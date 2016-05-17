@@ -42,8 +42,11 @@ import static org.mvel2.util.ParseTools.unboxPrimitive;
 public class ExpressionCompiler extends AbstractParser {
   private Class returnType;
 
+  /** 是否只是验证表达式是否合法 */
   private boolean verifyOnly = false;
+  /** 表示当前是否正在验证中 */
   private boolean verifying = true;
+  /** 是否需要二次优化(即去and操作) */
   private boolean secondPassOptimization = false;
 
   public CompiledExpression compile() {
@@ -106,6 +109,7 @@ public class ExpressionCompiler extends AbstractParser {
         pCtx.initializeTables();
       }
 
+      //首先表示当前为编译阶段，以便各个阶段进行信息编译
       fields |= COMPILE_IMMEDIATE;
 
       while ((tk = nextToken()) != null) {
@@ -122,6 +126,7 @@ public class ExpressionCompiler extends AbstractParser {
          */
         returnType = tk.getEgressType();
 
+        //单独处理子运行程序
         if (tk instanceof Substatement) {
           String key = new String(expr, tk.getStart(), tk.getOffset());
           Map<String, CompiledExpression> cec = pCtx.getCompiledExpressionCache();
@@ -140,16 +145,19 @@ public class ExpressionCompiler extends AbstractParser {
         }
 
         /**
+         * 这下面的动作在于进行编译期优化，以减少运行期的信息处理
          * This kludge of code is to handle compileShared-time literal reduction.  We need to avoid
          * reducing for certain literals like, 'this', ternary and ternary else.
          */
         if (!verifyOnly && tk.isLiteral()) {
           if (literalOnly == -1) literalOnly = 1;
 
+          //下一个符号为操作符节点
           if ((tkOp = nextTokenSkipSymbols()) != null && tkOp.isOperator()
               && !tkOp.isOperator(Operator.TERNARY) && !tkOp.isOperator(Operator.TERNARY_ELSE)) {
 
             /**
+             * 如果操作符之后的节点是常量节点 则表示可以编译期优化
              * If the next token is ALSO a literal, then we have a candidate for a compileShared-time literal
              * reduction.
              */
@@ -342,6 +350,7 @@ public class ExpressionCompiler extends AbstractParser {
     return operator == Operator.AND || operator == Operator.OR || operator == Operator.TERNARY || operator == Operator.TERNARY_ELSE;
   }
 
+  /** 验证节点并设置相应的信息，同时返回该节点 */
   protected ASTNode verify(ParserContext pCtx, ASTNode tk) {
     if (tk.isOperator() && (tk.getOperator().equals(Operator.AND) || tk.getOperator().equals(Operator.OR))) {
       secondPassOptimization = true;
@@ -351,6 +360,7 @@ public class ExpressionCompiler extends AbstractParser {
     }
     else if (tk.isLiteral()) {
       /**
+       * 如果当前节点是常量节点(可能为ASTNode，则强制转换为LiteralNode节点，以避免再操作astNode)
        * Convert literal values from the default ASTNode to the more-efficient LiteralNode.
        */
       if ((fields & COMPILE_IMMEDIATE) != 0 && tk.getClass() == ASTNode.class) {

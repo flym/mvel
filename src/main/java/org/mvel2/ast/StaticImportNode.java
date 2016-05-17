@@ -29,11 +29,15 @@ import static java.lang.reflect.Modifier.isStatic;
 import static org.mvel2.util.ArrayTools.findLast;
 
 /**
+ * 描述静态引用节点
  * @author Christopher Brock
  */
 public class StaticImportNode extends ASTNode {
+  /** 此静态引用所指向的类 */
   private Class declaringClass;
+  /** 静态引用方法名 */
   private String methodName;
+  /** 引用的方法 */
   private transient Method method;
 
   public StaticImportNode(char[] expr, int start, int offset, ParserContext pCtx) {

@@ -2,16 +2,16 @@
  * MVEL 2.0
  * Copyright (C) 2007 The Codehaus
  * Mike Brock, Dhanji Prasanna, John Graham, Mark Proctor
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -106,11 +106,16 @@ import static org.mvel2.util.Varargs.normalizeArgsForVarArgs;
 import static org.mvel2.util.Varargs.paramTypeVarArgsSafe;
 
 public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements AccessorOptimizer {
+  /** 当前优化器所优化时的第一个节点(首节点) */
   private AccessorNode rootNode;
+  /** 当前在进行优化处理时所对应的当前节点 */
   private AccessorNode currNode;
 
+  /** 引用实际的上下文对象 */
   private Object ctx;
+  /** 引用当前对象 */
   private Object thisRef;
+  /** 当前处理结束临时存储的值 */
   private Object val;
 
   private VariableResolverFactory variableFactory;
@@ -120,9 +125,12 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
   private static final Object[] EMPTYARG = new Object[0];
   private static final Class[] EMPTYCLS = new Class[0];
 
+  /** 表示当前处理属性刚开始(即处理位置在首位) */
   private boolean first = true;
 
+  /** 当前处理对象的类型信息(入参类型) */
   private Class ingressType;
+  /** 当前处理对象的返回类型 */
   private Class returnType;
 
   public ReflectiveAccessorOptimizer() {
@@ -348,20 +356,25 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
     return rootNode;
   }
 
+  /** 编译get访问处理链 */
   private Accessor compileGetChain() {
     Object curr = ctx;
     cursor = start;
 
     try {
+      //第1个if调用
       if (!MVEL.COMPILER_OPT_ALLOW_OVERRIDE_ALL_PROPHANDLING) {
         while (cursor < end) {
           switch (nextSubToken()) {
+            //属性访问
             case BEAN:
               curr = getBeanProperty(curr, capture());
               break;
+            //方法调用
             case METH:
               curr = getMethod(curr, capture());
               break;
+            //集合信息调用
             case COL:
               curr = getCollectionProperty(curr, capture());
               break;
@@ -455,6 +468,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
     }
   }
 
+  /** 设置起相应的节点链 */
   private void addAccessorNode(AccessorNode an) {
     if (rootNode == null)
       rootNode = currNode = an;
@@ -488,20 +502,26 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
     return getBeanProperty(ctx, property);
   }
 
+  /** 读取属性值信息 */
   private Object getBeanProperty(Object ctx, String property) throws Exception {
     if ((pCtx == null ? currType : pCtx.getVarOrInputTypeOrNull(property)) == Object.class
         && !pCtx.isStrongTyping()) {
       currType = null;
     }
 
+    //只有在初始处理时才需要处理this属性
     if (first) {
+      //this属性处理
       if ("this".equals(property)) {
         addAccessorNode(new ThisValueAccessor());
         return this.thisRef;
       }
+      //如果变量解析器能够解析此变量，则使用变量解析器，变量解析器敢只有在first时才能解析，
+      //如a.b中，只有a才可能在变量工厂中使用,b是不能使用的
       else if (variableFactory != null && variableFactory.isResolveable(property)) {
 
 
+        //2种处理方式，一种是基于下标处理，另一种是基于属性直接映射处理
         if (variableFactory.isIndexedFactory() && variableFactory.isTarget(property)) {
           int idx;
           addAccessorNode(new IndexedVariableAccessor(idx = variableFactory.variableIndexOf(property)));
@@ -521,9 +541,10 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
       }
     }
 
-    boolean classRef = false;
+    boolean classRef = false;//当前对象是否是类型引用
 
     Class<?> cls;
+    //当前对象为class，并且是否支持T.class 这种处理
     if (ctx instanceof Class) {
       if (MVEL.COMPILER_OPT_SUPPORT_JAVA_STYLE_CLASS_LITERALS
           && "class".equals(property)) {
@@ -541,22 +562,28 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
       cls = currType;
     }
 
+    //如果有属性解析器，则交由属性处理器来处理
     if (hasPropertyHandler(cls)) {
       PropertyHandlerAccessor acc = new PropertyHandlerAccessor(property, cls, getPropertyHandler(cls));
       addAccessorNode(acc);
       return acc.getValue(ctx, thisRef, variableFactory);
     }
 
+    //通过成员信息来处理
     Member member = cls != null ? getFieldOrAccessor(cls, property) : null;
 
+    //如果当前成员找到了，但当前处理对象为类类型，并且当前成员并不是静态成员，
+    //则表示找到的成员不能满足要求，则设置为null，避免错误处理
     if (member != null && classRef && (member.getModifiers() & Modifier.STATIC) == 0) {
       member = null;
     }
 
     Object o;
 
+    //处理getter方法
     if (member instanceof Method) {
       try {
+        //正常情况下，采用无参方法调用处理
         o = ctx != null ? ((Method) member).invoke(ctx, EMPTYARG) : null;
 
         if (hasNullPropertyHandler()) {
@@ -568,6 +595,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
         }
       }
       catch (IllegalAccessException e) {
+        //这里表示权限受限，则尝试使用不受限的方法来调用
         Method iFaceMeth = determineActualTargetMethod((Method) member);
 
         if (iFaceMeth == null)
@@ -601,9 +629,11 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
       currType = toNonPrimitiveType(((Method) member).getReturnType());
       return o;
     }
+    //剩下的成员肯定字段，因此有字段方式
     else if (member != null) {
       Field f = (Field) member;
 
+      //静态成员
       if ((f.getModifiers() & Modifier.STATIC) != 0) {
         o = f.get(null);
 
@@ -615,6 +645,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
           addAccessorNode(new StaticVarAccessor((Field) member));
         }
       }
+      //非静态成员
       else {
         o = ctx != null ? f.get(ctx) : null;
         if (hasNullPropertyHandler()) {
@@ -628,19 +659,24 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
       currType = toNonPrimitiveType(f.getType());
       return o;
     }
+    //map属性获取的方式(前提是有此key或者是允许null安全)
     else if (ctx instanceof Map && (((Map) ctx).containsKey(property) || nullSafe)) {
       addAccessorNode(new MapAccessor(property));
       return ((Map) ctx).get(property);
     }
+    //读取数组长度的方式
     else if (ctx != null && "length".equals(property) && ctx.getClass().isArray()) {
+      //当前对象是数组，并且属性名为length，则访问数组长度
       addAccessorNode(new ArrayLength());
       return getLength(ctx);
     }
+    //静态常量引用
     else if (LITERALS.containsKey(property)) {
       addAccessorNode(new StaticReferenceAccessor(ctx = LITERALS.get(property)));
       return ctx;
     }
     else {
+      //尝试获取静态方法引用，如果该属性即是一个静态方法，则直接返回此,即类.方法名的形式
       Object tryStaticMethodRef = tryStaticAccess();
       staticAccess = true;
       if (tryStaticMethodRef != null) {
@@ -657,11 +693,13 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
           return tryStaticMethodRef;
         }
       }
+      //这里与上面不同，上面是直接有类名，这里是只有方法名，如当前ctx为T 这里的属性名为 abc，则表示访问T.abc这个方法
       else if (ctx instanceof Class) {
         Class c = (Class) ctx;
+        //处理静态方法伪引用，即直接通过方法名引用的方式达到调用方法的目的
         for (Method m : c.getMethods()) {
           if (property.equals(m.getName())) {
-            if (pCtx!=null&& pCtx.getParserConfiguration()!=null?pCtx.getParserConfiguration().isAllowNakedMethCall():MVEL.COMPILER_OPT_ALLOW_NAKED_METH_CALL) {
+            if (pCtx != null && pCtx.getParserConfiguration() != null ? pCtx.getParserConfiguration().isAllowNakedMethCall() : MVEL.COMPILER_OPT_ALLOW_NAKED_METH_CALL) {
               o = m.invoke(null, EMPTY_OBJ_ARR);
               if (hasNullMethodHandler()) {
                 addAccessorNode(new MethodAccessorNH(m, new ExecutableStatement[0], getNullMethodHandler()));
@@ -674,12 +712,14 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
               return o;
             }
             else {
+              //不支持，则表示直接获取此静态方法引用
               addAccessorNode(new StaticReferenceAccessor(m));
               return m;
             }
           }
         }
 
+        //这里最后认为是 T$abc这个内部类的引用，一般情况下这里不会到达，即这里只写一个abc，最后引用到T$abc这个内部类
         try {
           Class subClass = findClass(variableFactory, c.getName() + "$" + property, pCtx);
           addAccessorNode(new StaticReferenceAccessor(subClass));
@@ -689,16 +729,20 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
           // fall through.
         }
       }
-      else if (pCtx!=null&& pCtx.getParserConfiguration()!=null?pCtx.getParserConfiguration().isAllowNakedMethCall():MVEL.COMPILER_OPT_ALLOW_NAKED_METH_CALL) {
+      else if (pCtx != null && pCtx.getParserConfiguration() != null ? pCtx.getParserConfiguration().isAllowNakedMethCall() : MVEL.COMPILER_OPT_ALLOW_NAKED_METH_CALL) {
+        //最后尝试直接执行此方法,虽然这里并不能走到这里,就像普通的方法一样执行(要求参数长度为0)
+        //实际上并不能走到这里，因为上面在获取getter时已经获取了此方法(getter会根据名字拿到此方法)
         return getMethod(ctx, property);
       }
 
+      //这里尝试一次从this引用上拿,虽然thisRef和ctx通常认为是一样的
       // if it is not already using this as context try to read the property value from this
       if (ctx != this.thisRef && this.thisRef != null) {
         addAccessorNode(new ThisValueAccessor());
         return getBeanProperty(this.thisRef, property);
       }
 
+      //最后都不能访问到，因此直接报错
       if (ctx == null) {
         throw new PropertyAccessException("unresolvable property or identifier: " + property, expr, start, pCtx);
       }
@@ -710,6 +754,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
   }
 
   /**
+   * 获取一个集合的值信息
    * Handle accessing a property embedded in a collections, map, or array
    *
    * @param ctx  -
@@ -718,6 +763,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
    * @throws Exception -
    */
   private Object getCollectionProperty(Object ctx, String prop) throws Exception {
+    //集合前的属性信息，如 a.bc[2]，先拿到a.bc信息
     if (prop.length() > 0) {
       ctx = getBeanProperty(ctx, prop);
     }
@@ -739,10 +785,12 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
 
     item = new String(expr, start, cursor - start);
 
+    //下标是否是表达式
     boolean itemSubExpr = true;
 
     Object idx = null;
 
+    //先尝试直接解析下标，如果能够解析，则表示下标是数字，否则就是表达式
     try {
       idx = parseInt(item);
       itemSubExpr = false;
@@ -751,6 +799,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
       // not a number;
     }
 
+    //单元解析表达式
     ExecutableStatement itemStmt = null;
     if (itemSubExpr) {
       try {
@@ -766,6 +815,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
 
     ++cursor;
 
+    //处理map访问的形式,如a[b]
     if (ctx instanceof Map) {
       if (itemSubExpr) {
         addAccessorNode(new MapAccessorNest(itemStmt, null));
@@ -776,6 +826,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
 
       return ((Map) ctx).get(idx);
     }
+    //处理list访问
     else if (ctx instanceof List) {
       if (itemSubExpr) {
         addAccessorNode(new ListAccessorNest(itemStmt, null));
@@ -786,6 +837,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
 
       return ((List) ctx).get((Integer) idx);
     }
+    //处理数组访问的形式
     else if (ctx.getClass().isArray()) {
       if (itemSubExpr) {
         addAccessorNode(new ArrayAccessorNest(itemStmt));
@@ -796,6 +848,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
 
       return Array.get(ctx, (Integer) idx);
     }
+    //处理字符串访问的形式
     else if (ctx instanceof CharSequence) {
       if (itemSubExpr) {
         addAccessorNode(new IndexedCharSeqAccessorNest(itemStmt));
@@ -807,6 +860,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
       return ((CharSequence) ctx).charAt((Integer) idx);
     }
     else {
+      //最后认为是一个数组类型描述符,当前数组内的内容忽略
       TypeDescriptor tDescr = new TypeDescriptor(expr, this.start, length, 0);
       if (tDescr.isArray()) {
         Class cls = getClassReference((Class) ctx, tDescr, variableFactory, pCtx);
@@ -946,6 +1000,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
   @SuppressWarnings({"unchecked"})
   private Object getMethod(Object ctx, String name) throws Exception {
     int st = cursor;
+    //sk表示捕获到()内的相应参数内容信息,如(a,b,c)就拿到a,b,c
     String tk = cursor != end
         && expr[cursor] == '(' && ((cursor = balancedCapture(expr, cursor, '(')) - st) > 1 ?
         new String(expr, st + 1, cursor - st - 1) : "";
@@ -955,17 +1010,20 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
     Class[] argTypes;
     ExecutableStatement[] es;
 
+    //空参数的情况
     if (tk.length() == 0) {
       args = ParseTools.EMPTY_OBJ_ARR;
       argTypes = ParseTools.EMPTY_CLS_ARR;
       es = null;
     }
     else {
+      //参数分组处理
       List<char[]> subtokens = parseParameterList(tk.toCharArray(), 0, -1);
       es = new ExecutableStatement[subtokens.size()];
       args = new Object[subtokens.size()];
       argTypes = new Class[subtokens.size()];
 
+      //每个参数段分别编译并执行
       for (int i = 0; i < subtokens.size(); i++) {
         try {
           args[i] = (es[i] = (ExecutableStatement) subCompileExpression(subtokens.get(i), pCtx))
@@ -975,13 +1033,15 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
           throw ErrorUtil.rewriteIfNeeded(e, this.expr, this.start);
         }
 
+        //如果这个参数是类似(Abc) xxx的调用，则使用转型之后的出参信息
         if (es[i].isExplicitCast()) argTypes[i] = es[i].getKnownEgressType();
       }
 
+      //设置参数类型信息
       if (pCtx.isStrictTypeEnforcement()) {
         for (int i = 0; i < args.length; i++) {
           argTypes[i] = es[i].getKnownEgressType();
-          if (es[i] instanceof ExecutableLiteral && ((ExecutableLiteral)es[i]).getLiteral() == null) {
+          if (es[i] instanceof ExecutableLiteral && ((ExecutableLiteral) es[i]).getLiteral() == null) {
             argTypes[i] = NullType.class;
           }
         }
@@ -1003,25 +1063,33 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
     return getMethod(ctx, name, args, argTypes, es);
   }
 
+  /** 通过当前方法名(或其它名称),参数类型，参数信息，以及参数执行单元执行此方法 */
   @SuppressWarnings({"unchecked"})
   private Object getMethod(Object ctx, String name, Object[] args, Class[] argTypes, ExecutableStatement[] es) throws Exception {
+    //如果是起始调用，并且变量能够解析，则表示此变量是一个方法句柄类信息，则通过此方法句柄进行调用
     if (first && variableFactory != null && variableFactory.isResolveable(name)) {
       Object ptr = variableFactory.getVariableResolver(name).getValue();
+      //变量为一个方法
       if (ptr instanceof Method) {
         ctx = ((Method) ptr).getDeclaringClass();
         name = ((Method) ptr).getName();
       }
+      //方法句柄
       else if (ptr instanceof MethodStub) {
         ctx = ((MethodStub) ptr).getClassReference();
         name = ((MethodStub) ptr).getMethodName();
       }
+      //函数定义
       else if (ptr instanceof FunctionInstance) {
         FunctionInstance func = (FunctionInstance) ptr;
+        //这里是说引用的名称与函数名不相同，如 在表达式中 function abc;var b = abc;
+        // 这里引用b时，就会出现此种情况
         if (!name.equals(func.getFunction().getName())) {
           getBeanProperty(ctx, name);
           addAccessorNode(new DynamicFunctionAccessor(es));
         }
         else {
+          //正常的函数调用
           addAccessorNode(new FunctionAccessor(func, es));
         }
         return func.call(ctx, thisRef, variableFactory, args);
@@ -1038,6 +1106,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
       throw new PropertyAccessException("null pointer or function not found: " + name, this.expr, this.start, pCtx);
     }
 
+    //当前上下文为静态类，即静态方法调用
     boolean classTarget = false;
     Class<?> cls = currType != null ? currType : ((classTarget = ctx instanceof Class) ? (Class<?>) ctx : ctx.getClass());
     currType = null;
@@ -1050,12 +1119,14 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
      */
 
     /**
+     * 重新尝试获取最匹配的方法，并且重置相应的参数类型
      * Try to find an instance method from the class target.
      */
     if ((m = getBestCandidate(argTypes, name, cls, cls.getMethods(), false, classTarget)) != null) {
       parameterTypes = m.getParameterTypes();
     }
 
+    //静态方法，并且还没找到方法，尝试查找Class类上的方法,如getClass等
     if (m == null && classTarget) {
       /**
        * If we didn't find anything, maybe we're looking for the actual java.lang.Class methods.
@@ -1073,8 +1144,10 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
       }
     }
 
+    //还没有找到方法，则尝试几个特殊的方法,或者直接报错
     if (m == null) {
       StringAppender errorBuild = new StringAppender();
+      //数组的size方法
       if ("size".equals(name) && args.length == 0 && cls.isArray()) {
         addAccessorNode(new ArrayLength());
         return getLength(ctx);
@@ -1095,14 +1168,17 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
           + name + "(" + errorBuild.toString() + ") [arglength=" + args.length + "]", this.expr, this.st, pCtx);
     }
 
+    //如果有表达式，则通过表达式重新处理相应的参数信息，如类型转换等
     if (es != null) {
       ExecutableStatement cExpr;
       for (int i = 0; i < es.length; i++) {
         cExpr = es[i];
+        //从参数签名上处理相应的类型兼容及转换问题
         if (cExpr.getKnownIngressType() == null) {
           cExpr.setKnownIngressType(paramTypeVarArgsSafe(parameterTypes, i, m.isVarArgs()));
           cExpr.computeTypeConversionRule();
         }
+        //类型不兼容，则处理相应的类型转换，转换为正确的参数类型
         if (!cExpr.isConvertableIngressEgress()) {
           args[i] = convert(args[i], paramTypeVarArgsSafe(parameterTypes, i, m.isVarArgs()));
         }
@@ -1110,12 +1186,14 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
     }
     else {
       /**
+       * 如果执行单元，则直接进行类型转换
        * Coerce any types if required.
        */
       for (int i = 0; i < args.length; i++)
         args[i] = convert(args[i], paramTypeVarArgsSafe(parameterTypes, i, m.isVarArgs()));
     }
 
+    //获取方法并进行调用
     Method method = getWidenedTarget(cls, m);
     Object o = ctx != null ? method.invoke(ctx, normalizeArgsForVarArgs(parameterTypes, args, m.isVarArgs())) : null;
 
@@ -1320,7 +1398,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
     }
     else {
       ClassLoader classLoader = pCtx != null ? pCtx.getClassLoader() : currentThread().getContextClassLoader();
-      Constructor<?> cns = Class.forName(new String(expression), true, classLoader ).getConstructor(EMPTYCLS);
+      Constructor<?> cns = Class.forName(new String(expression), true, classLoader).getConstructor(EMPTYCLS);
       AccessorNode ca = new ConstructorAccessor(cns, null);
 
       if (cnsRes.length > 1) {
@@ -1343,7 +1421,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
   }
 
   public boolean isLiteralOnly() {
-      return false;
+    return false;
   }
 
   private Object propHandler(String property, Object ctx, Class handler) {

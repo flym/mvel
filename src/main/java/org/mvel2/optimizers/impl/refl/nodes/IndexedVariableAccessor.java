@@ -21,8 +21,10 @@ package org.mvel2.optimizers.impl.refl.nodes;
 import org.mvel2.compiler.AccessorNode;
 import org.mvel2.integration.VariableResolverFactory;
 
+/** 描述通过下标参数变量解析来处理的访问器 */
 public class IndexedVariableAccessor implements AccessorNode {
   private AccessorNode nextNode;
+  /** 相应的下标值(即在变量中注册的下标值) */
   private int register;
 
   public IndexedVariableAccessor(int register) {

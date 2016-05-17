@@ -26,18 +26,23 @@ import org.mvel2.optimizers.OptimizerFactory;
 
 import static java.lang.System.currentTimeMillis;
 
+/** 处理对象设置值之类的动态访问器 */
 public class DynamicSetAccessor implements DynamicAccessor {
   private char[] property;
   private int start;
   private int offset;
 
+  /** 是否优化过 */
   private boolean opt = false;
+  /** 统计运行次数 */
   private int runcount = 0;
+  /** 上限统计计时 */
   private long stamp;
 
   private ParserContext context;
   private final Accessor _safeAccessor;
   private Accessor _accessor;
+  /** 描述(没什么用) */
   private String description;
 
   public DynamicSetAccessor(ParserContext context, char[] property, int start, int offset, Accessor _accessor) {

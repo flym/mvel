@@ -46,12 +46,15 @@ import static org.mvel2.util.ParseTools.*;
 import static org.mvel2.util.ReflectionUtil.toPrimitiveArrayType;
 
 /**
+ * 表示一个新建的节点,即使用New进行数据创建的节点
  * @author Christopher Brock
  */
 @SuppressWarnings({"ManualArrayCopy"})
 public class NewObjectNode extends ASTNode {
   private transient Accessor newObjectOptimizer;
+  /** 类型描述符 */
   private TypeDescriptor typeDescr;
+  /** 当前类型类名信息 */
   private char[] name;
 
   private static final Class[] EMPTYCLS = new Class[0];
@@ -109,6 +112,7 @@ public class NewObjectNode extends ASTNode {
           return;
         }
 
+        //非数组，准备处理相应的构造器以及相应的参数信息
         if (!typeDescr.isArray()) {
           String[] cnsResid = captureContructorAndResidual(expr, start, offset);
 
@@ -126,6 +130,8 @@ public class NewObjectNode extends ASTNode {
                   + Arrays.toString(parms)));
           }
 
+          //这里表示当前的处理节点其实还需要处理相应的属性数据，这里不仅仅是进行一个new操作，实际上是获取newbi对象之后的属性或数据信息
+          //如 new Abc().efg 就是取efg这个属性的信息，因此这里的实际类型就是 efg属性的类型
           if (cnsResid.length == 2) {
             String residualProperty =
                 cnsResid[1].trim();
@@ -139,6 +145,7 @@ public class NewObjectNode extends ASTNode {
     }
   }
 
+  /** 重写为全类型名(暂时没看出有什么用) */
   private void rewriteClassReferenceToFQCN(int fields) {
     String FQCN = egressType.getName();
 

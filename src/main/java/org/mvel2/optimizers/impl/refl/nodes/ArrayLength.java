@@ -23,6 +23,7 @@ import org.mvel2.integration.VariableResolverFactory;
 import static java.lang.reflect.Array.getLength;
 
 /**
+ * 用于实现访问数组长度的访问器
  * @author Christopher Brock
  */
 public class ArrayLength extends BaseAccessor {

@@ -13,8 +13,11 @@ import java.math.BigInteger;
 
 import static org.mvel2.util.ParseTools.boxPrimitive;
 
+/** 表示一个取负操作节点 */
 public class Sign extends ASTNode {
+  /** 表示对不同的操作数取负的取负器 */
   private Signer signer;
+  /** -号后面的表达式节点 */
   private ExecutableStatement stmt;
 
   public Sign(char[] expr, int start, int end, int fields, ParserContext pCtx) {

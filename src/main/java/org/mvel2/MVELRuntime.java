@@ -2,16 +2,16 @@
  * MVEL 2.0
  * Copyright (C) 2007 The Codehaus
  * Mike Brock, Dhanji Prasanna, John Graham, Mark Proctor
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -52,6 +52,7 @@ public class MVELRuntime {
                                VariableResolverFactory variableFactory) {
 
     Object v1, v2;
+    //保存当前临时的执行栈
     ExecutionStack stk = new ExecutionStack();
 
     ASTNode tk = expression.getFirstNode();
@@ -81,22 +82,27 @@ public class MVELRuntime {
           }
           continue;
         }
+        //当前操作栈为空的，则压入当前值，以进行处理
         else if (stk.isEmpty()) {
           stk.push(tk.getReducedValueAccelerated(ctx, ctx, variableFactory));
         }
 
+        //如果标识已结束了则直接返回数据信息
         if (variableFactory.tiltFlag()) {
           return stk.pop();
         }
 
         switch (operator = tk.getOperator()) {
+          //操作符return 在前一步即可以处理了
           case RETURN:
             variableFactory.setTiltFlag(true);
             return stk.pop();
 
+          //默认情况下，大部分的节点均返回NOOP操作符
           case NOOP:
             continue;
 
+            //? 操作符，如果当前结果为false，则表示要获取 ? :冒号之后的值，则当前执行流程直接跳转到:后面去.并且清空操作数栈
           case TERNARY:
             if (!stk.popBoolean()) {
               //noinspection StatementWithEmptyBody
@@ -105,11 +111,13 @@ public class MVELRuntime {
             stk.clear();
             continue;
 
+            //因为这里到达 :，表示对于?已经执行完:之前的表达式，因此直接返回即可
           case TERNARY_ELSE:
             return stk.pop();
 
           case END_OF_STMT:
             /**
+             * 这里如果还有下一个节点，表示还有进一步的操作，那么就把当前执行栈给清掉，表示不再需要之前的信息
              * If the program doesn't end here then we wipe anything off the stack that remains.
              * Althought it may seem like intuitive stack optimizations could be leveraged by
              * leaving hanging values on the stack,  trust me it's not a good idea.
@@ -124,6 +132,7 @@ public class MVELRuntime {
         stk.push(tk.nextASTNode.getReducedValueAccelerated(ctx, ctx, variableFactory), operator);
 
         try {
+          //这里保证当前栈中只有一个操作数，因为之前的操作数均没有用处
           while (stk.isReduceable()) {
             if ((Integer) stk.peek() == CHOR) {
               stk.pop();
@@ -150,8 +159,10 @@ public class MVELRuntime {
           throw new CompileException("failed to compileShared sub expression", new char[0], 0, e);
         }
       }
+      //这里继续循环的前提在于下一个节点必须不为null
       while ((tk = tk.nextASTNode) != null);
 
+      //最终到达结尾，直接返回最后一个表达式的值
       return stk.peek();
     }
     catch (NullPointerException e) {

@@ -31,13 +31,18 @@ import static org.mvel2.util.CompilerTools.expectType;
 import static org.mvel2.util.ParseTools.subCompileExpression;
 
 /**
+ * if节点
  * @author Christopher Brock
  */
 public class IfNode extends BlockNode implements NestedStatement {
+  /** 条件表达式 */
   protected ExecutableStatement condition;
+  /** 执行语句 */
   protected ExecutableStatement nestedStatement;
 
+  /** 后面的elseif 节点 */
   protected IfNode elseIf;
+  /** 后面的else 节点(与elseIf冲突) */
   protected ExecutableStatement elseBlock;
 
   protected boolean idxAlloc = false;
@@ -55,6 +60,7 @@ public class IfNode extends BlockNode implements NestedStatement {
     idxAlloc = pCtx != null && pCtx.isIndexAllocation();
 
     if ((fields & COMPILE_IMMEDIATE) != 0) {
+      //检测类型匹配
       expectType(pCtx, this.condition = (ExecutableStatement) subCompileExpression(expr, start, offset, pCtx),
           Boolean.class, true);
 

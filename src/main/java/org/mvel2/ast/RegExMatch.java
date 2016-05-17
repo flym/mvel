@@ -31,12 +31,18 @@ import static java.util.regex.Pattern.compile;
 import static org.mvel2.MVEL.eval;
 import static org.mvel2.util.ParseTools.subCompileExpression;
 
+/** 描述一个用于正则匹配的表达式节点 */
 public class RegExMatch extends ASTNode {
+  /** 当前变量或属性表达式 */
   private ExecutableStatement stmt;
+  /** 当前正则表达式字符串的表达式 */
   private ExecutableStatement patternStmt;
 
+  /** 正则表达式起始点 */
   private int patternStart;
+  /** 正则表达式结束点 */
   private int patternOffset;
+  /** 相应的正则表达式 */
   private Pattern p;
 
   public RegExMatch(char[] expr, int start, int offset, int fields, int patternStart, int patternOffset, ParserContext pCtx) {

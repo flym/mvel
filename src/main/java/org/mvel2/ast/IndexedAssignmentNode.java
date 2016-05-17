@@ -30,20 +30,30 @@ import static org.mvel2.util.ArrayTools.findFirst;
 import static org.mvel2.util.ParseTools.*;
 
 /**
+ * 按下标处理的赋值操作节点
  * @author Christopher Brock
  */
 public class IndexedAssignmentNode extends ASTNode implements Assignment {
+  /** 当前声明的变量名(与name类似) */
   private String assignmentVar;
+  /** 当前处理赋值的变量名(真实变量名) */
   private String name;
+  /** 当前变量在上下文中的下标值 */
   private int register;
+  /** 表示当前变量的属性表达式 */
   private transient CompiledAccExpression accExpr;
 
+  /** 当前集合属性名的字符串 */
   private char[] indexTarget;
+  /** 当前集合属性的下标字符串 */
   private char[] index;
 
+  /** 表示 a + b的操作表达式 */
   private char[] stmt;
+  /** 表示 a + b的编译表达式 */
   private ExecutableStatement statement;
 
+  /** 当前变量中是否存在集合表达式,如a[1] */
   private boolean col = false;
 
   public IndexedAssignmentNode(char[] expr, int start, int offset, int fields, int operation,

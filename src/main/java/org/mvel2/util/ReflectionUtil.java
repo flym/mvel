@@ -28,6 +28,7 @@ import static java.lang.System.arraycopy;
 public class ReflectionUtil {
 
   /**
+   * 获取指定字段串的setAbc形式
    * This new method 'slightly' outperforms the old method, it was
    * essentially a perfect example of me wasting my time and a
    * premature optimization.  But what the hell...
@@ -52,6 +53,7 @@ public class ReflectionUtil {
   }
 
 
+  /** 获取指定字符串的 getAbc形式 参数为abc */
   public static String getGetter(String s) {
     char[] c = s.toCharArray();
     char[] chars = new char[c.length + 3];
@@ -68,6 +70,7 @@ public class ReflectionUtil {
   }
 
 
+  /** 获取指定字符串的 isAbc形式 参数为abc */
   public static String getIsGetter(String s) {
     char[] c = s.toCharArray();
     char[] chars = new char[c.length + 2];
@@ -82,6 +85,7 @@ public class ReflectionUtil {
     return new String(chars);
   }
 
+  /** 尝试从方法器的方法名(字段名)中获取相应的属性信息 */
   public static String getPropertyFromAccessor(String s) {
     char[] c = s.toCharArray();
     char[] chars;
@@ -116,6 +120,7 @@ public class ReflectionUtil {
     return s;
   }
 
+  /** 转换为非基本类型 */
   public static Class<?> toNonPrimitiveType(Class<?> c) {
     if (!c.isPrimitive()) return c;
     if (c == int.class) return Integer.class;
@@ -128,6 +133,7 @@ public class ReflectionUtil {
     return Boolean.class;
   }
 
+  /** 将基本类型数组转换为非基本类型数组 */
   public static Class<?> toNonPrimitiveArray(Class<?> c) {
     if (!c.isArray() || !c.getComponentType().isPrimitive()) return c;
     if (c == int[].class) return Integer[].class;
@@ -140,6 +146,7 @@ public class ReflectionUtil {
     return Boolean[].class;
   }
 
+  /** 返回对指定基本类型的数组形式 */
   public static Class<?> toPrimitiveArrayType(Class<?> c) {
     if (!c.isPrimitive()) throw new RuntimeException(c + " is not a primitive type");
     if (c == int.class) return int[].class;
@@ -160,6 +167,7 @@ public class ReflectionUtil {
     return c1.isPrimitive() ? isPrimitiveOf(c2, c1) : (c2.isPrimitive() && isPrimitiveOf(c1, c2));
   }
 
+  /** 判断A类型是否是B类型的包装形式 */
   private static boolean isPrimitiveOf(Class<?> boxed, Class<?> primitive) {
     if (primitive == int.class) return boxed == Integer.class;
     if (primitive == long.class) return boxed == Long.class;

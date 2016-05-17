@@ -74,6 +74,7 @@ import static org.mvel2.compiler.AbstractParser.LITERALS;
 import static org.mvel2.integration.ResolverTools.appendFactory;
 
 
+/** 整个编译的工具类,可直接用于各项表达式编译 */
 @SuppressWarnings({"ManualArrayCopy"})
 public class ParseTools {
   public static final Object[] EMPTY_OBJ_ARR = new Object[0];
@@ -162,6 +163,7 @@ public class ParseTools {
   }
 
 
+  /** 将整个字符串处理成相应的参数列表,就是按照 逗号将数据进行分组处理 */
   public static List<char[]> parseParameterList(char[] parm, int offset, int length) {
     List<char[]> list = new ArrayList<char[]>();
 
@@ -217,6 +219,7 @@ public class ParseTools {
     return list;
   }
 
+  /** 在指定的方法中获取最匹配的方法 */
   public static Method getBestCandidate(Object[] arguments, String method, Class decl, Method[] methods, boolean requireExact) {
     Class[] targetParms = new Class[arguments.length];
     for (int i = 0; i != arguments.length; i++) {
@@ -225,10 +228,16 @@ public class ParseTools {
     return getBestCandidate(targetParms, method, decl, methods, requireExact);
   }
 
+  /** 在指定的方法中获取最匹配的方法 */
   public static Method getBestCandidate(Class[] arguments, String method, Class decl, Method[] methods, boolean requireExact) {
     return getBestCandidate(arguments, method, decl, methods, requireExact, false);
   }
 
+  /**
+   * 在指定的方法中获取最匹配的方法
+   *
+   * @param classTarget 是否是静态方法
+   */
   public static Method getBestCandidate(Class[] arguments, String method, Class decl, Method[] methods, boolean requireExact, boolean classTarget) {
 
     if (methods.length == 0) {
@@ -238,10 +247,12 @@ public class ParseTools {
     Class<?>[] parmTypes;
     Method bestCandidate = null;
     int bestScore = -1;
+    //是否已经重试过
     boolean retry = false;
 
     do {
       for (Method meth : methods) {
+        //静态方法判定
         if (classTarget && !Modifier.isStatic(meth.getModifiers())) continue;
 
         if (method.equals(meth.getName())) {
@@ -258,6 +269,7 @@ public class ParseTools {
             continue;
           }
 
+          //这里采用评分算法计算当前方法是否得分更高,得分最高的为最匹配方法
           int score = getMethodScore(arguments, requireExact, parmTypes, isVarArgs);
           if (score != 0) {
             if (score > bestScore) {
@@ -277,6 +289,7 @@ public class ParseTools {
         break;
       }
 
+      //没找到，尝试将object的方法一并加上进行处理
       if (!retry && decl.isInterface()) {
         Method[] objMethods = Object.class.getMethods();
         Method[] nMethods = new Method[methods.length + objMethods.length];
@@ -300,6 +313,7 @@ public class ParseTools {
     return bestCandidate;
   }
 
+  /** 判定一个方法是否比另一个方法更合适 判定依据即是返回类型更加细化，声明的参数类型也更细化 */
   private static boolean isMoreSpecialized( Method newCandidate, Method oldCandidate ) {
     return oldCandidate.getReturnType().isAssignableFrom( newCandidate.getReturnType()) &&
            oldCandidate.getDeclaringClass().isAssignableFrom( newCandidate.getDeclaringClass());
@@ -375,6 +389,7 @@ public class ParseTools {
     return 0;
   }
 
+  /** 获取在相应类上具备指定名字，参数类型以及返回类型的方法 */
   public static Method getExactMatch(String name, Class[] args, Class returnType, Class cls) {
 	outer:
 	for (Method meth : cls.getMethods()) {
@@ -391,10 +406,12 @@ public class ParseTools {
     return null;
   }
 
+  /** 从指定方法的定义上获取更宽化的定义方法 */
   public static Method getWidenedTarget(Method method) {
     return getWidenedTarget(method.getDeclaringClass(), method);
   }
 
+  /** 从指定类上查找指定的宽化方法定义(即从指定类的接口或者父类，不处理当前类) */
   public static Method getWidenedTarget(Class cls, Method method) {
     if (Modifier.isStatic(method.getModifiers())) {
       return method;
@@ -440,6 +457,7 @@ public class ParseTools {
     }
   }
 
+  /** 获取指定类的一个最匹配的构造函数 */
   public static Constructor getBestConstructorCandidate(Object[] args, Class cls, boolean requireExact) {
     Class[] arguments = new Class[args.length];
 
@@ -534,6 +552,7 @@ public class ParseTools {
   }
 
 
+  /** 捕获构建函数参数以及剩下的数据信息 */
   public static String[] captureContructorAndResidual(char[] cs, int start, int offset) {
     int depth = 0;
     int end = start + offset;
@@ -897,6 +916,7 @@ public class ParseTools {
   }
 
 
+  /** 从当前解析类中找到用于解析类名信息的解析器,如果没有，则追加一个 */
   public static ClassImportResolverFactory findClassImportResolverFactory(VariableResolverFactory factory, ParserContext pCtx) {
     if (factory == null) {
       throw new OptimizationFailure("unable to import classes.  no variable resolver factory available.");
@@ -1047,6 +1067,7 @@ public class ParseTools {
     typeCodes.put(BlankLiteral.class, DataTypes.EMPTY);
   }
 
+  /** 获取相应的内部类型信息,以进行类型处理 */
   public static int __resolveType(Class cls) {
     Integer code = typeCodes.get(cls);
     if (code == null) {
@@ -1084,10 +1105,12 @@ public class ParseTools {
   }
 
 
+  /** 读取指定方法接口或父类中受限类型为公共的方法 */
   public static Method determineActualTargetMethod(Method method) {
     return determineActualTargetMethod(method.getDeclaringClass(), method);
   }
 
+  /** 读取指定方法接口或父类中受限类型为公共的方法(初始类为指定类) */
   private static Method determineActualTargetMethod(Class clazz, Method method) {
     String name = method.getName();
 
@@ -1105,6 +1128,7 @@ public class ParseTools {
     return clazz.getSuperclass() != null ? determineActualTargetMethod(clazz.getSuperclass(), method) : null;
   }
 
+  /** 找到下一个可以作为分隔的点，如空格 ( [ {等，但对于[，需要找到]位置 */
   public static int captureToNextTokenJunction(char[] expr, int cursor, int end, ParserContext pCtx) {
     while (cursor != expr.length) {
       switch (expr[cursor]) {
@@ -1124,6 +1148,7 @@ public class ParseTools {
     return cursor;
   }
 
+  /** 找到下一个非空的字符 */
   public static int nextNonBlank(char[] expr, int cursor) {
     if ((cursor + 1) >= expr.length) {
       throw new CompileException("unexpected end of statement", expr, cursor);
@@ -1133,6 +1158,7 @@ public class ParseTools {
     return i;
   }
 
+  /** 从指定的下标跳过空白字符及注释 */
   public static int skipWhitespace(char[] expr, int cursor) {
     Skip:
     while (cursor != expr.length) {
@@ -1174,6 +1200,7 @@ public class ParseTools {
     return cursor;
   }
 
+  /** 表示从当前下标起，有没有 表示 结束的; 符号 */
   public static boolean isStatementNotManuallyTerminated(char[] expr, int cursor) {
     if (cursor >= expr.length) return false;
     int c = cursor;
@@ -1270,6 +1297,7 @@ public class ParseTools {
     return balancedCapture(chars, start, chars.length, type);
   }
 
+  /** 获取相对应捕获组的中间数据信息 */
   public static int balancedCapture(char[] chars, int start, int end, char type) {
     int depth = 1;
     char term = type;
@@ -1343,6 +1371,11 @@ public class ParseTools {
     }
   }
 
+  /**
+   * 这里是寻找一个与相应符号相对应的符号结束位置,如 [对应],{->} (->) 其它的则对应自己
+   * 一般情况下，此方法只处理如 ( { [ 这种符号
+   * 这个方法不能处理 " '符号，处理字符串需要采用 captureStringLiteral
+   */
   public static int balancedCaptureWithLineAccounting(char[] chars, int start, int end, char type, ParserContext pCtx) {
     int depth = 1;
     int st = start;
@@ -1360,6 +1393,7 @@ public class ParseTools {
     }
 
     if (type == term) {
+      //这里处理除([{的情况
       for (start++; start != end; start++) {
         if (chars[start] == type) {
           return start;
@@ -1369,6 +1403,7 @@ public class ParseTools {
     else {
       int lines = 0;
       for (start++; start < end; start++) {
+        //---------------------------- 处理空格及注释 start ------------------------------//
         if (isWhitespace(chars[start])) {
           switch (chars[start]) {
             case '\r':
@@ -1379,11 +1414,14 @@ public class ParseTools {
           }
         }
         else if (start < end && chars[start] == '/') {
+          //到底末尾，忽略
           if (start + 1 == end) return start;
+          //行注释
           if (chars[start + 1] == '/') {
             start++;
             while (start < end && chars[start] != '\n') start++;
           }
+          // 段注释
           else if (chars[start + 1] == '*') {
             start += 2;
             Skiploop:
@@ -1403,13 +1441,18 @@ public class ParseTools {
             }
           }
         }
+        //---------------------------- 处理空格及注释 start ------------------------------//
+
         if (start == end) return start;
+        //特殊处理字符串,因为字符串也是一种类似于闭合结构,在这里直接跳过字符串
         if (chars[start] == '\'' || chars[start] == '"') {
           start = captureStringLiteral(chars[start], chars, start, end);
         }
+        //增加递归处理，即 [[ 情况
         else if (chars[start] == type) {
           depth++;
         }
+        //惟一退出的情况
         else if (chars[start] == term && --depth == 0) {
           if (pCtx != null) pCtx.incrementLineCount(lines);
           return start;
@@ -1417,6 +1460,7 @@ public class ParseTools {
       }
     }
 
+    //因为没正常返回，最终报错
     switch (type) {
       case '[':
         throw new CompileException("unbalanced braces [ ... ]", chars, st);
@@ -1450,8 +1494,11 @@ public class ParseTools {
     return new String(processedEscapeString);
   }
 
+  /** 匹配字符串组 */
   public static int captureStringLiteral(final char type, final char[] expr, int cursor, int end) {
+    //查找相对应的字符，并且不再处理像 注释的场景，处理逻辑与 balancedCaptureWithLineAccounting 相一致
     while (++cursor < end && expr[cursor] != type) {
+      //如果这里是转义符，则强行跳过，以避免出现 \"的情况，这里是简化处理，因为像\ u zxxx并不完全处理
       if (expr[cursor] == '\\') cursor++;
     }
 
@@ -1619,8 +1666,11 @@ public class ParseTools {
     }
   }
 
+  /** 处理类型转换，并且判断相应的实际类型 */
   public static Object handleNumericConversion(final char[] val, int start, int offset) {
+    //以0开头，但并没有.，即表示是整数
     if (offset != 1 && val[start] == '0' && val[start + 1] != '.') {
+      //末尾带标识，通过标记来进行判定
       if (!isDigit(val[start + offset - 1])) {
         switch (val[start + offset - 1]) {
           case 'L':
@@ -1635,6 +1685,7 @@ public class ParseTools {
 
       return Integer.decode(new String(val, start, offset));
     }
+    //末尾带标识，通过标记判断
     else if (!isDigit(val[start + offset - 1])) {
       switch (val[start + offset - 1]) {
         case 'l':
@@ -1655,6 +1706,7 @@ public class ParseTools {
       throw new CompileException("unrecognized numeric literal", val, start);
     }
     else {
+      //通过数字测试来进行,即猜一下
       switch (numericTest(val, start, offset)) {
         case DataTypes.FLOAT:
           return java.lang.Float.parseFloat(new String(val, start, offset));
@@ -1844,11 +1896,13 @@ public class ParseTools {
     return -1;
   }
 
+  /** 从后往前找1个字符的位置信息 */
   public static int findLast(char[] c, int start, int offset, char find) {
     for (int i = start + offset; i >= start; i--) if (c[i] == find) return i;
     return -1;
   }
 
+  /** 匹配一个连接的字符串(即直到空格结束) */
   public static String createStringTrimmed(char[] s) {
     int start = 0, end = s.length;
     while (start != end && s[start] < '\u0020' + 1) start++;
@@ -1856,6 +1910,7 @@ public class ParseTools {
     return new String(s, start, end - start);
   }
 
+  /** 匹配一个连接的字符串(即直到空格结束) */
   public static String createStringTrimmed(char[] s, int start, int length) {
     if ((length = start + length) > s.length) return new String(s);
     while (start != length && s[start] < '\u0020' + 1) {
@@ -1867,6 +1922,7 @@ public class ParseTools {
     return new String(s, start, length - start);
   }
 
+  /** 判断指定的字符串(字符数组)是否以指定的后缀(以字符数组表示)结尾 */
   public static boolean endsWith(char[] c, int start, int offset, char[] test) {
     if (test.length > c.length) return false;
 
@@ -1881,7 +1937,8 @@ public class ParseTools {
   }
 
   public static boolean isIdentifierPart(final int c) {
-    return ((c > 96 && c < 123)
+    return ((c > 96 && c < 123)//小写字母
+        //大写字母 数字
         || (c > 64 && c < 91) || (c > 47 && c < 58) || (c == '_') || (c == '$')
         || Character.isJavaIdentifierPart(c));
   }
@@ -2003,6 +2060,7 @@ public class ParseTools {
   }
 
   /**
+   * 检查字符串是否合法(作为字段标识)
    * Check if the specfied string represents a valid name of label.
    *
    * @param name -
@@ -2016,6 +2074,7 @@ public class ParseTools {
     return false;
   }
 
+  /** 判断当前字符串是否只是字段元素 */
   public static boolean isPropertyOnly(char[] array, int start, int end) {
     for (int i = start; i < end; i++) {
       if (!isIdentifierPart(array[i])) return false;
@@ -2023,6 +2082,7 @@ public class ParseTools {
     return true;
   }
 
+  /** 判断当前字符串是否是数组类型 */
   public static boolean isArrayType(char[] array, int start, int end) {
     return end > start + 2 && isPropertyOnly(array, start, end - 2) && array[end - 2] == '[' && array[end - 1] == ']';
   }

@@ -2,16 +2,16 @@
  * MVEL 2.0
  * Copyright (C) 2007 The Codehaus
  * Mike Brock, Dhanji Prasanna, John Graham, Mark Proctor
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -35,14 +35,24 @@ import static org.mvel2.util.ArrayTools.findFirst;
 import static org.mvel2.util.ParseTools.*;
 import static org.mvel2.util.ReflectionUtil.toPrimitiveArrayType;
 
+/**
+ * 类型描述，即描述一个有效的类型定义信息,如Date Date[2]这样的
+ * 对于非数组，这里仅描述类名，对于数组，则要求描述相应的数组长度信息
+ */
 public class TypeDescriptor implements Serializable {
+  /** 存储的类名 */
   private String className;
+  /** 当前处理字符串引用 */
   private char[] expr;
 
+  /** 起始点 */
   private int start;
+  /** 跨度(即start+size中的size值) */
   private int offset;
 
+  /** 用于描述数组长度的信息值 */
   private ArraySize[] arraySize;
+  /** 用于描述长度信息中可能存在的计算表达式 */
   private ExecutableStatement[] compiledArraySize;
   int endRange;
 
@@ -82,6 +92,7 @@ public class TypeDescriptor implements Serializable {
         for (int i = 0; i < arraySize.length; i++)
           arraySize[i] = new ArraySize(iter.next());
 
+        //这里表示在编译期的话，需要再次处理[]里面表达式的值
         if ((fields & COMPILE_IMMEDIATE) != 0) {
           compiledArraySize = new ExecutableStatement[arraySize.length];
           for (int i = 0; i < compiledArraySize.length; i++)
@@ -133,15 +144,15 @@ public class TypeDescriptor implements Serializable {
   public void setEndRange(int endRange) {
     this.endRange = endRange;
   }
-  
+
   public Class<?> getClassReference() throws ClassNotFoundException {
     return getClassReference(null, this);
   }
-  
+
   public Class<?> getClassReference(ParserContext ctx) throws ClassNotFoundException {
-    return getClassReference(ctx,this);
+    return getClassReference(ctx, this);
   }
-  
+
   public static Class getClassReference(Class baseType,
                                         TypeDescriptor tDescr,
                                         VariableResolverFactory factory, ParserContext ctx) throws ClassNotFoundException {
@@ -151,37 +162,41 @@ public class TypeDescriptor implements Serializable {
   public static Class getClassReference(ParserContext ctx, Class cls, TypeDescriptor tDescr) throws ClassNotFoundException {
     if (tDescr.isArray()) {
       cls = cls.isPrimitive() ?
-              toPrimitiveArrayType(cls) :
-              findClass(null, repeatChar('[', tDescr.arraySize.length) + "L" + cls.getName() + ";", ctx);
+          toPrimitiveArrayType(cls) :
+          findClass(null, repeatChar('[', tDescr.arraySize.length) + "L" + cls.getName() + ";", ctx);
     }
     return cls;
   }
 
 
+  /** 从上下文中获取相应的类型信息，因为从原始的typeDescriptor中拿不到类型 */
   public static Class getClassReference(ParserContext ctx, TypeDescriptor tDescr) throws ClassNotFoundException {
     Class cls;
+    //由上下文引用的
     if (ctx != null && ctx.hasImport(tDescr.className)) {
       cls = ctx.getImport(tDescr.className);
       if (tDescr.isArray()) {
         cls = cls.isPrimitive() ?
-                toPrimitiveArrayType(cls) :
-                findClass(null, repeatChar('[', tDescr.arraySize.length) + "L" + cls.getName() + ";", ctx);
+            toPrimitiveArrayType(cls) :
+            findClass(null, repeatChar('[', tDescr.arraySize.length) + "L" + cls.getName() + ";", ctx);
       }
     }
     else if (ctx == null && hasContextFreeImport(tDescr.className)) {
+      //由字面量常量引用的，如true,false等
       cls = getContextFreeImport(tDescr.className);
       if (tDescr.isArray()) {
         cls = cls.isPrimitive() ?
-                toPrimitiveArrayType(cls) :
-                findClass(null, repeatChar('[', tDescr.arraySize.length) + "L" + cls.getName() + ";", ctx);
+            toPrimitiveArrayType(cls) :
+            findClass(null, repeatChar('[', tDescr.arraySize.length) + "L" + cls.getName() + ";", ctx);
       }
     }
     else {
+      //默认处理，实际上到这里的也会报错
       cls = createClass(tDescr.getClassName(), ctx);
       if (tDescr.isArray()) {
         cls = cls.isPrimitive() ?
-                toPrimitiveArrayType(cls) :
-                findClass(null, repeatChar('[', tDescr.arraySize.length) + "L" + cls.getName() + ";", ctx);
+            toPrimitiveArrayType(cls) :
+            findClass(null, repeatChar('[', tDescr.arraySize.length) + "L" + cls.getName() + ";", ctx);
       }
     }
 

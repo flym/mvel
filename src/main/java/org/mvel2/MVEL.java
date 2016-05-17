@@ -53,7 +53,9 @@ public class MVEL {
   static boolean WEAK_CACHE = getBoolean("mvel2.weak_caching");
   static boolean NO_JIT = getBoolean("mvel2.disable.jit");
   public static boolean INVOKED_METHOD_EXCEPTIONS_BUBBLE = getBoolean("mvel2.invoked_meth_exceptions_bubble");
+  /** 是否允许伪方法调用，即将 a.bc 代替a.bc()这种处理方式 */
   public static boolean COMPILER_OPT_ALLOW_NAKED_METH_CALL = getBoolean("mvel2.compiler.allow_naked_meth_calls");
+  /** 编译器是否允许重写相应的属性处理器(重写之后，当前整个属性访问均由属性处理器来进行) */
   public static boolean COMPILER_OPT_ALLOW_OVERRIDE_ALL_PROPHANDLING = getBoolean("mvel2.compiler.allow_override_all_prophandling");
   public static boolean COMPILER_OPT_ALLOW_RESOLVE_INNERCLASSES_WITH_DOTNOTATION = getBoolean("mvel2.compiler.allow_resolve_inner_classes_with_dotnotation");
   public static boolean COMPILER_OPT_SUPPORT_JAVA_STYLE_CLASS_LITERALS = getBoolean("mvel2.compiler.support_java_style_class_literals");
@@ -674,6 +676,7 @@ public class MVEL {
     analysisCompile(expression.toCharArray(), ctx);
   }
 
+  /** 分析一个表达式的最终返回类型 */
   public static Class analyze(char[] expression, ParserContext ctx) {
     ExpressionCompiler compiler = new ExpressionCompiler(expression, ctx);
     compiler.setVerifyOnly(true);
@@ -1079,6 +1082,7 @@ public class MVEL {
     return preprocess(input.toCharArray(), preprocessors);
   }
 
+  /** 从当前对象上获取一个属性值信息 */
   public static Object getProperty(String property, Object ctx) {
     return PropertyAccessor.get(property, ctx);
   }

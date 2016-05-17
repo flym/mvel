@@ -27,9 +27,12 @@ import java.util.List;
 
 import static org.mvel2.util.ParseTools.subCompileExpression;
 
+/** list集合访问器，并且下标为执行单元的情况 */
 public class ListAccessorNest implements AccessorNode {
   private AccessorNode nextNode;
+  /** 下标执行单元 */
   private ExecutableStatement index;
+  /** 当前集合中存储的值的类型(用于设置值时进行参数转换 */
   private Class conversionType;
 
 

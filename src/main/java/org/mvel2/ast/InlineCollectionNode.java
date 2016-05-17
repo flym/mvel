@@ -35,6 +35,7 @@ import java.util.Map;
 import static org.mvel2.util.ParseTools.*;
 
 /**
+ * 表示一个内部的集合表达式,使用[ 或 {均可以用来表示集合
  * @author Christopher Brock
  */
 public class InlineCollectionNode extends ASTNode {

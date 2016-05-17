@@ -30,6 +30,7 @@ import static org.mvel2.util.ReflectionUtil.isAssignableFrom;
 import static org.mvel2.util.ReflectionUtil.toNonPrimitiveType;
 
 /**
+ * 内部自带的对象转换器
  * The DataConversion factory is where all of MVEL's type converters are registered with the runtime.
  *
  * @author Mike Brock
@@ -113,6 +114,7 @@ public class DataConversion {
     return false;
   }
 
+  /** 对象转换 */
   public static <T> T convert(Object in, Class<T> toType) {
     if (in == null) return null;
     if (toType == in.getClass() || toType.isAssignableFrom(in.getClass())) {

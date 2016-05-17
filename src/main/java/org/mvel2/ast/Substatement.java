@@ -25,7 +25,9 @@ import org.mvel2.integration.VariableResolverFactory;
 
 import static org.mvel2.util.ParseTools.subCompileExpression;
 
+/** 表示一个子运行程序的节点信息，即当前节点用于描述一个被外部包装起来的节点信息，如()这种 */
 public class Substatement extends ASTNode {
+  /** 内部的运行节点 */
   private ExecutableStatement statement;
 
   public Substatement(char[] expr, int start, int offset, int fields, ParserContext pCtx) {

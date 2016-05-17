@@ -25,6 +25,7 @@ import static java.lang.String.valueOf;
 import static java.lang.reflect.Array.getLength;
 import static org.mvel2.util.ParseTools.isNumeric;
 
+/** 表示一个特别的空常量 */
 public class BlankLiteral implements Serializable {
   public static final BlankLiteral INSTANCE = new BlankLiteral();
 

@@ -28,11 +28,14 @@ import java.util.Map;
 import static org.mvel2.util.ParseTools.subCompileExpression;
 
 /**
+ * map类型的访问器，属性为计算单元
  * @author Christopher Brock
  */
 public class MapAccessorNest implements AccessorNode {
   private AccessorNode nextNode;
+  /** 描述属性值的计算单元 */
   private ExecutableStatement property;
+  /** 期望的值类型 */
   private Class conversionType;
 
   public MapAccessorNest() {

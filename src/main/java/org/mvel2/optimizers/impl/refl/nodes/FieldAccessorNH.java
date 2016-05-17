@@ -26,10 +26,14 @@ import java.lang.reflect.Field;
 
 import static org.mvel2.DataConversion.convert;
 
+/** 字段访问器，附带空处理的情况 */
 public class FieldAccessorNH implements AccessorNode {
   private AccessorNode nextNode;
+  /** 当前字段 */
   private Field field;
+  /** 是否需要转型 */
   private boolean coercionRequired = false;
+  /** 相应的空值处理器 */
   private PropertyHandler nullHandler;
 
   public FieldAccessorNH(Field field, PropertyHandler handler) {

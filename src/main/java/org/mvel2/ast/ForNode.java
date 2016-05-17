@@ -31,14 +31,19 @@ import static org.mvel2.util.CompilerTools.expectType;
 import static org.mvel2.util.ParseTools.subCompileExpression;
 
 /**
+ * 描述for循环的节点信息
  * @author Christopher Brock
  */
 public class ForNode extends BlockNode {
+  /** 无用字段 */
   protected String item;
 
+  /** 初始化语句(第1段) */
   protected ExecutableStatement initializer;
+  /** 条件语句(第2段) */
   protected ExecutableStatement condition;
 
+  /** 第3段语句 */
   protected ExecutableStatement after;
 
   protected boolean indexAlloc = false;
@@ -51,6 +56,7 @@ public class ForNode extends BlockNode {
 
     this.indexAlloc = pCtx != null && pCtx.isIndexAllocation();
 
+    //避免无限循环的问题,即条件不变(没有更新变量)，语句为空的情况
     if ((fields & COMPILE_IMMEDIATE) != 0 && compiledBlock.isEmptyStatement() && !varsEscape) {
       throw new RedundantCodeException();
     }
@@ -95,12 +101,15 @@ public class ForNode extends BlockNode {
         spCtx = new ParserContext();
       }
 
+      //起始节点
       this.initializer = (ExecutableStatement) subCompileExpression(condition, start, cursor - start - 1, spCtx);
 
+      //进入语句块，因此添加新的作用域t
       if (pCtx != null) {
         pCtx.pushVariableScope();
       }
 
+      //条件节点
       try {
         expectType(pCtx, this.condition = (ExecutableStatement) subCompileExpression(condition, start = cursor,
             (cursor = nextCondPart(condition, start, end, false)) - start - 1, spCtx), Boolean.class, ((fields & COMPILE_IMMEDIATE) != 0));
@@ -118,6 +127,7 @@ public class ForNode extends BlockNode {
         throw e;
       }
 
+      //第三块节点
       this.after = (ExecutableStatement)
           subCompileExpression(condition, start = cursor, (nextCondPart(condition, start, end, true)) - start, spCtx);
 
@@ -129,6 +139,7 @@ public class ForNode extends BlockNode {
         pCtx.addVariables(spCtx.getVariables());
       }
 
+      //执行节点
       this.compiledBlock = (ExecutableStatement) subCompileExpression(expr, blockStart, blockEnd, spCtx);
       if (pCtx != null) {
         pCtx.setInputs(spCtx.getInputs());

@@ -26,10 +26,14 @@ import java.lang.reflect.Field;
 
 import static org.mvel2.DataConversion.convert;
 
+/** 表示一个字段的访问器 */
 public class FieldAccessor implements AccessorNode {
+  /** 下一个节点 */
   private AccessorNode nextNode;
+  /** 当前所对应的字段信息 */
   private Field field;
   private boolean coercionRequired = false;
+  /** 当前字段是否是基本类型 */
   private boolean primitive;
 
 

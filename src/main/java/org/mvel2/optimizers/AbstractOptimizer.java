@@ -31,13 +31,19 @@ import static org.mvel2.util.ParseTools.*;
  * @author Christopher Brock
  */
 public class AbstractOptimizer extends AbstractParser {
+  /** 表示属性访问 */
   protected static final int BEAN = 0;
+  /** 表示方法访问 */
   protected static final int METH = 1;
+  /** 表示集合访问 */
   protected static final int COL = 2;
   protected static final int WITH = 3;
 
+  /** 当前处理是否是集合 */
   protected boolean collection = false;
+  /** 当前处理是否是null安全的 */
   protected boolean nullSafe = false;
+  /** 当前处理属性的类型 */
   protected Class currType = null;
   protected boolean staticAccess = false;
 
@@ -50,6 +56,7 @@ public class AbstractOptimizer extends AbstractParser {
   }
 
   /**
+   * 尝试静态访问此属性，此属性可能是字段，类或者对象本身
    * Try static access of the property, and return an instance of the Field, Method of Class if successful.
    *
    * @return - Field, Method or Class instance.
@@ -168,18 +175,27 @@ public class AbstractOptimizer extends AbstractParser {
     return null;
   }
 
+  /**
+   * 读取可能的操作属性,通过查找当前字符串中可能存在的特殊符号来进行定位.
+   * <p/>
+   * 操作属性的读取是通过读取最接近的操作来完成的,而并不是一步一步来完成的.如a.b[2]则会定义为集合访问，即最终为(a.b)[2]这种操作，然后先处理a.b，再处理[2]操作
+   */
   protected int nextSubToken() {
     skipWhitespace();
     nullSafe = false;
 
+    //先通过首字符来判定，可能是集合，属性或者其它调用
     switch (expr[tkStart = cursor]) {
+      //集合调用
       case '[':
         return COL;
+      //with调用，先忽略
       case '{':
         if (expr[cursor - 1] == '.') {
           return WITH;
         }
         break;
+      //属性调用,如果.后接一个?号，表示当前属性的值结果可能是null的
       case '.':
         if ((start + 1) != end) {
           switch (expr[cursor = ++tkStart]) {
@@ -205,6 +221,7 @@ public class AbstractOptimizer extends AbstractParser {
           throw new CompileException("unexpected end of statement", expr, start);
         }
         break;
+      //这里直接在最前台加一个?，即表示访问这个属性，并且这个属性值可能为null
       case '?':
         if (start == cursor) {
           tkStart++;
@@ -216,6 +233,7 @@ public class AbstractOptimizer extends AbstractParser {
     //noinspection StatementWithEmptyBody
     while (++cursor < end && isIdentifierPart(expr[cursor])) ;
 
+    //在跳过一堆字段之后，还没有到达末尾，表示中间有类似操作符存在，则通过第一个非字段点来进行判断
     skipWhitespace();
     if (cursor < end) {
       switch (expr[cursor]) {
@@ -228,9 +246,11 @@ public class AbstractOptimizer extends AbstractParser {
       }
     }
 
+    //默认为bean操作，即读取属性
     return 0;
   }
 
+  /** 当前捕获的属性名(字符串) */
   protected String capture() {
     /**
      * Trim off any whitespace.
@@ -248,6 +268,7 @@ public class AbstractOptimizer extends AbstractParser {
   }
 
   /**
+   * 查找指定的字符，直到找到为止
    * @param c - character to scan to.
    * @return - returns true is end of statement is hit, false if the scan scar is countered.
    */

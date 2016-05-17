@@ -23,5 +23,6 @@ import org.mvel2.compiler.ExecutableStatement;
  * @author Christopher Brock
  */
 public interface NestedStatement {
+  /** 表示里面内部的执行语句，其实就是执行块 */
   public ExecutableStatement getNestedStatement();
 }

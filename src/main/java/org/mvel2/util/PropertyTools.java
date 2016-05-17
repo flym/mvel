@@ -35,6 +35,7 @@ import static org.mvel2.DataConversion.canConvert;
 import static org.mvel2.util.ParseTools.boxPrimitive;
 
 public class PropertyTools {
+  /** 判断指定对象是否是空的 */
   public static boolean isEmpty(Object o) {
     if (o != null) {
       if (o instanceof Object[]) {
@@ -51,6 +52,7 @@ public class PropertyTools {
     return true;
   }
 
+  /** 获取指定属性的setter方法 */
   public static Method getSetter(Class clazz, String property) {
     property = ReflectionUtil.getSetter(property);
 
@@ -64,6 +66,7 @@ public class PropertyTools {
     return null;
   }
 
+  /** 获取指定类指定属性中的setter方法，并且该方法的类型是兼容的 */
   public static Method getSetter(Class clazz, String property, Class type) {
     String simple = "set" + property;
     property = ReflectionUtil.getSetter(property);
@@ -79,17 +82,20 @@ public class PropertyTools {
     return null;
   }
 
+  /** 指定字段是否是getter方法 */
   public static boolean hasGetter(Field field) {
     Method meth = getGetter(field.getDeclaringClass(), field.getName());
     return meth != null && field.getType().isAssignableFrom(meth.getReturnType());
   }
 
+  /** 指定字段是否是setter方法 */
   public static boolean hasSetter(Field field) {
     Method meth = getSetter(field.getDeclaringClass(), field.getName());
     return meth != null && meth.getParameterTypes().length == 1 &&
         field.getType().isAssignableFrom(meth.getParameterTypes()[0]);
   }
 
+  /** 获取指定成员的getter方法 */
   public static Method getGetter(Class clazz, String property) {
     String simple = "get" + property;
     String simpleIsGet = "is" + property;
@@ -113,6 +119,7 @@ public class PropertyTools {
     return new PropertyVerifier(property, ctx, clazz).analyze();
   }
 
+  /** 获取指定成员公共字段或者是相应的getter访问器 */
   public static Member getFieldOrAccessor(Class clazz, String property) {
     for (Field f : clazz.getFields()) {
       if (property.equals(f.getName())) {

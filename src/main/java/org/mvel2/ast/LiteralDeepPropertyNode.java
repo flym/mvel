@@ -26,6 +26,7 @@ import static org.mvel2.PropertyAccessor.get;
 import static org.mvel2.optimizers.OptimizerFactory.getThreadAccessorOptimizer;
 
 /**
+ * 描述一个有.号的多级常量属性节点，如类名描述信息等
  * @author Christopher Brock
  */
 @SuppressWarnings({"CaughtExceptionImmediatelyRethrown"})

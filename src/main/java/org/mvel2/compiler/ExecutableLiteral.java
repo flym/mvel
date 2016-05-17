@@ -22,6 +22,7 @@ import org.mvel2.ast.Safe;
 import org.mvel2.integration.VariableResolverFactory;
 
 /**
+ * 表示一个常量的计算单元
  * @author Christopher Brock
  */
 public class ExecutableLiteral implements ExecutableStatement, Safe {

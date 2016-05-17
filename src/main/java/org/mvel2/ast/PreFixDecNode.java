@@ -25,9 +25,11 @@ import org.mvel2.integration.VariableResolverFactory;
 import org.mvel2.math.MathProcessor;
 
 /**
+ * 表示一个支持前置操作的处理节点，如++x,--x，这里的变量未在上下文中注册
  * @author Christopher Brock
  */
 public class PreFixDecNode extends ASTNode {
+  /** 当前变量名 */
   private String name;
 
   public PreFixDecNode(String name, ParserContext pCtx) {

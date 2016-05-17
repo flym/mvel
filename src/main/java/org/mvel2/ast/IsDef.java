@@ -23,6 +23,7 @@ import org.mvel2.integration.VariableResolverFactory;
 
 import static org.mvel2.util.PropertyTools.getFieldOrAccessor;
 
+/** 定义 isDef节点，以判断指定的变量是否存在 */
 public class IsDef extends ASTNode {
   public IsDef(char[] expr, int start, int offset, ParserContext pCtx) {
     super(pCtx);

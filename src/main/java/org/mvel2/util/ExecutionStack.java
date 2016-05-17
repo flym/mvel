@@ -24,7 +24,9 @@ import static java.lang.String.valueOf;
 import static org.mvel2.math.MathProcessor.doOperations;
 
 public class ExecutionStack {
+  /** 当前最新值 */
   private StackElement element;
+  /** 栈中操作数长度 */
   private int size = 0;
 
   public boolean isEmpty() {
@@ -52,6 +54,7 @@ public class ExecutionStack {
 
   }
 
+  /** 入栈2个对象 */
   public void push(Object obj1, Object obj2) {
     size += 2;
     element = new StackElement(new StackElement(element, obj1), obj2);
@@ -102,6 +105,7 @@ public class ExecutionStack {
     return element.next.value;
   }
 
+  /** 弹出当前操作数 */
   public Object pop() {
     if (size == 0) {
       return null;
@@ -116,6 +120,7 @@ public class ExecutionStack {
     }
   }
 
+  /** 弹出当前操作数，并期望是一个boolean值 */
   public Boolean popBoolean() {
     if (size-- == 0) {
       return null;
@@ -153,6 +158,7 @@ public class ExecutionStack {
     return size;
   }
 
+  /** 判定当前操作数栈是否需要减少 */
   public boolean isReduceable() {
     return size > 1;
   }

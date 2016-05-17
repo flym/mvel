@@ -32,19 +32,28 @@ import java.lang.reflect.Array;
 import static org.mvel2.util.ParseTools.*;
 
 /**
+ * 描述在java5中for(i:col)这种表达式
  * @author Christopher Brock
  */
 public class ForEachNode extends BlockNode {
+  /** 描述具体这个对象的字符串形式，即for(abc:efg)中的abc */
   protected String item;
+  /** 对象的类型 */
   protected Class itemType;
 
+  /** :后面的表达式节点 */
   protected ExecutableStatement condition;
 
+  /** 集合迭代 */
   private static final int ITERABLE = 0;
+  /** 数组迭代 */
   private static final int ARRAY = 1;
+  /** 字符串迭代 */
   private static final int CHARSEQUENCE = 2;
+  /** 数字处理，表示从 A..B的数字处理 */
   private static final int INTEGER = 3;
 
+  /** 当前循环对象的类型 4选1(上面的) */
   private int type = -1;
 
   public ForEachNode(char[] expr, int start, int offset, int blockStart, int blockOffset, int fields, ParserContext pCtx) {
@@ -176,6 +185,8 @@ public class ForEachNode extends BlockNode {
     if (cursor == end || condition[cursor] != ':')
       throw new CompileException("expected : in foreach", condition, cursor);
 
+    //这里判断这个for(a:b)以及for(String a:b)的情况
+    //在后面一种中，因为:前面包括2块内容，类型声明以及具体的变量，因此需要分别处理
     int x;
     if ((x = (item = createStringTrimmed(condition, start, cursor - start)).indexOf(' ')) != -1) {
       String tk = new String(condition, start, x).trim();
@@ -198,6 +209,7 @@ public class ForEachNode extends BlockNode {
       Class egress = (this.condition = (ExecutableStatement) subCompileExpression(expr, this.start, this.offset, pCtx)).getKnownEgressType();
 
       if (itemType != null && egress.isArray()) {
+        //这里对数组保证类型正确
         enforceTypeSafety(itemType, getBaseComponentType(this.condition.getKnownEgressType()));
       }
       else if (pCtx.isStrongTyping()) {
@@ -224,6 +236,7 @@ public class ForEachNode extends BlockNode {
     }
   }
 
+  /** 保证类型安全 */
   private void enforceTypeSafety(Class required, Class actual) {
     if (!required.isAssignableFrom(actual) && !DataConversion.canConvert(actual, required)) {
       throw new CompileException("type mismatch in foreach: expected: "

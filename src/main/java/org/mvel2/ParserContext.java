@@ -55,15 +55,21 @@ public class ParserContext implements Serializable {
 
   private Object evaluationContext;
 
+  /** 存放当前有顺序的输入变量信息,顺序保证变量举随机分布，之后可以根据此顺序查找具体值 */
   private ArrayList<String> indexedInputs;
+  /** 存放当前有顺序的临时变量信息,顺序保证当前变量不会随机分布,之后可以根据此顺序查找具体值 */
   private ArrayList<String> indexedLocals;
+  /** 变量作用域,描述每个变量是否在指定的变量域中 */
   private ArrayList<Set<String>> variableVisibility;
 
+  /** 变量声明以及变量类型定义 */
   private HashMap<String, Class> variables;
+  /** 表示需要接收的参数入参信息以及入参类型信息(这些信息需要从外部传入或者是外部必须存在 */
   private Map<String, Class> inputs;
 
   private transient HashMap<String, Map<String, Type>> typeParameters;
   private transient Type[] lastTypeParameters;
+  /** 描述全局函数信息 */
   private HashMap<String, Function> globalFunctions;
 
   private transient List<ErrorDetail> errorList;
@@ -74,13 +80,18 @@ public class ParserContext implements Serializable {
   private LineLabel lastLineLabel;
 
   private transient Parser rootParser;
+  /** 编译的编译表达式 */
   private transient Map<String, CompiledExpression> compiledExpressionCache;
+  /** 针对指定的编译表达式，缓存相应的返回类型 */
   private transient Map<String, Class> returnTypeCache;
 
   private boolean functionContext = false;
   private boolean compiled = false;
+  /** 是否是严格类型调用的 */
   private boolean strictTypeEnforcement = false;
+  /** 是否是强类型处理 */
   private boolean strongTyping = false;
+  /** 设置当前的优化状态，表示正在进行优化 */
   private boolean optimizationMode = false;
 
   private boolean fatalError = false;
@@ -89,6 +100,7 @@ public class ParserContext implements Serializable {
   private boolean blockSymbols = false;
   private boolean executableCodeReached = false;
   private boolean indexAllocation = false;
+  /** 判断在处理中，是否使用了新的变量 */
   protected boolean variablesEscape = false;
 
   public ParserContext() {
@@ -240,6 +252,7 @@ public class ParserContext implements Serializable {
   }
 
   /**
+   * 获取一个变量的类型(从变量及入参中提取),默认值为 object
    * Return the variable or input type froom the current parser context.  Returns <tt>Object.class</tt> if the
    * type cannot be determined.
    *
@@ -256,6 +269,7 @@ public class ParserContext implements Serializable {
     return Object.class;
   }
 
+  /** 读取一个变量或输入信息的类型值 */
   public Class getVarOrInputTypeOrNull(String name) {
     if (variables != null && variables.containsKey(name)) {
       return variables.get(name);
@@ -489,6 +503,7 @@ public class ParserContext implements Serializable {
     }
   }
 
+  /** 添加一个变量信息 */
   public void addVariable(String name, Class type, boolean failIfNewAssignment) {
     initializeTables();
     if (variables.containsKey(name) && failIfNewAssignment)
@@ -516,6 +531,7 @@ public class ParserContext implements Serializable {
     }
   }
 
+  /** 添加入参定义及类型 */
   public void addInput(String name, Class type) {
     if (inputs == null) inputs = new LinkedHashMap<String, Class>();
     if (inputs.containsKey(name) || (variables != null && variables.containsKey(name))) return;
@@ -693,11 +709,13 @@ public class ParserContext implements Serializable {
     }
   }
 
+  /** 用于创建一个新的变量作用域 */
   public void pushVariableScope() {
     initVariableVisibility();
     variableVisibility.add(new HashSet<String>());
   }
 
+  /** 用于将刚才的变量作用域出栈，以表示不再使用此作用域 */
   public void popVariableScope() {
     if (variableVisibility != null && !variableVisibility.isEmpty()) {
       variableVisibility.remove(variableVisibility.size() - 1);
@@ -952,6 +970,7 @@ public class ParserContext implements Serializable {
     if (!indexedInputs.contains(variable)) indexedInputs.add(variable);
   }
 
+  /** 添加按顺序的参数变量 */
   public void addIndexedInputs(Collection<String> variables) {
     if (variables == null) return;
     initIndexedVariables();
@@ -961,6 +980,7 @@ public class ParserContext implements Serializable {
     }
   }
 
+  /** 查找一个变量在当前输入变量以及本地变量中的顺序值 */
   public int variableIndexOf(String name) {
     if (indexedInputs != null) {
       int idx = indexedInputs.indexOf(name);

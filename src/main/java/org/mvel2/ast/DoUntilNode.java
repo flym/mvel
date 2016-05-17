@@ -29,10 +29,13 @@ import static org.mvel2.util.CompilerTools.expectType;
 import static org.mvel2.util.ParseTools.subCompileExpression;
 
 /**
+ * 描述 do util的节点块 until 表示与 do while中while条件的相反判断
  * @author Christopher Brock
  */
 public class DoUntilNode extends BlockNode {
+  /** 无用的字段 */
   protected String item;
+  /** 直到的条件表达式 */
   protected ExecutableStatement condition;
 
   public DoUntilNode(char[] expr, int start, int offset, int blockStart, int blockOffset, ParserContext pCtx) {

@@ -25,9 +25,11 @@ import org.mvel2.integration.VariableResolverFactory;
 import org.mvel2.math.MathProcessor;
 
 /**
+ * 描述一个指定变量的 ++ 操作节点
  * @author Christopher Brock
  */
 public class PostFixIncNode extends ASTNode {
+  /** 变量名 */
   private String name;
 
   public PostFixIncNode(String name, ParserContext pCtx) {

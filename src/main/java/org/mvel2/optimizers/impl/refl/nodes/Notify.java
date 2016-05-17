@@ -5,7 +5,9 @@ import org.mvel2.integration.GlobalListenerFactory;
 import org.mvel2.integration.VariableResolverFactory;
 
 
+/** 描述一下可以在调用时进行监听通知的访问器 */
 public class Notify implements AccessorNode {
+  /** 当前处理的属性名 */
   private String name;
   private AccessorNode nextNode;
 

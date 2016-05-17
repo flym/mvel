@@ -18,10 +18,13 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * 用于描述堆栈指令集的节点信息
  * @author Mike Brock <cbrock@redhat.com>
  */
 public class Stacklang extends BlockNode {
+  /** 指令列表,由原字符串使用;隔开的多个指令 */
   List<Instruction> instructionList;
+  /** 当前解析上下文 */
   ParserContext pCtx;
 
   public Stacklang(char[] expr, int blockStart, int blockOffset, int fields, ParserContext pCtx) {
@@ -240,12 +243,14 @@ public class Stacklang extends BlockNode {
     return stack.pop();
   }
 
+  /** 描述所支持的指令集 */
   private static class Instruction {
     int opcode;
     String expr;
     Object cache;
   }
 
+  /** 解析指令集，对于不能解析的指令实际上会忽略掉 */
   private static Instruction parseInstruction(String s) {
     int split = s.indexOf(' ');
 

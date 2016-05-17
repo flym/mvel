@@ -23,8 +23,11 @@ import org.mvel2.compiler.Accessor;
 import org.mvel2.integration.VariableResolverFactory;
 
 
+/** 描述一个函数调用访问器 */
 public class FunctionAccessor extends BaseAccessor {
+  /** 函数定义实体对象 */
   private FunctionInstance function;
+  /** 相应的参数信息 */
   private Accessor[] parameters;
 
   public FunctionAccessor(FunctionInstance function, Accessor[] parms) {

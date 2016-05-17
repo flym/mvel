@@ -26,9 +26,11 @@ import org.mvel2.integration.VariableResolverFactory;
 import org.mvel2.math.MathProcessor;
 
 /**
+ * 表示前置的++操作节点，变量信息采用下标来表示(在上下文中)
  * @author Christopher Brock
  */
 public class IndexedPreFixIncNode extends ASTNode {
+  /** 当前变量的下标值 */
   private int register;
 
   public IndexedPreFixIncNode(int register, ParserContext pCtx) {

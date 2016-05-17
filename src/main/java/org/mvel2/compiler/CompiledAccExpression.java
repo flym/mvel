@@ -26,6 +26,7 @@ import java.io.Serializable;
 
 import static org.mvel2.optimizers.OptimizerFactory.getThreadAccessorOptimizer;
 
+/** 表示一个编译的访问器表达式，用于读取或处理一个特别的属性信息(带有相应的属性访问器) */
 public class CompiledAccExpression implements ExecutableStatement, Serializable {
   private char[] expression;
   private int start;

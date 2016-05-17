@@ -28,9 +28,12 @@ import java.lang.reflect.Method;
 import static org.mvel2.MVEL.getProperty;
 import static org.mvel2.util.ParseTools.getBestCandidate;
 
+/** 带空值处理器的getter方法访问 */
 public class GetterAccessorNH implements AccessorNode {
   private AccessorNode nextNode;
+  /** 对应的方法 */
   private final Method method;
+  /** 空值处理 */
   private PropertyHandler nullHandler;
 
   public static final Object[] EMPTY = new Object[0];

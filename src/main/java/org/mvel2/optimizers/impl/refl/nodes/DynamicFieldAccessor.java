@@ -24,10 +24,13 @@ import org.mvel2.integration.VariableResolverFactory;
 
 import java.lang.reflect.Field;
 
+/** 动态字段访问器，表示实际的值与当前字段类型可能存在不匹配的情况(这时需要进行类型转换) */
 @SuppressWarnings({"unchecked"})
 public class DynamicFieldAccessor implements AccessorNode {
   private AccessorNode nextNode;
+  /** 字段信息 */
   private Field field;
+  /** 参数目标类型 */
   private Class targetType;
 
   public DynamicFieldAccessor() {

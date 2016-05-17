@@ -23,6 +23,7 @@ import org.mvel2.ParserContext;
 import org.mvel2.integration.VariableResolverFactory;
 
 /**
+ * 一个表示当前语句块结束的抽象节点,无任何意义
  * @author Christopher Brock
  */
 public class EndOfStatement extends ASTNode {

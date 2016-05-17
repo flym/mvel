@@ -23,8 +23,10 @@ import org.mvel2.integration.VariableResolverFactory;
 
 import java.lang.reflect.Array;
 
+/** 针对数据的访问器 */
 public class ArrayAccessor implements AccessorNode {
   private AccessorNode nextNode;
+  /** 数组下标 */
   private int index;
 
   public ArrayAccessor() {

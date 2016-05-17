@@ -27,7 +27,9 @@ import org.mvel2.util.ParseTools;
 
 import static org.mvel2.util.ParseTools.subCompileExpression;
 
+/** 表示一个对表达式取反的操作节点 */
 public class Negation extends ASTNode {
+  /** 后面待取反的执行块 */
   private ExecutableStatement stmt;
 
   public Negation(char[] expr, int start, int offset, int fields, ParserContext pCtx) {

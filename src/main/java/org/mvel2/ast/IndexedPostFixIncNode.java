@@ -26,9 +26,11 @@ import org.mvel2.integration.VariableResolverFactory;
 import org.mvel2.math.MathProcessor;
 
 /**
+ * 在指定上下文中指定位置的变量 ++操作节点
  * @author Christopher Brock
  */
 public class IndexedPostFixIncNode extends ASTNode {
+  /** 变量的位置 */
   private int register;
 
   public IndexedPostFixIncNode(int register, ParserContext pCtx) {

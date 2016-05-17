@@ -9,12 +9,17 @@ import java.lang.reflect.Method;
 import static org.mvel2.DataConversion.convert;
 import static org.mvel2.util.ParseTools.getBestCandidate;
 
+/** 描述一个setter方法的访问器 */
 public class SetterAccessor implements AccessorNode {
   private AccessorNode nextNode;
+  /** 当前所对应的方法 */
   private final Method method;
+  /** 目标参数类型 */
   private Class<?> targetType;
+  /** 参数是否是基本类型的 */
   private boolean primitive;
 
+  /** 是否需要可变参数转换 */
   private boolean coercionRequired = false;
 
   public static final Object[] EMPTY = new Object[0];

@@ -23,11 +23,14 @@ import org.mvel2.integration.VariableResolverFactory;
 
 import java.lang.reflect.Constructor;
 
+/** 表示对象访问器(创建对象)(由NewNode对应) */
 public class ConstructorAccessor extends InvokableAccessor {
+  /** 当前所引用的构建函数 */
   private Constructor constructor;
 
   public Object getValue(Object ctx, Object elCtx, VariableResolverFactory variableFactory) {
     try {
+      //默认情况下不作可变参数处理
       if (!coercionNeeded) {
         try {
           if (nextNode != null) {
@@ -38,6 +41,7 @@ public class ConstructorAccessor extends InvokableAccessor {
           }
         }
         catch (IllegalArgumentException e) {
+          //默认处理报错，重新设置标记位处理
           coercionNeeded = true;
           return getValue(ctx, elCtx, variableFactory);
         }
@@ -62,6 +66,7 @@ public class ConstructorAccessor extends InvokableAccessor {
     return null;
   }
 
+  /** 通过额外的参数上下文执行所有的参数节点信息,并返回相应的值信息 */
   private Object[] executeAll(Object ctx, VariableResolverFactory vars) {
     if (length == 0) return GetterAccessor.EMPTY;
 

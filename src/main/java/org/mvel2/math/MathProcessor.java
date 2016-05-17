@@ -39,6 +39,7 @@ import static org.mvel2.util.ParseTools.*;
 import static org.mvel2.util.Soundex.soundex;
 
 /**
+ * 数学处理，进行各项数学运算
  * @author Christopher Brock
  */
 public strictfp class MathProcessor {
@@ -55,6 +56,7 @@ public strictfp class MathProcessor {
   }
 
   public static Object doOperations(int type1, Object val1, int operation, int type2, Object val2) {
+    //-1 表示要重新计算处理
     if (type1 == -1)
       type1 = val1 == null ? DataTypes.OBJECT : __resolveType(val1.getClass());
 
@@ -68,6 +70,7 @@ public strictfp class MathProcessor {
           case BIG_DECIMAL:
             return doBigDecimalArithmetic((BigDecimal) val1, operation, (BigDecimal) val2, false, -1);
           default:
+            //类型2是数字
             if (type2 > 99) {
               return doBigDecimalArithmetic((BigDecimal) val1, operation, getInternalNumberFromType(val2, type2), false, -1);
             }
@@ -81,6 +84,7 @@ public strictfp class MathProcessor {
     }
   }
 
+  /** 进行窄化的数学运算，先使用double进行处理，最后转换为相应的类型 */
   private static Object doPrimWrapperArithmetic(final Number val1, final int operation, final Number val2, boolean iNumber, int returnTarget) {
     switch (operation) {
       case ADD:
@@ -140,6 +144,12 @@ public strictfp class MathProcessor {
     throw new RuntimeException("internal error: " + returnType);
   }
 
+  /**
+   * 进行bigDecimal运算
+   *
+   * @param iNumber      最后是否返回正常数字
+   * @param returnTarget 目的返回类型
+   */
   private static Object doBigDecimalArithmetic(final BigDecimal val1, final int operation, final BigDecimal val2, boolean iNumber, int returnTarget) {
     switch (operation) {
       case ADD:
@@ -205,16 +215,19 @@ public strictfp class MathProcessor {
   }
 
   private static Object _doOperations(int type1, Object val1, int operation, int type2, Object val2) {
-    if (operation < 20) {
+    if (operation < 20) {//操作符小于20,表示是数学操作
+      //第一种情况，表示是同类型操作，包括==和 != 以及整数操作
       if (((type1 > 49 || operation == EQUAL || operation == NEQUAL) && type1 == type2) ||
               (isIntegerType(type1) && isIntegerType(type2) && operation >= BW_AND && operation <= BW_NOT)) {
         return doOperationsSameType(type1, val1, operation, val2);
       }
+      //确实是数字操作
       else if (isNumericOperation(type1, val1, operation, type2, val2)) {
         return doPrimWrapperArithmetic(getNumber(val1, type1),
             operation,
             getNumber(val2, type2), true, box(type2) > box(type1) ? box(type2) : box(type1));
       }
+      //非数学操作,并且2者有1个为boolean类型，则表示进行boolean的各项操作
       else if (operation != ADD &&
           (type1 == DataTypes.W_BOOLEAN || type2 == DataTypes.W_BOOLEAN) &&
           type1 != type2 && type1 != EMPTY && type2 != EMPTY) {
@@ -239,12 +252,15 @@ public strictfp class MathProcessor {
         || (operation != ADD && (type1 > 99 || type2 > 99 || operation < LTHAN || operation > GETHAN) && isNumber(val1) && isNumber(val2));
   }
 
+  /** 是否是整数类型 */
   private static boolean isIntegerType(int type) {
     return type == DataTypes.INTEGER || type == DataTypes.W_INTEGER || type == DataTypes.LONG || type == DataTypes.W_LONG;
   }
 
+  /** 非数字运算 */
   private static Object doOperationNonNumeric(int type1, final Object val1, final int operation, final Object val2) {
     switch (operation) {
+      //集合
       case ADD:
         if (type1 == DataTypes.COLLECTION) {
           List list = new ArrayList((Collection) val1);
@@ -261,6 +277,7 @@ public strictfp class MathProcessor {
       case NEQUAL:
         return safeNotEquals(val2, val1) ? Boolean.TRUE : Boolean.FALSE;
 
+      //数学运算如为比较 类型，则进行比较 操作，否则直接返回false
       case SUB:
       case DIV:
       case MULT:
@@ -354,8 +371,10 @@ public strictfp class MathProcessor {
     else return (val2 != null && !val2.equals(val1)) ? Boolean.TRUE : Boolean.FALSE;
   }
 
+  /** 同类型操作 */
   private static Object doOperationsSameType(int type1, Object val1, int operation, Object val2) {
     switch (type1) {
+      //集合操作，支持[] + []
       case DataTypes.COLLECTION:
         switch (operation) {
           case ADD:
@@ -373,6 +392,7 @@ public strictfp class MathProcessor {
             throw new UnsupportedOperationException("illegal operation on Collection type");
         }
 
+        //整数
       case DataTypes.INTEGER:
       case DataTypes.W_INTEGER:
         switch (operation) {
@@ -422,6 +442,7 @@ public strictfp class MathProcessor {
             return (Integer) val1 ^ (Integer) val2;
         }
 
+        //short类型
       case DataTypes.SHORT:
       case DataTypes.W_SHORT:
         switch (operation) {
@@ -465,6 +486,7 @@ public strictfp class MathProcessor {
             return (Short) val1 ^ (Short) val2;
         }
 
+        //long类型
       case DataTypes.LONG:
       case DataTypes.W_LONG:
         switch (operation) {
@@ -520,6 +542,7 @@ public strictfp class MathProcessor {
         val2 = ((Unit) val1).convertFrom(val2);
         val1 = ((Unit) val1).getValue();
 
+        //double类型
       case DataTypes.DOUBLE:
       case DataTypes.W_DOUBLE:
         switch (operation) {
@@ -556,6 +579,7 @@ public strictfp class MathProcessor {
             throw new RuntimeException("bitwise operation on a non-fixed-point number.");
         }
 
+        //float类型
       case DataTypes.FLOAT:
       case DataTypes.W_FLOAT:
         switch (operation) {
@@ -592,6 +616,7 @@ public strictfp class MathProcessor {
             throw new RuntimeException("bitwise operation on a non-fixed-point number.");
         }
 
+        //biginteger类型
       case DataTypes.BIG_INTEGER:
         switch (operation) {
           case ADD:
@@ -628,6 +653,7 @@ public strictfp class MathProcessor {
         }
 
 
+        //其它情况下，实现==和!=以及add操作,+号默认实现为字符串处理
       default:
         switch (operation) {
           case EQUAL:
@@ -663,6 +689,7 @@ public strictfp class MathProcessor {
     return type;
   }
 
+  /** 获取相应的数字形式 */
   private static Double getNumber(Object in, int type) {
     if (in == null || in == BlankLiteral.INSTANCE)
       return 0d;
@@ -705,6 +732,7 @@ public strictfp class MathProcessor {
   }
 
 
+  /** 将正常数字转换为一个内部表示的bigDecimal数字 */
   private static InternalNumber getInternalNumberFromType(Object in, int type) {
     if (in == null || in == BlankLiteral.INSTANCE)
       return new InternalNumber(0, MATH_CONTEXT);

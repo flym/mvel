@@ -21,6 +21,11 @@ package org.mvel2.optimizers.impl.refl.nodes;
 import org.mvel2.compiler.AccessorNode;
 import org.mvel2.integration.VariableResolverFactory;
 
+/**
+ * 对特定的属性this的一个表示
+ * <p/>
+ * this属性只能在一个表达式的起始点才能使用，在属性名中，如abc.this使用无效
+ */
 public class ThisValueAccessor implements AccessorNode {
   private AccessorNode nextNode;
 

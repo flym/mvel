@@ -35,9 +35,13 @@ import static org.mvel2.math.MathProcessor.doOperations;
 import static org.mvel2.util.CompilerTools.getReturnTypeFromOp;
 import static org.mvel2.util.ParseTools.boxPrimitive;
 
+/** 这里描述一个二元运算操作 */
 public class BinaryOperation extends BooleanNode {
+  /** 运算符 */
   private final int operation;
+  /** 左边类型 */
   private int lType = -1;
+  /** 右边类型 */
   private int rType = -1;
 
   public BinaryOperation(int operation, ParserContext ctx) {
@@ -59,6 +63,7 @@ public class BinaryOperation extends BooleanNode {
     switch (operation) {
       case Operator.ADD:
         /**
+         * 处理可能为字符串相加的情况
          * In the special case of Strings, the return type may leftward propogate.
          */
         if (left.getEgressType() == String.class || right.getEgressType() == String.class) {
@@ -73,6 +78,7 @@ public class BinaryOperation extends BooleanNode {
         egressType = getReturnTypeFromOp(operation, this.left.egressType, this.right.egressType);
         if (!ctx.isStrongTyping()) break;
 
+        //处理可能的左右类型转换
         if (!left.getEgressType().isAssignableFrom(right.getEgressType()) && !right.getEgressType().isAssignableFrom(left.getEgressType())) {
           if (right.isLiteral() && canConvert(left.getEgressType(), right.getEgressType())) {
             Class targetType = isAritmeticOperation(operation) ? egressType : left.getEgressType();
@@ -102,6 +108,7 @@ public class BinaryOperation extends BooleanNode {
     }
   }
 
+  /** 是否是算术操作，即基本的 +-* */
   private boolean isAritmeticOperation(int operation) {
     return operation <= Operator.POWER;
   }
@@ -131,6 +138,7 @@ public class BinaryOperation extends BooleanNode {
     return right != null && right instanceof BinaryOperation ? (BinaryOperation) right : null;
   }
 
+  /** 替换掉最右边的节点 如 a + b - c 增加一个 * d时，就把c替换为(c*d) */
   public void setRightMost(ASTNode right) {
     BinaryOperation n = this;
     while (n.right != null && n.right instanceof BinaryOperation) {
@@ -143,6 +151,7 @@ public class BinaryOperation extends BooleanNode {
     }
   }
 
+  /** 获取最右边的节点,如果右边仍是二元操作，继续靠右 */
   public ASTNode getRightMost() {
     BinaryOperation n = this;
     while (n.right != null && n.right instanceof BinaryOperation) {
@@ -151,6 +160,7 @@ public class BinaryOperation extends BooleanNode {
     return n.right;
   }
 
+  /** 获取相应的优先级 */
   public int getPrecedence() {
     return PTABLE[operation];
   }

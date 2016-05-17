@@ -6,11 +6,18 @@ import org.mvel2.compiler.AccessorNode;
 import org.mvel2.integration.VariableResolverFactory;
 import org.mvel2.optimizers.OptimizerFactory;
 
+/**
+ * 对象安全的访问器,即在具体的处理时，如果当前对象为null，则不再处理剩下的处理
+ * <p/>
+ * 如?a.b,如果a为null，则整体返回为null，而不是报NPE.这里表示a属性的值可能为null
+ */
 public class NullSafe implements AccessorNode {
+  /** 由当前节点包含的真实访问节点 */
   private AccessorNode nextNode;
   private char[] expr;
   private int start;
   private int offset;
+  /** 解析上下文 */
   private ParserContext pCtx;
 
   public NullSafe(char[] expr, int start, int offset, ParserContext pCtx) {
@@ -21,6 +28,7 @@ public class NullSafe implements AccessorNode {
   }
 
   public Object getValue(Object ctx, Object elCtx, VariableResolverFactory variableFactory) {
+    //当前对象为null，跳过
     if (ctx == null) return null;
     if (nextNode == null) {
       final Accessor a = OptimizerFactory.getAccessorCompiler(OptimizerFactory.SAFE_REFLECTIVE)
@@ -56,6 +64,7 @@ public class NullSafe implements AccessorNode {
   }
 
   public Object setValue(Object ctx, Object elCtx, VariableResolverFactory variableFactory, Object value) {
+    //当前对象为null，跳过
     if (ctx == null) return null;
     return nextNode.setValue(ctx, elCtx, variableFactory, value);
   }

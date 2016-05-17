@@ -78,6 +78,7 @@ public interface VariableResolverFactory extends Serializable {
   public VariableResolverFactory setNextFactory(VariableResolverFactory resolverFactory);
 
   /**
+   * 获取指定变量名的变量解析器
    * Return a variable resolver for the specified variable name.  This method is expected to traverse the
    * heirarchy of ResolverFactories.
    *
@@ -87,9 +88,11 @@ public interface VariableResolverFactory extends Serializable {
   public VariableResolver getVariableResolver(String name);
 
 
+  /** 根据之前存储的变量下标来获取相应的变量解析器 */
   public VariableResolver getIndexedVariableResolver(int index);
 
   /**
+   * 判断当前解析工厂是否就是指定属性的直接解析器(因为它有多个解析链)
    * Deterimines whether or not the current VariableResolverFactory is the physical target for the actual
    * variable.
    *
@@ -100,6 +103,7 @@ public interface VariableResolverFactory extends Serializable {
 
 
   /**
+   * 判定变量解析器是否能够解析此变量
    * Determines whether or not the variable is resolver in the chain of factories.
    *
    * @param name - variable name
@@ -116,11 +120,15 @@ public interface VariableResolverFactory extends Serializable {
    */
   public Set<String> getKnownVariables();
 
+  /** 读取指定属性或参数的索引下标位置(然后可以通过getIndexedVariableResolver来获取解析器进行处理) */
   public int variableIndexOf(String name);
 
+  /** 当前解析工厂是否是基于索引进行处理的 */
   public boolean isIndexedFactory();
 
+  /** 当前工厂是否已处理结束(如果已处理结束，则整个结果将返回) */
   public boolean tiltFlag();
 
+  /** 设置当前处理结束标记 */
   public void setTiltFlag(boolean tilt);
 }

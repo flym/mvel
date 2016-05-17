@@ -23,10 +23,13 @@ import org.mvel2.integration.Interceptor;
 import org.mvel2.integration.VariableResolverFactory;
 
 /**
+ * 表示一个拦截器节点，通过对一个节点的引用达到执行前调用和执行后调用的目的
  * @author Christopher Brock
  */
 public class InterceptorWrapper extends ASTNode {
+  /** 当前所使用的拦截器 */
   private Interceptor interceptor;
+  /** 当前所拦截的节点信息 */
   private ASTNode node;
 
   public InterceptorWrapper(Interceptor interceptor, ASTNode node, ParserContext pCtx) {

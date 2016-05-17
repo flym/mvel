@@ -25,9 +25,12 @@ import org.mvel2.integration.VariableResolverFactory;
 
 import java.lang.reflect.Field;
 
+/** 描述静态字段访问器，附带空值处理 */
 public class StaticVarAccessorNH implements AccessorNode {
   private AccessorNode nextNode;
+  /** 相应的字段 */
   Field field;
+  /** 空值处理器 */
   private PropertyHandler nullHandler;
 
   public Object getValue(Object ctx, Object elCtx, VariableResolverFactory vars) {

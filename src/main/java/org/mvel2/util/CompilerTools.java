@@ -2,16 +2,16 @@
  * MVEL 2.0
  * Copyright (C) 2007 The Codehaus
  * Mike Brock, Dhanji Prasanna, John Graham, Mark Proctor
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -58,6 +58,7 @@ import static org.mvel2.util.ParseTools.boxPrimitive;
 
 public class CompilerTools {
   /**
+   * 进行节点优化,包括运算节点转换，常量节点优化替换等
    * Finalize the payload, by reducing any stack-based-operations to dedicated nodes where possible.
    *
    * @param astLinkedList          - AST to be optimized.
@@ -67,41 +68,51 @@ public class CompilerTools {
    */
   public static ASTLinkedList finalizePayload(ASTLinkedList astLinkedList, boolean secondPassOptimization, ParserContext pCtx) {
     ASTLinkedList optimizedAst = new ASTLinkedList();
+    //操作对象A,操作符1,操作符2
     ASTNode tk, tkOp, tkOp2;
 
     /**
      * Re-process the AST and optimize it.
      */
     while (astLinkedList.hasMoreNodes()) {
+      //特定节点
       if ((tk = astLinkedList.nextNode()).getFields() == -1) {
         optimizedAst.addTokenNode(tk);
       }
+      //非末尾节点
       else if (astLinkedList.hasMoreNodes()) {
+        //继续特定节点
         if ((tkOp = astLinkedList.nextNode()).getFields() == -1) {
           optimizedAst.addTokenNode(tk, tkOp);
         }
+        //小于21,表示2个对象操作
         else if (tkOp.isOperator() && tkOp.getOperator() < 21) {
-          int op = tkOp.getOperator();
-          int op2;
+          int op = tkOp.getOperator();//操作符1
+          int op2;//操作符2
 
           if (op == -1) {
             throw new CompileException("illegal use of operator: " + tkOp.getName(), tkOp.getExpr(), tk.getStart());
           }
 
 
+          //操作数2
           ASTNode tk2 = astLinkedList.nextNode();
           BinaryOperation bo;
 
+          //如果2个都是数字，则直接进行内联优化,减少普通的运算类型判断
           if (tk.getEgressType() == Integer.class && tk2.getEgressType() == Integer.class) {
             bo = boOptimize(op, tk, tk2, pCtx);
           }
           else {
             /**
+             * 以下逻辑用于解决 二进制操作和加减法优先级问题
              * Let's see if we can simply the expression more.
              */
             bo = null;
 
+            //解决减法的问题，更换为 + -x
             boolean inv = tkOp.isOperator(Operator.SUB);
+            //处理加减法优先级问题
             boolean reduc = isReductionOpportunity(tkOp, tk2);
             boolean p_inv = false;
 
@@ -115,6 +126,7 @@ public class CompilerTools {
                   new LiteralNode(signNumber(tk2.getLiteralValue()), pCtx) : tk2, rightNode, pCtx)
                   .getReducedValueAccelerated(null, null, null);
 
+              //这里表示后面的运算结果为0,则忽略此2个节点
               if (!astLinkedList.hasMoreNodes() && BlankLiteral.INSTANCE.equals(val)) {
                 optimizedAst.addTokenNode(tk);
                 continue;
@@ -124,7 +136,10 @@ public class CompilerTools {
                   && (reducacbleOperator(astLinkedList.peekNode().getOperator()))
                   && astLinkedList.peekNext().isLiteral();
 
+              //这个地方因为如果前面是-号，那么在不继续的情况下，应该操作符应该换为 +号，在不更换操作符的情况号，只能更换操作数
+              //意思就是 - -x，其中第1个是原来的操作符
               if (inv) p_inv = true;
+              //因为已经处理了减法的切换，因此转换为加法
               inv = false;
 
               if (!reduc) {
@@ -135,6 +150,7 @@ public class CompilerTools {
               }
             }
 
+            //不能继续优化，则直接更换为二元操作
             if (bo == null)
               bo = new BinaryOperation(op, tk, tk2, pCtx);
           }
@@ -142,6 +158,8 @@ public class CompilerTools {
           tkOp2 = null;
 
           /**
+           * 以下解析乘法除法问题优先级问题,以及和加减法问题,同样涉及到优先级问题(实际上这段代码已经替换掉上面代码中的else部分)
+           * 以下逻辑涉及到3个操作符 bop,op,op2，其中bop表示在bo操作中的操作符,op表示在解析过程中上一次操作符，op2表示当前操作符
            * If we have a chain of math/comparitive operators then we fill them into the tree
            * right here.
            */
@@ -149,17 +167,24 @@ public class CompilerTools {
               && tkOp2.getFields() != -1 && (op2 = tkOp2.getOperator()) != -1 && op2 < 21) {
 
             if (PTABLE[op2] > PTABLE[op]) {
+              //优先级比上一次op更高，替换相应的操作数(先计算优先级更高的)
+              //这里实际的情况就是 a + b 和 * c 替换为 a + (b * c) 其中b*c为一个整体
               //       bo.setRightMost(new BinaryOperation(op2, bo.getRightMost(), astLinkedList.nextNode(), pCtx));
               bo.setRightMost(boOptimize(op2, bo.getRightMost(), astLinkedList.nextNode(), pCtx));
             }
+            //这里处理上一次优先级相同，但bo中原始的操作符不相同的情况
             else if (bo.getOperation() != op2 && PTABLE[op] == PTABLE[op2]) {
               if (PTABLE[bo.getOperation()] == PTABLE[op2]) {
+                //和bo中优先级一样，直接连接起来即可，如 a * b / c 换为 (a * b) / c
                 //     bo = new BinaryOperation(op2, bo, astLinkedList.nextNode(), pCtx);
                 bo = boOptimize(op2, bo, astLinkedList.nextNode(), pCtx);
               }
               else {
+                //这里即表示优先级为上一次优先级一样，但与bo不一样，就可以理解为这里的优先级比原来的bo中的优先级更高
+                //如 a + (b*c) / d，就更换为a + ((b * c) / d)
                 tk2 = astLinkedList.nextNode();
 
+                //这句话什么意思...
                 if (isIntOptimizationviolation(bo, tk2)) {
                   bo = new BinaryOperation(bo.getOperation(), bo.getLeft(), bo.getRight(), pCtx);
                 }
@@ -168,9 +193,11 @@ public class CompilerTools {
               }
             }
             else if (PTABLE[bo.getOperation()] >= PTABLE[op2]) {
+              //bo中优先级更高，直接连接起即可
               bo = new BinaryOperation(op2, bo, astLinkedList.nextNode(), pCtx);
             }
             else {
+              //bo中优先级更小，那么连接右边逻辑
               tk2 = astLinkedList.nextNode();
 
               if (isIntOptimizationviolation(bo, tk2)) {
@@ -186,6 +213,7 @@ public class CompilerTools {
 
 
           if (tkOp2 != null && tkOp2 != tkOp) {
+            //这里表示操作符不是数学运算的情况,则按正常处理逻辑来执行
             optimizeOperator(tkOp2.getOperator(), bo, tkOp2, astLinkedList, optimizedAst, pCtx);
           }
           else {
@@ -193,12 +221,15 @@ public class CompilerTools {
           }
         }
         else if (tkOp.isOperator()) {
+          //普通运算操作
           optimizeOperator(tkOp.getOperator(), tk, tkOp, astLinkedList, optimizedAst, pCtx);
         }
         else if (!tkOp.isAssignment() && !tkOp.isOperator() && tk.getLiteralValue() instanceof Class) {
+          //普通ast转换为类型声明
           optimizedAst.addTokenNode(new DeclTypedVarNode(tkOp.getName(), tkOp.getExpr(), tkOp.getStart(), tk.getOffset(), (Class) tk.getLiteralValue(), 0, pCtx));
         }
         else if (tkOp.isAssignment() && tk.getLiteralValue() instanceof Class) {
+          //如果类似为 Object obj = xxx;这种，第1个Object没有意义，可以忽略掉
           tk.discard();
           optimizedAst.addTokenNode(tkOp);
         }
@@ -212,6 +243,7 @@ public class CompilerTools {
           optimizedAst.addTokenNode(tk);
         }
       }
+      //末尾节点
       else {
         optimizedAst.addTokenNode(tk);
       }
@@ -219,25 +251,30 @@ public class CompilerTools {
 
     if (secondPassOptimization) {
       /**
+       * boolean条件优化
        * Perform a second pass optimization for boolean conditions.
        */
       (astLinkedList = optimizedAst).reset();
       optimizedAst = new ASTLinkedList();
 
       while (astLinkedList.hasMoreNodes()) {
+        //特殊节点忽略
         if ((tk = astLinkedList.nextNode()).getFields() == -1) {
           optimizedAst.addTokenNode(tk);
         }
         else if (astLinkedList.hasMoreNodes()) {
+          //特殊节点
           if ((tkOp = astLinkedList.nextNode()).getFields() == -1) {
             optimizedAst.addTokenNode(tk, tkOp);
           }
+          //处理boolean型操作
           else if (tkOp.isOperator()
               && (tkOp.getOperator() == Operator.AND || tkOp.getOperator() == Operator.OR)) {
 
             tkOp2 = null;
             BooleanNode bool;
 
+            //转换为and 和 or节点
             if (tkOp.getOperator() == Operator.AND) {
               bool = new And(tk, astLinkedList.nextNode(), pCtx.isStrongTyping(), pCtx);
             }
@@ -245,6 +282,7 @@ public class CompilerTools {
               bool = new Or(tk, astLinkedList.nextNode(), pCtx.isStrongTyping(), pCtx);
             }
 
+            //因为and的优先级更高，因此在整个处理过程中，需要将and优先级提高，与原先的右节点相匹配，而or节点则直接对接即可
             while (astLinkedList.hasMoreNodes() && (tkOp2 = astLinkedList.nextNode()).isOperator()
                 && (tkOp2.isOperator(Operator.AND) || tkOp2.isOperator(Operator.OR))) {
 
@@ -267,6 +305,7 @@ public class CompilerTools {
             optimizedAst.addTokenNode(tk, tkOp);
           }
         }
+        //末尾的节点
         else {
           optimizedAst.addTokenNode(tk);
         }
@@ -276,6 +315,7 @@ public class CompilerTools {
     return optimizedAst;
   }
 
+  /** 整数计算优化 */
   private static BinaryOperation boOptimize(int op, ASTNode tk, ASTNode tk2, ParserContext pCtx) {
     if (tk.getEgressType() == Integer.class && tk2.getEgressType() == Integer.class) {
       switch (op) {
@@ -300,6 +340,7 @@ public class CompilerTools {
     }
   }
 
+  /** 判断当前操作符是否后面有 加减法操作，并且当前操作优先级比后面操作优先级低(或相同) */
   private static boolean isReductionOpportunity(ASTNode oper, ASTNode node) {
     ASTNode n = node;
     return (n != null && n.isLiteral()
@@ -308,6 +349,7 @@ public class CompilerTools {
         && (n = n.nextASTNode) != null && n.isLiteral() && n.getLiteralValue() instanceof Number);
   }
 
+  /** 判断操作符是否可降权处理(即可继续处理),就是是否是加减法 */
   private static boolean reducacbleOperator(int oper) {
     switch (oper) {
       case Operator.ADD:
@@ -318,6 +360,7 @@ public class CompilerTools {
     return false;
   }
 
+  /** 处理非数学运算的情况 */
   private static void optimizeOperator(int operator, ASTNode tk, ASTNode tkOp,
                                        ASTLinkedList astLinkedList,
                                        ASTLinkedList optimizedAst,
@@ -407,8 +450,10 @@ public class CompilerTools {
     }
   }
 
+  /** 根据操作符以及左边类型和右边类型，推断整个结果的返回类型 */
   public static Class getReturnTypeFromOp(int operation, Class left, Class right) {
     switch (operation) {
+      //boolean 型操作
       case Operator.LETHAN:
       case Operator.LTHAN:
       case Operator.GETHAN:
@@ -421,18 +466,20 @@ public class CompilerTools {
       case Operator.CONVERTABLE_TO:
         return Boolean.class;
 
+      //4符混合运算，则返回宽化类型
       case Operator.ADD:
-        if (left == String.class) return String.class;
+        if (left == String.class) return String.class;//特殊处理字符串问题
       case Operator.SUB:
       case Operator.MULT:
       case Operator.POWER:
       case Operator.MOD:
       case Operator.DIV:
-            if (left == Object.class || right == Object.class)
+        if (left == Object.class || right == Object.class)
           return Object.class;
         else
           return __resolveType(boxPrimitive(left)) < __resolveType(boxPrimitive(right)) ? right : left;
 
+        //二进制操作，均返回整数
       case Operator.BW_AND:
       case Operator.BW_OR:
       case Operator.BW_XOR:
@@ -443,6 +490,7 @@ public class CompilerTools {
       case Operator.BW_NOT:
         return Integer.class;
 
+      //字符串拼接，返回字符串
       case Operator.STR_APPEND:
         return String.class;
     }

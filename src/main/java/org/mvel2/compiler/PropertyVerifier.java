@@ -49,14 +49,19 @@ public class PropertyVerifier extends AbstractOptimizer {
 
   private List<String> inputs = new LinkedList<String>();
   private boolean first = false;
+  /** 是否是类常量 */
   private boolean classLiteral = false;
+  /** 是否需要外部参与解析(如变量工厂处理) */
   private boolean resolvedExternally;
+  /** 当前属性是否是方法调用 */
   private boolean methodCall = false;
+  /** 是否有多层属性调用,如a.b.c */
   private boolean deepProperty = false;
   private boolean fqcn = false;
 
   private Map<String, Type> paramTypes;
 
+  /** 当前上下文类型信息,即表示当前验证的表达式的类型 */
   private Class ctx = null;
 
   public PropertyVerifier(char[] property, ParserContext parserContext) {
@@ -98,6 +103,7 @@ public class PropertyVerifier extends AbstractOptimizer {
   }
 
   /**
+   * 分析当前的值，并且返回相应的返回类型
    * Analyze the statement and return the known egress type.
    *
    * @return known engress type

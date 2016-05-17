@@ -5,9 +5,13 @@ import org.mvel2.integration.PropertyHandler;
 import org.mvel2.integration.VariableResolverFactory;
 
 
+/** 使用属性处理器来进行属性访问的访问器 */
 public class PropertyHandlerAccessor extends BaseAccessor {
+  /** 属性名 */
   private String propertyName;
+  /** 对应的处理器 */
   private PropertyHandler propertyHandler;
+  /** 当前所支持的类型 */
   private Class conversionType;
 
   public PropertyHandlerAccessor(String propertyName, Class conversionType, PropertyHandler propertyHandler) {
@@ -17,6 +21,7 @@ public class PropertyHandlerAccessor extends BaseAccessor {
   }
 
   public Object getValue(Object ctx, Object elCtx, VariableResolverFactory variableFactory) {
+    //如果类型与处理类型不一致，则使用原生的处理方式(不再由当前处理)
     if (!conversionType.isAssignableFrom(ctx.getClass())) {
       if (nextNode != null) {
         return nextNode.getValue(MVEL.getProperty(propertyName, ctx), elCtx, variableFactory);
@@ -25,6 +30,7 @@ public class PropertyHandlerAccessor extends BaseAccessor {
         return MVEL.getProperty(propertyName, ctx);
       }
     }
+    //正常的处理流程
     try {
       if (nextNode != null) {
         return nextNode.getValue(propertyHandler.getProperty(propertyName, ctx, variableFactory), elCtx, variableFactory);

@@ -29,6 +29,7 @@ import static org.mvel2.util.CompilerTools.expectType;
 import static org.mvel2.util.ParseTools.subCompileExpression;
 
 /**
+ * 实现与while一致
  * @author Christopher Brock
  */
 public class UntilNode extends BlockNode {

@@ -22,11 +22,16 @@ import org.mvel2.ast.ASTNode;
 import org.mvel2.ast.TypeCast;
 import org.mvel2.integration.VariableResolverFactory;
 
+/** 描述一下通过节点进行处理的执行访问器(其实就是对astNode的封装) */
 public class ExecutableAccessor implements ExecutableStatement {
+  /** 所引用的节点 */
   private ASTNode node;
 
+  /** 入参类型 */
   private Class ingress;
+  /** 出参类型 */
   private Class egress;
+  /** 当前运行是否需要转换(即入参，出参转型) */
   private boolean convertable;
 
   public ExecutableAccessor(ASTNode node, Class egress) {

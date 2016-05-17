@@ -25,6 +25,7 @@ import org.mvel2.integration.VariableResolverFactory;
 import static org.mvel2.MVEL.executeSetExpression;
 
 /**
+ * 描述将当前节点作为上下文进行with操作的节点
  * @author Christopher Brock
  */
 public class ThisWithNode extends WithNode {

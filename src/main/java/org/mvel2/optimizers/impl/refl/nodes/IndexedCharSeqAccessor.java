@@ -21,9 +21,11 @@ package org.mvel2.optimizers.impl.refl.nodes;
 import org.mvel2.compiler.AccessorNode;
 import org.mvel2.integration.VariableResolverFactory;
 
+/** 处理对字符串的下标处理调用，如'abcd'[1] 将返回 b */
 public class IndexedCharSeqAccessor implements AccessorNode {
   private AccessorNode nextNode;
 
+  /** 下标值 */
   private int index;
 
   public IndexedCharSeqAccessor() {
@@ -43,6 +45,7 @@ public class IndexedCharSeqAccessor implements AccessorNode {
   }
 
   public Object setValue(Object ctx, Object elCtx, VariableResolverFactory variableFactory, Object value) {
+    //因为字符串不可变，因此这里不再判定是否有nextNode了，因为必须存在
     return nextNode.setValue(((String) ctx).charAt(index), elCtx, variableFactory, value);
   }
 

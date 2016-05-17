@@ -34,16 +34,19 @@ import static org.mvel2.MVELRuntime.execute;
 import static org.mvel2.optimizers.OptimizerFactory.setThreadAccessorOptimizer;
 
 public class CompiledExpression implements Serializable, ExecutableStatement {
+  /** 当前表达式第一个节点(剩下的信息通过第1个节点来调用) */
   private ASTNode firstNode;
 
   private Class knownEgressType;
   private Class knownIngressType;
 
   private boolean convertableIngressEgress;
+  /** 表示当前表达式是否已经经过优化处理,未优化则必须经过优化才能处理(即设置访问优化器) */
   private boolean optimized = false;
   private boolean importInjectionRequired = false;
   private boolean literalOnly;
 
+  /** 在当前执行过程中使用的优化器(或者是当前表达式使用的优化器) */
   private Class<? extends AccessorOptimizer> accessorOptimizer;
 
   private String sourceName;

@@ -44,7 +44,9 @@ import static org.mvel2.util.ParseTools.forNameWithInner;
 public class ParserConfiguration implements Serializable {
   private static final int MAX_NEGATIVE_CACHE_SIZE;
 
+  /** 使用到的引用的类名或方法名(不全是类名) */
   protected Map<String, Object> imports;
+  /** 使用到的引用的包名 */
   protected HashSet<String> packageImports;
   protected Map<String, Interceptor> interceptors;
   protected transient ClassLoader classLoader;

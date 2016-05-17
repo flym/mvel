@@ -29,15 +29,25 @@ import static org.mvel2.DataConversion.convert;
 import static org.mvel2.util.ParseTools.getBestCandidate;
 
 
+/**
+ * 描述调用方法的访问器，并且带有空值处理
+ * 处理逻辑与MethodAccessor一致
+ */
 public class MethodAccessorNH implements AccessorNode {
   private AccessorNode nextNode;
 
+  /** 方法 */
   private Method method;
+  /** 参数类型信息 */
   private Class[] parameterTypes;
+  /** 表示参数的计算单元信息 */
   private ExecutableStatement[] parms;
+  /** 参数有效长度 */
   private int length;
+  /** 是否需要可变参数处理 */
   private boolean coercionNeeded = false;
 
+  /** 相应的空值处理器 */
   private PropertyHandler nullHandler;
 
   public Object getValue(Object ctx, Object elCtx, VariableResolverFactory vars) {

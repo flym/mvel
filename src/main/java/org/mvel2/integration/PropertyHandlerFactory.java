@@ -21,11 +21,15 @@ package org.mvel2.integration;
 import java.util.HashMap;
 import java.util.Map;
 
+/** 用于描述针对特定类的属性处理器,即采用属性处理器来代替指定的类的属性访问 */
 public class PropertyHandlerFactory {
+  /** 类型映射 */
   protected static Map<Class, PropertyHandler> propertyHandlerClass =
       new HashMap<Class, PropertyHandler>();
 
+  /** 空属性处理器,指当属性返回值为null时处理 */
   protected static PropertyHandler nullPropertyHandler;
+  /** 空方法处理器,指当方法返回值为null时处理 */
   protected static PropertyHandler nullMethodHandler;
 
   public static PropertyHandler getPropertyHandler(Class clazz) {

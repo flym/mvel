@@ -21,8 +21,10 @@ package org.mvel2.optimizers.impl.refl.nodes;
 import org.mvel2.compiler.AccessorNode;
 import org.mvel2.integration.VariableResolverFactory;
 
+/** 表示对变量信息的访问 */
 public class VariableAccessor implements AccessorNode {
   private AccessorNode nextNode;
+  /** 变量名 */
   private String property;
 
   public VariableAccessor(String property) {

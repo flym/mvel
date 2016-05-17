@@ -25,6 +25,7 @@ import org.mvel2.integration.VariableResolverFactory;
 import org.mvel2.optimizers.AccessorOptimizer;
 import org.mvel2.optimizers.OptimizerFactory;
 
+/** 表示基于主节点然后再继续香处理的节点信息,通常用于表示主节点之后的某个属性调用或者方法调用 */
 public class Union extends ASTNode {
   private ASTNode main;
   private transient Accessor accessor;

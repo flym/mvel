@@ -20,6 +20,7 @@ package org.mvel2.integration;
 import org.mvel2.ast.ASTNode;
 
 /**
+ * 拦截器，用于执行某些额外的操作，在代码中通过 @name的方式进行调用
  * An interceptor can be used to decorate functionality into an expression or to hook into external functionality, such
  * as to log an event or fire some other event.
  *

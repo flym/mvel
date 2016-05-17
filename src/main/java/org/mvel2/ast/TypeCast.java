@@ -29,8 +29,11 @@ import static org.mvel2.MVEL.eval;
 import static org.mvel2.util.ParseTools.subCompileExpression;
 import static org.mvel2.util.ReflectionUtil.isAssignableFrom;
 
+/** 表示一个类型转换的转换节点 */
 public class TypeCast extends ASTNode {
+  /** 待转换的类型的表达式信息 */
   private ExecutableStatement statement;
+  /** 是否是宽转换，表示从子类型转换为父类型 */
   private boolean widen;
 
   public TypeCast(char[] expr, int start, int offset, Class cast, int fields, ParserContext pCtx) {

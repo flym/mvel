@@ -25,9 +25,12 @@ import org.mvel2.compiler.ExecutableStatement;
  * @author Christopher Brock
  */
 public class BlockNode extends ASTNode {
+  /** 当前语法块起始点 */
   protected int blockStart;
+  /** 当前语法块结束点 */
   protected int blockOffset;
 
+  /** 表示当前的执行块 */
   protected ExecutableStatement compiledBlock;
 
   public BlockNode(ParserContext pCtx) {

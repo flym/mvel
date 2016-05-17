@@ -23,9 +23,11 @@ import org.mvel2.compiler.ExecutableStatement;
 import org.mvel2.integration.VariableResolverFactory;
 
 /**
+ * 表示一个在当前上下文中具体指定参数顺序的var节点,用于对象声明
  * @author Christopher Brock
  */
 public class IndexedDeclTypedVarNode extends ASTNode implements Assignment {
+  /** 当前声明变量在上下文参数中的位置(入参或本地变量) */
   private int register;
 
   public IndexedDeclTypedVarNode(int register, int start, int offset, Class type, ParserContext pCtx) {

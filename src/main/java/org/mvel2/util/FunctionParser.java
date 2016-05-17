@@ -7,14 +7,21 @@ import org.mvel2.ast.Function;
 
 import static org.mvel2.util.ParseTools.balancedCaptureWithLineAccounting;
 
+/** 函数解析器 */
 public class FunctionParser {
+  /** 当前函数名 */
   private String name;
 
+  /** 当前解析位置 */
   private int cursor;
+  /** 最大解析长度 */
   private int length;
 
+  /** 当前解析标识 */
   private int fields;
+  /** 解析串 */
   private char[] expr;
+  /** 上下文 */
   private ParserContext pCtx;
 
   private ExecutionStack splitAccumulator;
@@ -50,8 +57,10 @@ public class FunctionParser {
 
     cursor = ParseTools.captureToNextTokenJunction(expr, cursor, end, pCtx);
 
+    //该函数有相应的参数定义信息
     if (expr[cursor = ParseTools.nextNonBlank(expr, cursor)] == '(') {
       /**
+       * 这里因为是(，表示有参数定义了，这里找到()之内的定义信息
        * If we discover an opening bracket after the function name, we check to see
        * if this function accepts parameters.
        */
@@ -65,9 +74,11 @@ public class FunctionParser {
         throw new CompileException("incomplete statement", expr, cursor);
       }
       else if (expr[cursor] == '{') {
+        //具备{，表示是多条指令的定义主体
         blockEnd = cursor = balancedCaptureWithLineAccounting(expr, blockStart = cursor, end, '{', pCtx);
       }
       else {
+        //这里没有 {，即表示只有单条定义指令
         blockStart = cursor - 1;
         cursor = ParseTools.captureToEOS(expr, cursor, end, pCtx);
         blockEnd = cursor;
@@ -75,6 +86,7 @@ public class FunctionParser {
     }
     else {
       /**
+       * 没有参数定义，按照有 { 和没有{的两种处理逻辑
        * This function has not parameters.
        */
       if (expr[cursor] == '{') {
@@ -102,6 +114,7 @@ public class FunctionParser {
     cursor++;
 
     /**
+     * 没有结束点，这里手动地添加一个截止标记
      * Check if the function is manually terminated.
      */
     if (splitAccumulator != null && ParseTools.isStatementNotManuallyTerminated(expr, cursor)) {

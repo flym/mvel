@@ -53,6 +53,7 @@ public class ASTLinkedList implements ASTIterator {
     }
   }
 
+  /** 入栈2个节点 */
   public void addTokenNode(ASTNode astNode, ASTNode token2) {
     size += 2;
 
@@ -161,6 +162,7 @@ public class ASTLinkedList implements ASTIterator {
     this.current = node;
   }
 
+  /** 去掉中间被废掉的节点重新处理整个调用链 */
   public void finish() {
     reset();
 

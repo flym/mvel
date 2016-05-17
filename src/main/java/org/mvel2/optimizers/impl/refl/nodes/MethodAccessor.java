@@ -26,11 +26,15 @@ import java.lang.reflect.Method;
 import static org.mvel2.util.ParseTools.getBestCandidate;
 import static org.mvel2.util.ParseTools.getWidenedTarget;
 
+/** 表示方法访问器，通过方法调用来进行处理 */
 public class MethodAccessor extends InvokableAccessor {
 
+  /** 所引用的方法信息 */
   private Method method;
 
   public Object getValue(Object ctx, Object elCtx, VariableResolverFactory vars) {
+    //通过可变参数和不可变分别处理,同时还要考虑方法重载的问题
+    //如方法名为 getAbc(long abc)，但实际参数为getAbc(int)，则可能还存在方法getAbc(int)
     if (!coercionNeeded) {
       try {
         if (nextNode != null) {
@@ -82,6 +86,7 @@ public class MethodAccessor extends InvokableAccessor {
     }
   }
 
+  /** 重新使用重写过的方法来执行相应的方法调用 */
   private Object executeOverrideTarget(Method o, Object ctx, Object elCtx, VariableResolverFactory vars) {
     if (!coercionNeeded) {
       try {
@@ -124,6 +129,7 @@ public class MethodAccessor extends InvokableAccessor {
     }
   }
 
+  /** 处理参数 */
   private Object[] executeAll(Object ctx, VariableResolverFactory vars, Method m) {
     if (length == 0) return GetterAccessor.EMPTY;
 

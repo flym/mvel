@@ -27,10 +27,15 @@ import org.mvel2.util.ParseTools;
 import static org.mvel2.MVEL.eval;
 import static org.mvel2.util.ParseTools.subCompileExpression;
 
+/** 描述变量赋值的操作节点 */
 public class OperativeAssign extends ASTNode {
+  /** 变量名 */
   private String varName;
+  /** = 后面的表达式 */
   private ExecutableStatement statement;
+  /** 操作符 */
   private final int operation;
+  /** 已知当前属性的入参类型(即如果此变量被传入其它操作) 如 a+= 3，即为a = a + 3，在后面的a + 3中，需要知道a的类型值 */
   private int knownInType = -1;
 
   public OperativeAssign(String variableName, char[] expr, int start, int offset, int operation, int fields, ParserContext pCtx) {
@@ -48,6 +53,7 @@ public class OperativeAssign extends ASTNode {
         knownInType = ParseTools.__resolveType(egressType);
       }
 
+      //在上下文中注册类型，以方便了解当前对象类型信息
       if (!pCtx.hasVarOrInput(varName)) {
         pCtx.addInput(varName, egressType);
       }

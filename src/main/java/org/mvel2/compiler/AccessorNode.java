@@ -20,8 +20,11 @@ package org.mvel2.compiler;
 
 import java.io.Serializable;
 
+/** 带有引用信息的节点器,通过节点连接达到多次调用的目的，如a.b.c，就可以通过这种方式来进行处理 */
 public interface AccessorNode extends Accessor, Serializable {
+  /** 获取下一个节点 */
   public AccessorNode getNextNode();
 
+  /** 设置下一个节点 */
   public AccessorNode setNextNode(AccessorNode accessorNode);
 }

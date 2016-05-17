@@ -22,8 +22,10 @@ import org.mvel2.compiler.AccessorNode;
 import org.mvel2.compiler.ExecutableStatement;
 import org.mvel2.integration.VariableResolverFactory;
 
+/** 字符串下标访问，下标值为执行单元的访问器 */
 public class IndexedCharSeqAccessorNest implements AccessorNode {
   private AccessorNode nextNode;
+  /** 下标执行单元 */
   private ExecutableStatement index;
 
   public IndexedCharSeqAccessorNest() {

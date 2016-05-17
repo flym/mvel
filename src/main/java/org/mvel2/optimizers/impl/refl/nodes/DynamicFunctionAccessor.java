@@ -23,6 +23,7 @@ import org.mvel2.compiler.Accessor;
 import org.mvel2.integration.VariableResolverFactory;
 
 
+/** 动态函数调用，表示当前的函数由ctx提供(即ctx即函数句柄),当前只需要直接调用相应函数即可 */
 public class DynamicFunctionAccessor extends BaseAccessor {
   // private Function function;
   private Accessor[] parameters;

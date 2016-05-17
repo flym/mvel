@@ -29,10 +29,16 @@ import org.mvel2.util.ParseTools;
 import static org.mvel2.util.ParseTools.findClassImportResolverFactory;
 
 /**
+ * 描述一个引入特定类以及指定包的节点
+ * 引入包 import abc.*;
+ * 引入类 import ab.T2;
+ *
  * @author Christopher Brock
  */
 public class ImportNode extends ASTNode {
+  /** 当前引入的类名(如果是引入类) */
   private Class importClass;
+  /** 当前是否是引入包名 */
   private boolean packageImport;
   private int _offset;
 
@@ -46,6 +52,7 @@ public class ImportNode extends ASTNode {
     this.pCtx = pCtx;
 
     if (ParseTools.endsWith(expr, start, offset, WC_TEST)) {
+      //引入包
       packageImport = true;
       _offset = (short) ParseTools.findLast(expr, start, offset, '.');
       if (_offset == -1) {

@@ -23,8 +23,10 @@ import org.mvel2.integration.VariableResolverFactory;
 
 import java.util.List;
 
+/** list集合访问器 */
 public class ListAccessor implements AccessorNode {
   private AccessorNode nextNode;
+  /** 下标 */
   private int index;
 
 

@@ -29,10 +29,13 @@ import static org.mvel2.util.CompilerTools.expectType;
 import static org.mvel2.util.ParseTools.subCompileExpression;
 
 /**
+ * 处理while循环的节点
  * @author Christopher Brock
  */
 public class WhileNode extends BlockNode {
+  /** 此字段无用 */
   protected String item;
+  /** while条件值 */
   protected ExecutableStatement condition;
 
   public WhileNode(char[] expr, int start, int offset, int blockStart, int blockEnd, int fields, ParserContext pCtx) {

@@ -24,10 +24,14 @@ import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+/** 表示一个方法句柄，可以通过import引用起来 */
 public class MethodStub implements StaticStub {
+  /** 当前方法所对应的方法 */
   private Class classReference;
+  /** 方法名 */
   private String name;
 
+  /** 当前方法 */
   private transient Method method;
 
   public MethodStub(Method method) {

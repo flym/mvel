@@ -25,10 +25,13 @@ import org.mvel2.integration.VariableResolverFactory;
 
 import java.util.*;
 
+/** 用于保存类名与真实类信息的变量解析工厂,即拿来解析类名信息 */
 public class ClassImportResolverFactory extends BaseVariableResolverFactory {
+  /** 引用的包名 */
   private Set<String> packageImports;
   private ClassLoader classLoader;
   private Map<String, Object> imports;
+  /** 类名引用 */
   private Map<String, Object> dynImports;
   
   public ClassImportResolverFactory(ParserConfiguration pCfg, VariableResolverFactory nextFactory, boolean compiled) {

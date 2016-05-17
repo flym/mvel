@@ -21,6 +21,7 @@ package org.mvel2.integration;
 import java.io.Serializable;
 
 /**
+ * 用于操作变量的变量解析器，用于读取，写入以及存储相应的值，可以理解为valueHolder
  * A variable resolver is responsible for physically accessing a variable, for either read or write.  VariableResolver's
  * are obtained via a {@link org.mvel2.integration.VariableResolverFactory}.
  */

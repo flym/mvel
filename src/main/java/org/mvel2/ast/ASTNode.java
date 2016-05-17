@@ -2,16 +2,16 @@
  * MVEL 2.0
  * Copyright (C) 2007 The Codehaus
  * Mike Brock, Dhanji Prasanna, John Graham, Mark Proctor
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -36,13 +36,21 @@ import static org.mvel2.optimizers.OptimizerFactory.*;
 import static org.mvel2.util.CompilerTools.getInjectedImports;
 import static org.mvel2.util.ParseTools.*;
 
+/**
+ * 通用节点描述，当前节点也可以通过一些判定，判定为其它节点，以提供节点之间的转换操作
+ */
 @SuppressWarnings({"ManualArrayCopy", "CaughtExceptionImmediatelyRethrown"})
 public class ASTNode implements Cloneable, Serializable {
+  /** 该节点为文本节点 */
   public static final int LITERAL = 1;
   public static final int DEEP_PROPERTY = 1 << 1;
+  /** 该节点为操作节点 */
   public static final int OPERATOR = 1 << 2;
+  /** 变量节点 */
   public static final int IDENTIFIER = 1 << 3;
+  /** 表示当前处于编译阶段,是一个中间状态值 */
   public static final int COMPILE_IMMEDIATE = 1 << 4;
+  /** 数字节点 */
   public static final int NUMERIC = 1 << 5;
 
   public static final int INVERT = 1 << 6;
@@ -50,6 +58,7 @@ public class ASTNode implements Cloneable, Serializable {
 
   public static final int COLLECTION = 1 << 8;
   public static final int THISREF = 1 << 9;
+  /** 内联的集合,即{12,3,4} 这种数据 */
   public static final int INLINE_COLLECTION = 1 << 10;
 
   public static final int BLOCK_IF = 1 << 11;
@@ -65,6 +74,7 @@ public class ASTNode implements Cloneable, Serializable {
 
   public static final int FQCN = 1 << 20;
 
+  /** 表示当前节点为StackLang类型 */
   public static final int STACKLANG = 1 << 22;
 
   public static final int DEFERRED_TYPE_RES = 1 << 23;
@@ -72,9 +82,11 @@ public class ASTNode implements Cloneable, Serializable {
   public static final int PCTX_STORED = 1 << 25;
   public static final int ARRAY_TYPE_LITERAL = 1 << 26;
 
+  /** 取消优化 */
   public static final int NOJIT = 1 << 27;
   public static final int DEOP = 1 << 28;
 
+  /** 表示当前节点应该被废掉 */
   public static final int DISCARD = 1 << 29;
 
 
@@ -83,25 +95,34 @@ public class ASTNode implements Cloneable, Serializable {
   protected int firstUnion;
   protected int endOfName;
 
+  /** 描述当前节点的解析属性值 */
   public int fields = 0;
 
+  /** 当前节点的处理类型 */
   protected Class egressType;
+  /** 描述当前节点所引用的字符串 */
   protected char[] expr;
+  /** 有效值字符串起始位 */
   protected int start;
+  /** 有效值字符串有效位长度 */
   protected int offset;
 
+  /** 当前节点缓存的名称值(即当前节点的一个name属性，如变量名等) */
   protected String nameCache;
 
   protected Object literal;
 
+  /** 当前节点的值访问器 */
   protected transient volatile Accessor accessor;
   protected volatile Accessor safeAccessor;
 
   protected int cursorPosition;
   public ASTNode nextASTNode;
 
+  /** 当前解析上下文 */
   protected ParserContext pCtx;
 
+  /** 获取相应的执行值，采用快速优化模式运行 */
   public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
     if (accessor != null) {
       try {
@@ -179,6 +200,7 @@ public class ASTNode implements Cloneable, Serializable {
   }
 
 
+  /** 获取相应的执行值，采用解释模式运行 */
   public Object getReducedValue(Object ctx, Object thisValue, VariableResolverFactory factory) {
     if ((fields & (LITERAL)) != 0) {
       return literal;
@@ -254,6 +276,7 @@ public class ASTNode implements Cloneable, Serializable {
 
   @SuppressWarnings({"SuspiciousMethodCalls"})
   protected void setName(char[] name) {
+    //判断当前字符串是否是一个数字，如果是数字，则设置相应的标记
     if (isNumber(name, start, offset)) {
       egressType = (literal = handleNumericConversion(name, start, offset)).getClass();
       if (((fields |= NUMERIC | LITERAL | IDENTIFIER) & INVERT) != 0) {
@@ -308,10 +331,12 @@ public class ASTNode implements Cloneable, Serializable {
     return this.accessor = accessor;
   }
 
+  /** 表示当前节点是否是变量节点 */
   public boolean isIdentifier() {
     return (fields & IDENTIFIER) != 0;
   }
 
+  /** 表示当前节点是否是常量节点 */
   public boolean isLiteral() {
     return (fields & LITERAL) != 0;
   }
@@ -320,14 +345,17 @@ public class ASTNode implements Cloneable, Serializable {
     return (fields & THISREF) != 0;
   }
 
+  /** 当前节点是否是操作符节点 */
   public boolean isOperator() {
     return (fields & OPERATOR) != 0;
   }
 
+  /** 当前节点是操作节点并且是指定的运算符 */
   public boolean isOperator(Integer operator) {
     return (fields & OPERATOR) != 0 && operator.equals(literal);
   }
 
+  /** 获取当前节点的操作符，默认情况下为 NOOP，表示不作任何操作 */
   public Integer getOperator() {
     return NOOP;
   }

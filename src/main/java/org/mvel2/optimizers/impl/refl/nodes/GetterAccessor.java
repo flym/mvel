@@ -28,8 +28,10 @@ import static org.mvel2.MVEL.getProperty;
 import static org.mvel2.util.ParseTools.getBestCandidate;
 import static org.mvel2.util.ReflectionUtil.getPropertyFromAccessor;
 
+/** 表示访问一个getter方法 访问器 */
 public class GetterAccessor implements AccessorNode {
   private AccessorNode nextNode;
+  /** 所对应的方法 */
   private final Method method;
 
   public static final Object[] EMPTY = new Object[0];
@@ -44,6 +46,7 @@ public class GetterAccessor implements AccessorNode {
       }
     }
     catch (IllegalArgumentException e) {
+      //这里处理类型不匹配 的问题，即method的调用者不正确，因此这里重新获取相应的方法信息进行处理
       if (ctx != null && method.getDeclaringClass() != ctx.getClass()) {
         Method o = getBestCandidate(EMPTY, method.getName(), ctx.getClass(), ctx.getClass().getMethods(), true);
         if (o != null) {
@@ -52,6 +55,7 @@ public class GetterAccessor implements AccessorNode {
       }
 
       /**
+       * 仍然不行，则退化到使用属性访问的方式来处理
        * HACK: Try to access this another way.
        */
       if (nextNode != null) {

@@ -27,21 +27,29 @@ import org.mvel2.optimizers.OptimizerFactory;
 
 import static java.lang.System.currentTimeMillis;
 
+/** 用于执行get访问的动态访问器(如字段读取，方法调用等) */
 public class DynamicGetAccessor implements DynamicAccessor {
   private char[] expr;
   private int start;
   private int offset;
 
+  /** 上一次优化访问时间(即在一定时间内上一次统计时间) */
   private long stamp;
+  /** 处理类型，有0和3可选，分别表示获取和对象创建(2不存在，由collectionAccessor完成) */
   private int type;
 
+  /** 在时间区间内的运行统计次数 */
   private int runcount;
 
+  /** 是否作过优化 */
   private boolean opt = false;
 
+  /** 当前解析上下文 */
   private ParserContext pCtx;
 
+  /** 当前安全的访问器(即可正常执行的访问器) */
   private Accessor _safeAccessor;
+  /** 当前的优化访问器 */
   private Accessor _accessor;
 
   public DynamicGetAccessor(ParserContext pCtx, char[] expr, int start, int offset, int type, Accessor _accessor) {
@@ -58,6 +66,7 @@ public class DynamicGetAccessor implements DynamicAccessor {
 
   public Object getValue(Object ctx, Object elCtx, VariableResolverFactory variableFactory) {
     if (!opt) {
+      //这里即尝试优化，即如果次数超过指定计数，并且时间在指定区间内，即在100ms内运行超过50次 */
       if (++runcount > DynamicOptimizer.tenuringThreshold) {
         if ((currentTimeMillis() - stamp) < DynamicOptimizer.timeSpan) {
           opt = true;
@@ -85,6 +94,7 @@ public class DynamicGetAccessor implements DynamicAccessor {
 
   private Object optimize(Object ctx, Object elCtx, VariableResolverFactory variableResolverFactory) {
 
+    //过载保护，避免无限创建新类(其实没什么用)
     if (DynamicOptimizer.isOverloaded()) {
       DynamicOptimizer.enforceTenureLimit();
     }

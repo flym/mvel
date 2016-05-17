@@ -23,8 +23,10 @@ import org.mvel2.integration.VariableResolverFactory;
 
 import java.util.Map;
 
+/** 表示map类型的访问器 */
 public class MapAccessor implements AccessorNode {
   private AccessorNode nextNode;
+  /** 属性值 */
   private Object property;
 
   public MapAccessor() {

@@ -21,9 +21,11 @@ package org.mvel2.optimizers.impl.refl.nodes;
 import org.mvel2.compiler.AccessorNode;
 import org.mvel2.integration.VariableResolverFactory;
 
+/** 描述静态引用的访问器,通过持有此引用，在处理时直接返回此引用即可 */
 public class StaticReferenceAccessor implements AccessorNode {
   private AccessorNode nextNode;
 
+  /** 相应的引用信息 */
   Object literal;
 
   public Object getValue(Object ctx, Object elCtx, VariableResolverFactory vars) {

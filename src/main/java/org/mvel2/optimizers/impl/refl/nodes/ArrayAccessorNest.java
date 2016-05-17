@@ -27,11 +27,15 @@ import java.lang.reflect.Array;
 
 import static org.mvel2.DataConversion.convert;
 
+/** 数组访问器，但下标值是一个执行单元的情况(在编译层不能优化) */
 public class ArrayAccessorNest implements AccessorNode {
   private AccessorNode nextNode;
+  /** 下标执行单元 */
   private ExecutableStatement index;
 
+  /** 当前处理的数组类型 */
   private Class baseComponentType;
+  /** 设置值时是否需要类型转换 */
   private boolean requireConversion;
 
   public ArrayAccessorNest() {

@@ -35,14 +35,20 @@ import static org.mvel2.util.ParseTools.parseParameterDefList;
 import static org.mvel2.util.ParseTools.subCompileExpression;
 
 
+/** 描述函数定义的节点 */
 @SuppressWarnings({"unchecked"})
 public class Function extends ASTNode implements Safe {
+  /** 函数名 */
   protected String name;
   protected ExecutableStatement compiledBlock;
 
+  /** 参数定义信息 */
   protected String[] parameters;
+  /** 参数个数 */
   protected int parmNum;
+  /** 是否处于编译模式中 */
   protected boolean compiledMode = false;
+  /** 是否是单列的，可以理解为是否是静态方法 */
   protected boolean singleton;
 
   public Function(String name,
@@ -94,6 +100,7 @@ public class Function extends ASTNode implements Safe {
     ctx.setIndexAllocation(true);
 
     /**
+     * 定义参数入参
      * Add globals as inputs
      */
     if (pCtx.getVariables() != null) {
@@ -105,6 +112,7 @@ public class Function extends ASTNode implements Safe {
       ctx.processTables();
     }
 
+    //定义顺序入参
     ctx.addIndexedInputs(ctx.getVariables().keySet());
     ctx.getVariables().clear();
 
@@ -121,6 +129,7 @@ public class Function extends ASTNode implements Safe {
 
     this.egressType = this.compiledBlock.getKnownEgressType();
 
+    //最后把自己也添加进变量，以支持递归
     pCtx.addVariable(name, Function.class);
   }
 
