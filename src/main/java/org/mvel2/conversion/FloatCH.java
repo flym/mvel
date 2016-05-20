@@ -28,6 +28,7 @@ import java.util.Map;
 
 import static java.lang.String.valueOf;
 
+/** 各种类型转float */
 public class FloatCH implements ConversionHandler {
   private static final Map<Class, Converter> CNV =
       new HashMap<Class, Converter>();

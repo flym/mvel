@@ -27,6 +27,7 @@ import java.util.Map;
 import static java.lang.Integer.parseInt;
 import static java.lang.String.valueOf;
 
+/** 此类无任何作用 */
 public class ArrayCH implements ConversionHandler {
   private static final Map<Class, Converter> CNV =
       new HashMap<Class, Converter>();

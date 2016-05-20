@@ -24,6 +24,7 @@ import org.mvel2.ConversionHandler;
 import java.util.HashMap;
 import java.util.Map;
 
+/** 处理字符串转换为int数组 */
 public class IntArrayCH implements ConversionHandler {
   private static final Map<Class, Converter> CNV =
       new HashMap<Class, Converter>();

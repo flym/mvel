@@ -27,6 +27,12 @@ import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * 将各种数据转换为BigInteger类型
+ * 当前支持 object,BigDecimal,BigInteger,
+ * String,Double,Float,Short,Long,Integer,char[]类型
+ * 其基本的转换类型，即是通过原生的构建函数直接进行转换，否则就是将其string化，通过原生的valueOf进行转换
+ */
 public class BigIntegerCH implements ConversionHandler {
   private static final Map<Class, Converter> CNV =
       new HashMap<Class, Converter>();

@@ -30,16 +30,18 @@ import static org.mvel2.util.ReflectionUtil.isAssignableFrom;
 import static org.mvel2.util.ReflectionUtil.toNonPrimitiveType;
 
 /**
- * 内部自带的对象转换器
+ * 内部自带的对象转换器,即把当前内置的实现全部打包进行一起处理，统一对外提供工具处理类
  * The DataConversion factory is where all of MVEL's type converters are registered with the runtime.
  *
  * @author Mike Brock
  * @see ConversionHandler
  */
 public class DataConversion {
+  /** 转换处理程序，key为转换至的目标类，源类为handler中自行判定 */
   private static final Map<Class, ConversionHandler> CONVERTERS
       = new HashMap<Class, ConversionHandler>(38 * 2, 0.5f);
 
+  /** 无用接口 */
   private interface ArrayTypeMarker {
   }
 
@@ -103,11 +105,16 @@ public class DataConversion {
     CONVERTERS.put(TreeSet.class, ch);
   }
 
+  /** 判定两个类型之间是否能够进行转换 */
   public static boolean canConvert(Class toType, Class convertFrom) {
+    //如果本身即是类型兼容，即父子类型，那么直接支持
     if (isAssignableFrom(toType, convertFrom)) return true;
+    //先判定是否直接支持转换
     if (CONVERTERS.containsKey(toType)) {
       return CONVERTERS.get(toType).canConvertFrom(toNonPrimitiveType(convertFrom));
     }
+    //如果转换的目标类为数组，但源类型与目标类型兼容，也可以转换
+    //即可以认为两个类型之间可以通过数组再进行处理,即A[]->B[]
     else if (toType.isArray() && canConvert(toType.getComponentType(), convertFrom)) {
       return true;
     }
@@ -116,14 +123,19 @@ public class DataConversion {
 
   /** 对象转换 */
   public static <T> T convert(Object in, Class<T> toType) {
+    //空处理
     if (in == null) return null;
+    //类型兼容
     if (toType == in.getClass() || toType.isAssignableFrom(in.getClass())) {
       return (T) in;
     }
 
+    //在接下来的转换中，如果目标类型为数组，那么可以认为如果存在源类型到componentType的转换
+    //则也可以进行转换，同时通过ArrayHandler来实现相应的处理逻辑即可
     ConversionHandler h = CONVERTERS.get(toType);
     if (h == null && toType.isArray()) {
       ArrayHandler ah;
+      //这里动态添加新的转换处理类，即A[]->B[]的转换
       CONVERTERS.put(toType, ah = new ArrayHandler(toType));
       return (T) ah.convertFrom(in);
     }
@@ -133,6 +145,7 @@ public class DataConversion {
   }
 
   /**
+   * 注册并添加新的转换器
    * Register a new {@link ConversionHandler} with the factory.
    *
    * @param type    - Target type represented by the conversion handler.

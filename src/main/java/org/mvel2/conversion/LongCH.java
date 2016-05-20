@@ -28,6 +28,7 @@ import java.util.Map;
 
 import static java.lang.String.valueOf;
 
+/** 各种类型转长整形 */
 public class LongCH implements ConversionHandler {
   private static final Map<Class, Converter> CNV =
       new HashMap<Class, Converter>();

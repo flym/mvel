@@ -2,16 +2,16 @@
  * MVEL 2.0
  * Copyright (C) 2007 The Codehaus
  * Mike Brock, Dhanji Prasanna, John Graham, Mark Proctor
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -28,6 +28,12 @@ import java.math.MathContext;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * 将各种数据转换为BigDecimal类型
+ * 当前支持 object,BigDecimal,BigInteger,
+ * String,Double,Float,Short,Long,Integer,char[]类型
+ * 其基本的转换类型，即是通过原生的构建函数直接进行转换，否则就是将其string化，通过原生的valueOf进行转换
+ */
 public class BigDecimalCH implements ConversionHandler {
   private static final Map<Class, Converter> CNV =
       new HashMap<Class, Converter>();
@@ -45,6 +51,7 @@ public class BigDecimalCH implements ConversionHandler {
   }
 
   static {
+    //通用类型，toString转换
     CNV.put(Object.class,
         new Converter() {
           public BigDecimal convert(Object o) {
@@ -127,6 +134,7 @@ public class BigDecimalCH implements ConversionHandler {
         }
     );
 
+    //字符数组也可以认为就是通过字符串来处理
     CNV.put(char[].class,
         new Converter() {
           public BigDecimal convert(Object o) {
