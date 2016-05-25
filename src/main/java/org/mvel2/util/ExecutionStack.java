@@ -2,16 +2,16 @@
  * MVEL 2.0
  * Copyright (C) 2007 The Codehaus
  * Mike Brock, Dhanji Prasanna, John Graham, Mark Proctor
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -23,12 +23,21 @@ import org.mvel2.ScriptRuntimeException;
 import static java.lang.String.valueOf;
 import static org.mvel2.math.MathProcessor.doOperations;
 
+/**
+ * 维护了一个栈式的计算结构，即通过数据入栈，操作数入栈，然后再通过op进行操作处理以模拟一个栈式的计算过程
+ * 在处理过程中，通过size来维护相应的栈内数据，并且可以判定相应的栈是否已处理完毕
+ * 操作数的栈的引用没有通过通常的java stack来表示，而是通过在入栈时使用element来进行引用，
+ * 即下一个要入栈的元素将引用之前在栈内的数据，这样在整个计算栈中，只需要维护最上层的引用即可
+ * 如 a + b，在栈内即表现为a b +，这种后缀表达式结构，然后再通过最上层的操作符来进行op操作，
+ * 得到的结果c再重新入栈
+ */
 public class ExecutionStack {
   /** 当前最新值 */
   private StackElement element;
   /** 栈中操作数长度 */
   private int size = 0;
 
+  /** 当前栈是否是空的，即没有操作数也没有操作符 */
   public boolean isEmpty() {
     return size == 0;
   }
@@ -54,7 +63,10 @@ public class ExecutionStack {
 
   }
 
-  /** 入栈2个对象 */
+  /**
+   * 入栈2个对象,其中第二个对象为一个操作符对象，即插入的数据为 对象 + 操作符
+   * 在后序的处理中，将直接通过此操作符将相应的节点以及之前插入的节点进行直接运算或者是编译处理
+   */
   public void push(Object obj1, Object obj2) {
     size += 2;
     element = new StackElement(new StackElement(element, obj1), obj2);
@@ -174,6 +186,7 @@ public class ExecutionStack {
     assert size == deepCount();
   }
 
+  /** 使用栈上的操作符对最近的2个操作数进行处理，处理的结果重新入栈 */
   public void op() {
     element = new StackElement(element.next.next.next, doOperations(element.next.next.value, (Integer) element.value, element.next.value));
     size -= 2;

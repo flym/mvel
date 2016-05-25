@@ -43,6 +43,7 @@ import static org.mvel2.util.ParseTools.*;
 public class ASTNode implements Cloneable, Serializable {
   /** 该节点为文本节点 */
   public static final int LITERAL = 1;
+  /** 是否是深度属性处理(如+=) */
   public static final int DEEP_PROPERTY = 1 << 1;
   /** 该节点为操作节点 */
   public static final int OPERATOR = 1 << 2;
@@ -53,37 +54,61 @@ public class ASTNode implements Cloneable, Serializable {
   /** 数字节点 */
   public static final int NUMERIC = 1 << 5;
 
+  /** 表示该节点是否应该被反转,当前已实际无作用 */
+  @Deprecated
   public static final int INVERT = 1 << 6;
+
+  /** 表示该节点是一个赋值节点 */
   public static final int ASSIGN = 1 << 7;
 
+  /** 当前节点中存在集合处理(如变量名中存在[这种操作符） */
   public static final int COLLECTION = 1 << 8;
+  /** 当前节点是一个this引用节点，实际上不再使用 */
+  @Deprecated
   public static final int THISREF = 1 << 9;
   /** 内联的集合,即{12,3,4} 这种数据 */
   public static final int INLINE_COLLECTION = 1 << 10;
 
+  //---------------------------- 以下的标记仅起到静态标记的作用，没有其它逻辑作用 start ------------------------------//
+
+  /** 特定的if语句块标识 */
   public static final int BLOCK_IF = 1 << 11;
+  /** 特定的foreach语句块标识 */
   public static final int BLOCK_FOREACH = 1 << 12;
+  /** 特定的with语句块标识 */
   public static final int BLOCK_WITH = 1 << 13;
+  /** 特定的until语句块标识 */
   public static final int BLOCK_UNTIL = 1 << 14;
+  /** while语句块 */
   public static final int BLOCK_WHILE = 1 << 15;
+  /** do语句块 */
   public static final int BLOCK_DO = 1 << 16;
+  /** do{}until语句块 */
   public static final int BLOCK_DO_UNTIL = 1 << 17;
+  /** for语句块 */
   public static final int BLOCK_FOR = 1 << 18;
 
+  //---------------------------- 以下的标记仅起到静态标记的作用，没有其它逻辑作用 end ------------------------------//
+
+  /** 特定的标识 表示当前操作数需要取反，但实际上也没有意义 */
   public static final int OPT_SUBTR = 1 << 19;
 
+  /** 表示当前节点是一个静态全称访问，即通过全类型名来访问一个属性，通常指静态属性访问 */
   public static final int FQCN = 1 << 20;
 
   /** 表示当前节点为StackLang类型 */
   public static final int STACKLANG = 1 << 22;
 
   public static final int DEFERRED_TYPE_RES = 1 << 23;
+  /** 当前处理是否是强类型处理 */
   public static final int STRONG_TYPING = 1 << 24;
   public static final int PCTX_STORED = 1 << 25;
+  /** 表示当前节点是一个 数组类型的空常量,如[]，即用来标识数组 */
   public static final int ARRAY_TYPE_LITERAL = 1 << 26;
 
   /** 取消优化 */
   public static final int NOJIT = 1 << 27;
+  /** 表示当前节点需要反优化，即之前的优化失败了 */
   public static final int DEOP = 1 << 28;
 
   /** 表示当前节点应该被废掉 */
@@ -110,13 +135,19 @@ public class ASTNode implements Cloneable, Serializable {
   /** 当前节点缓存的名称值(即当前节点的一个name属性，如变量名等) */
   protected String nameCache;
 
+  /** 用于描述当前节点的一个常量值，即如果当前节点为表示一个常量信息,这里可以是任意的值，不仅仅是字符串 */
   protected Object literal;
 
-  /** 当前节点的值访问器 */
+  /** 当前节点的值访问器(优化版的)，通常指asm访问 */
   protected transient volatile Accessor accessor;
+  /**
+   * 当前节点的安全访问器(未优化的)
+   * 这里的是否优化版，均是指通过二次编译之后的访问，而不是指解释运行
+   */
   protected volatile Accessor safeAccessor;
 
   protected int cursorPosition;
+  /** 当前节点的下一步节点(顺序上的下一步) */
   public ASTNode nextASTNode;
 
   /** 当前解析上下文 */
@@ -200,12 +231,23 @@ public class ASTNode implements Cloneable, Serializable {
   }
 
 
-  /** 获取相应的执行值，采用解释模式运行 */
+  /**
+   * 获取相应的执行值，采用解释模式运行
+   * 解释模式即最简单的方式，通过逐步读取信息，然后通过读取下一步的字符来判定下一步的走向
+   * 在mvel中，解释模式会在编译时改写为优化方式，因此大部分的节点都不支持解释运行
+   * 解释模式的运行主要应用于如字段的读取或者访问地调用，在这些地方如果优化模式不能调用，将最终退化为解释模式运行
+   * <p>
+   * 解释模式主要用于在MvelInterpretedRuntime(即通过MVEL.eval调用的)时候，完成基本的解释调用处理
+   * 主要的功能由四则混合运算以及bean(数组)访问来完成,其中混合运行通过ExecutionStack来完成，而属性访问则
+   * 通过PropertyAccessor来完成，在解释过程中，能够进入到这里的，肯定只会有属性解释,因此默认的执行即是通过调用属性访问来获取相应的结果
+   */
   public Object getReducedValue(Object ctx, Object thisValue, VariableResolverFactory factory) {
+    //如果是常量节点，则直接返回相应的常量信息
     if ((fields & (LITERAL)) != 0) {
       return literal;
     }
     else {
+      //调用解释模式来获取相应的数据信息
       return get(expr, start, offset, ctx, factory, thisValue, pCtx);
     }
   }

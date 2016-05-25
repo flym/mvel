@@ -2166,10 +2166,12 @@ public class ParseTools {
     return new String(n);
   }
 
+  /** 使用系统默认编码读取文件，并返回相应的字符信息 */
   public static char[] loadFromFile(File file) throws IOException {
     return loadFromFile(file, null);
   }
 
+  /** 使用指定编码读取文件，并返回相应的字符内容 */
   public static char[] loadFromFile(File file, String encoding) throws IOException {
     if (!file.exists())
       throw new RuntimeException("cannot find file: " + file.getName());

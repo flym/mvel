@@ -2,16 +2,16 @@
  * MVEL 2.0
  * Copyright (C) 2007 The Codehaus
  * Mike Brock, Dhanji Prasanna, John Graham, Mark Proctor
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -121,6 +121,7 @@ public class PropertyAccessor {
     return new PropertyAccessor(property, ctx).get();
   }
 
+  /** 静态方法，通过单次调用相应的解释语句来获取相应的处理结果 */
   public static Object get(char[] property, int offset, int end, Object ctx, VariableResolverFactory resolver, Object thisReferece, ParserContext pCtx) {
     return new PropertyAccessor(property, offset, end, ctx, resolver, thisReferece, pCtx).get();
   }
@@ -137,6 +138,7 @@ public class PropertyAccessor {
     new PropertyAccessor(property.toCharArray(), ctx, resolver, null, pCtx).set(value);
   }
 
+  /** 获取相应的解释运行结果 */
   private Object get() {
     curr = ctx;
 
@@ -155,7 +157,7 @@ public class PropertyAccessor {
       throw new PropertyAccessException("could not access property", property, cursor, e, pCtx);
     }
     catch (IndexOutOfBoundsException e) {
-      if (cursor >= length) cursor = length -1;
+      if (cursor >= length) cursor = length - 1;
 
       throw new PropertyAccessException("array or collections index out of bounds in property: "
           + new String(property, cursor, length), property, cursor, e, pCtx);
@@ -638,7 +640,7 @@ public class PropertyAccessor {
         Class c = (Class) ctx;
         for (Method m : c.getMethods()) {
           if (property.equals(m.getName())) {
-            if (pCtx!=null&& pCtx.getParserConfiguration()!=null?pCtx.getParserConfiguration().isAllowNakedMethCall():MVEL.COMPILER_OPT_ALLOW_NAKED_METH_CALL) {
+            if (pCtx != null && pCtx.getParserConfiguration() != null ? pCtx.getParserConfiguration().isAllowNakedMethCall() : MVEL.COMPILER_OPT_ALLOW_NAKED_METH_CALL) {
               return m.invoke(ctx, EMPTY_OBJ_ARR);
             }
             return m;
@@ -668,7 +670,7 @@ public class PropertyAccessor {
         return ((Field) tryStatic).get(null);
       }
     }
-    else if (pCtx!=null&& pCtx.getParserConfiguration()!=null?pCtx.getParserConfiguration().isAllowNakedMethCall():MVEL.COMPILER_OPT_ALLOW_NAKED_METH_CALL) {
+    else if (pCtx != null && pCtx.getParserConfiguration() != null ? pCtx.getParserConfiguration().isAllowNakedMethCall() : MVEL.COMPILER_OPT_ALLOW_NAKED_METH_CALL) {
       return getMethod(ctx, property);
     }
 
@@ -1017,7 +1019,7 @@ public class PropertyAccessor {
   }
 
   private ClassLoader getClassLoader() {
-      return pCtx != null ? pCtx.getClassLoader() : currentThread().getContextClassLoader();
+    return pCtx != null ? pCtx.getClassLoader() : currentThread().getContextClassLoader();
   }
 
   /**

@@ -28,6 +28,7 @@ import static org.mvel2.util.ParseTools.subCompileExpression;
 
 /**
  * 断言类节点，用于进行程序断言
+ *
  * @author Christopher Brock
  */
 public class AssertNode extends ASTNode {
@@ -62,6 +63,7 @@ public class AssertNode extends ASTNode {
 
   public Object getReducedValue(Object ctx, Object thisValue, VariableResolverFactory factory) {
     try {
+      //采用解释模式来评估相应的值
       if (!((Boolean) MVEL.eval(this.expr, ctx, factory))) {
         throw new AssertionError("assertion failed in expression: " + new String(this.expr, start, offset));
       }

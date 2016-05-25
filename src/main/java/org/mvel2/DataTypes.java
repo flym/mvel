@@ -39,12 +39,17 @@ public interface DataTypes {
   public static final int CHAR = 8;
   public static final int BYTE = 9;
 
+  /** boolean的包装类型 */
   public static final int W_BOOLEAN = 15;
 
   public static final int COLLECTION = 50;
 
+  /** Short */
   public static final int W_SHORT = 105;
+  /** Integer包装 */
   public static final int W_INTEGER = 106;
+
+  /** long 包装 */
   public static final int W_LONG = 107;
   public static final int W_FLOAT = 108;
   public static final int W_DOUBLE = 109;
@@ -55,7 +60,9 @@ public interface DataTypes {
   public static final int BIG_DECIMAL = 110;
   public static final int BIG_INTEGER = 111;
 
+  /** 表示是一个空常量信息 */
   public static final int EMPTY = 200;
 
+  /** 表示一个处理单元 */
   public static final int UNIT = 300;
 }

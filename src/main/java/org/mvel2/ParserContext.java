@@ -34,6 +34,9 @@ import java.lang.reflect.*;
 import java.util.*;
 
 /**
+ * 描述一个在编译过程中所使用的解析上下文，相应的在编译过程中所使用的一些临时变量，定义等都存储在上下文中
+ * 由于在编译中存储级联关系，因为上下文也存在parent关系，即内层会引用外层的信息，以达到一个scope的语义概念
+ * 上下文可以在进行编译的过程中进行引入，否则将采用默认的上下文
  * The <tt>ParserContext</tt> is the main environment object used for sharing state throughout the entire
  * parser/compileShared process.<br/><br/>
  * The <tt>ParserContext</tt> is used to configure the parser/compiler.  For example:

@@ -28,11 +28,14 @@ import static org.mvel2.util.ParseTools.isWhitespace;
 import static org.mvel2.util.ParseTools.repeatChar;
 
 /**
+ * 编译异常，即描述在解析表达式过程中或者是在运行过程中的各种错误信息
  * Standard exception thrown for all general compileShared and some runtime failures.
  */
 public class CompileException extends RuntimeException {
+  /** 相应的表达式 */
   private char[] expr;
 
+  /** 当前编译时的错误下标 */
   private int cursor = 0;
   private int msgOffset = 0;
 
