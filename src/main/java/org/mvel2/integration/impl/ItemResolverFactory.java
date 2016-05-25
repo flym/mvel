@@ -2,16 +2,16 @@
  * MVEL 2.0
  * Copyright (C) 2007 The Codehaus
  * Mike Brock, Dhanji Prasanna, John Graham, Mark Proctor
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -61,9 +61,13 @@ public class ItemResolverFactory extends BaseVariableResolverFactory {
     return resolver.getName().equals(name) || (nextFactory != null && nextFactory.isResolveable(name));
   }
 
+  /** 通过变量名+值+类型来进行变量解析的解析器 */
   public static class ItemResolver implements VariableResolver {
+    /** 相应的变量名 */
     private final String name;
+    /** 变量的类型 */
     private Class type = Object.class;
+    /** 相应的值 */
     public Object value;
 
     public ItemResolver(String name, Class type) {
@@ -87,6 +91,7 @@ public class ItemResolverFactory extends BaseVariableResolverFactory {
       this.type = type;
     }
 
+    /** 无特殊的标记 */
     public int getFlags() {
       return 0;
     }

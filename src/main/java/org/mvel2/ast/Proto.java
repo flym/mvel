@@ -302,6 +302,11 @@ public class Proto extends ASTNode {
     }
   }
 
+  /**
+   * 使用指定变量名+类型+外部的map存储来进行变量解析的解析器
+   * 与mapVarResolver不一样的是，此解析器并没有将相应的值存储到map中，而是存储到map中的value的receiver上
+   * 即此是一个定制类，其map中存储的数据为Receiver对象，相应变量的值实际上存储到Receiver对象上的receiver属性中
+   */
   public class ProtoResolver implements VariableResolver {
     private String name;
     private Class<?> knownType;
@@ -356,6 +361,7 @@ public class Proto extends ASTNode {
       return ((Receiver) variableMap.get(name)).receiver;
     }
 
+    /** 无特殊标记 */
     public int getFlags() {
       return 0;
     }
