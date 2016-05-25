@@ -39,6 +39,8 @@ import static org.mvel2.util.ParseTools.loadFromFile;
 import static org.mvel2.util.ParseTools.optimizeTree;
 
 /**
+ * MVEL主类
+ * 在以下的方法中,eval表示进行解释运行，因此仅在项目中进行临时处理或者是交互时才使用eval
  * The MVEL convienence class is a collection of static methods that provides a set of easy integration points for
  * MVEL.  The vast majority of MVEL's core functionality can be directly accessed through methods in this class.
  */
@@ -52,17 +54,25 @@ public class MVEL {
   static boolean ADVANCED_DEBUG = getBoolean("mvel2.advanced_debugging");
   static boolean WEAK_CACHE = getBoolean("mvel2.weak_caching");
   static boolean NO_JIT = getBoolean("mvel2.disable.jit");
+  /** 在抛出有cause异常的执行异常时是否throw相应的的cause异常,而不是直接将当前异常进行包装显示 */
   public static boolean INVOKED_METHOD_EXCEPTIONS_BUBBLE = getBoolean("mvel2.invoked_meth_exceptions_bubble");
   /** 是否允许伪方法调用，即将 a.bc 代替a.bc()这种处理方式 */
   public static boolean COMPILER_OPT_ALLOW_NAKED_METH_CALL = getBoolean("mvel2.compiler.allow_naked_meth_calls");
-  /** 编译器是否允许重写相应的属性处理器(重写之后，当前整个属性访问均由属性处理器来进行) */
+  /** 编译器是否允许重写相应的属性处理器(重写之后，重写即表示在过程中可以进行控制相应的流程，包括一些nullHandler，methodHandler等) */
   public static boolean COMPILER_OPT_ALLOW_OVERRIDE_ALL_PROPHANDLING = getBoolean("mvel2.compiler.allow_override_all_prophandling");
   public static boolean COMPILER_OPT_ALLOW_RESOLVE_INNERCLASSES_WITH_DOTNOTATION = getBoolean("mvel2.compiler.allow_resolve_inner_classes_with_dotnotation");
+  /** 是否支持java样式的class常量调用，即通过A.class这种方式来获取相应的class属性 */
   public static boolean COMPILER_OPT_SUPPORT_JAVA_STYLE_CLASS_LITERALS = getBoolean("mvel2.compiler.support_java_style_class_literals");
+  /**
+   * 即是否通过引入一个类之后，在后面的类型匹配中使用简写的类名进行cast等类型处理
+   * 如 import java.lang.String;String 这种处理
+   */
   public static boolean COMPILER_OPT_ALLOCATE_TYPE_LITERALS_TO_SHARED_SYMBOL_TABLE = getBoolean("mvel2.compiler.allocate_type_literals_to_shared_symbol_table");
 
+  /** 此字段实际上当前未使用到 */
   static boolean OPTIMIZER = true;
 
+  /** 以下静态块无实际作用 */
   static {
     if (System.getProperty("mvel2.optimizer") != null) {
       OPTIMIZER = getBoolean("mvel2.optimizer");
@@ -85,6 +95,8 @@ public class MVEL {
   }
 
   /**
+   * 直接评估相应的表达式
+   * 要求表达式必须是直接执行的，不支持临时变量存储
    * Evaluate an expression and return the value.
    *
    * @param expression A String containing the expression to be evaluated.
@@ -95,6 +107,7 @@ public class MVEL {
   }
 
   /**
+   * 使用解释模式进行表达式评估，并从相应的上下文中获取相应的属性信息
    * Evaluate an expression against a context object.  Expressions evaluated against a context object are designed
    * to treat members of that context object as variables in the expression.  For example:
    * <pre><code>
@@ -112,6 +125,7 @@ public class MVEL {
   }
 
   /**
+   * 使用解释模式评估表达式，并使用相应的变量工厂，即支持临时变量存储和读取
    * Evaluate an expression with externally injected variables via a {@link VariableResolverFactory}.  A factory
    * provides the means by which MVEL can resolve external variables.  MVEL contains a straight-forward implementation
    * for wrapping Maps: {@link MapVariableResolverFactory}, which is used implicitly when calling overloaded methods
@@ -139,6 +153,7 @@ public class MVEL {
   }
 
   /**
+   * 进行解释评估，并使用相应的表达式，上下文，变量工厂
    * Evaluates an expression against a context object and injected variables from a {@link VariableResolverFactory}.
    * This method of execution will prefer to find variables from the factory and <em>then</em> from the context.
    *
@@ -153,6 +168,8 @@ public class MVEL {
   }
 
   /**
+   * 使用解释模式进行评估，并使用相应的map作为变量工厂的初始存储
+   * 即后面相应的变量解析会使用vars来作存储,结束之后，相应的数据会被放在vars中进行返回
    * Evaluates an expression against externally injected variables.  This is a wrapper convenience method which
    * wraps the provided Map of vars in a {@link MapVariableResolverFactory}
    *
@@ -172,6 +189,7 @@ public class MVEL {
   }
 
   /**
+   * 使用解释模式进行评估，带上下文，并使用vars作为初始化变量工厂存储
    * Evaluates an expression against a context object and externally injected variables.  This is a wrapper
    * convenience method which wraps the provided Map of vars in a {@link MapVariableResolverFactory}
    *
@@ -192,6 +210,7 @@ public class MVEL {
   }
 
   /**
+   * 使用解释模式评估，并将结果转换为指定的类型
    * Evaluates an expression and, if necessary, coerces the resultant value to the specified type. Example:
    * <pre><code>
    * Float output = MVEL.eval("5 + 5", Float.class);
@@ -208,6 +227,7 @@ public class MVEL {
   }
 
   /**
+   * 使用指定的表达式，上下文进行解释评估，并将结果转换为指定类型
    * Evaluates an expression against a context object and, if necessary, coerces the resultant value to the specified
    * type.
    *
@@ -222,6 +242,7 @@ public class MVEL {
   }
 
   /**
+   * 使用指定的表达式+变量工厂进行解释评估，并将结果转换为指定的类型
    * Evaluates an expression against externally injected variables and, if necessary, coerces the resultant value
    * to the specified type.
    *
@@ -237,6 +258,7 @@ public class MVEL {
   }
 
   /**
+   * 使用指定的表达式+初始map vars进行解释评估，并进行结果转换
    * Evaluates an expression against externally injected variables.  The resultant value is coerced to the specified
    * type if necessary. This is a wrapper convenience method which wraps the provided Map of vars in a{@link MapVariableResolverFactory}
    *
@@ -257,6 +279,7 @@ public class MVEL {
   }
 
   /**
+   * 使用表达式，上下文，变量工厂进行解释评估，并进行结果转换
    * Evaluates an expression against a context object and externally injected variables.  If necessary, the resultant
    * value is coerced to the specified type.
    *
@@ -273,6 +296,7 @@ public class MVEL {
   }
 
   /**
+   * 使用表达式，上下文，初始map vars进行解释评估，并转换结果
    * Evaluates an expression against a context object and externally injected variables.  If necessary, the resultant
    * value is coerced to the specified type.
    *
@@ -295,40 +319,47 @@ public class MVEL {
   }
 
   /**
+   * 评估表达式，并最终转换为字符串对象
    * Evaluates an expression and returns the resultant value as a String.
    *
-   * @param expression A string containing the expressino to be evaluated.
+   * @param expression A string containing the expression to be evaluated.
    * @return The resultant value
    */
+  @SuppressWarnings("unused")
   public static String evalToString(String expression) {
     return valueOf(eval(expression));
   }
 
   /**
+   * 使用表达式+上下文解释评估，并返回字符串结果
    * Evaluates an expression and returns the resultant value as a String.
    *
-   * @param expression A string containing the expressino to be evaluated.
+   * @param expression A string containing the expression to be evaluated.
    * @param ctx        The context object to evaluate against
    * @return The resultant value
    * @see #eval(String, Object)
    */
+  @SuppressWarnings("unused")
   public static String evalToString(String expression, Object ctx) {
     return valueOf(eval(expression, ctx));
   }
 
   /**
+   * 使用表达式+变量工厂进行解释评估，并将结果转换为字符串
    * Evaluates an expression and returns the resultant value as a String.
    *
-   * @param expression A string containing the expressino to be evaluated.
+   * @param expression A string containing the expression to be evaluated.
    * @param vars       The variables to be injected
    * @return The resultant value
    * @see #eval(String, VariableResolverFactory)
    */
+  @SuppressWarnings("unused")
   public static String evalToString(String expression, VariableResolverFactory vars) {
     return valueOf(eval(expression, vars));
   }
 
   /**
+   * 使用表达式+初始化map变量进行解释评估，并转换结果为字符串
    * Evaluates an expression and returns the resultant value as a String.
    *
    * @param expression A string containing the expressino to be evaluated.
@@ -336,37 +367,43 @@ public class MVEL {
    * @return The resultant value
    * @see #eval(String, Map)
    */
+  @SuppressWarnings("unchecked,unused")
   public static String evalToString(String expression, Map vars) {
     return valueOf(eval(expression, vars));
   }
 
   /**
+   * 使用表达式，上下文，变量工厂进行解释评估，并将结果转换为字符串
    * Evaluates an expression and returns the resultant value as a String.
    *
-   * @param expression A string containing the expressino to be evaluated.
+   * @param expression A string containing the expression to be evaluated.
    * @param ctx        The context object to evaluate against.
    * @param vars       The variables to be injected
    * @return The resultant value
    * @see #eval(String, Map)
    */
+  @SuppressWarnings("unused")
   public static String evalToString(String expression, Object ctx, VariableResolverFactory vars) {
     return valueOf(eval(expression, ctx, vars));
   }
 
   /**
+   * 使用表达式+上下文+初始map变量进行评估，并将结果转换为字符串
    * Evaluates an expression and returns the resultant value as a String.
    *
-   * @param expression A string containing the expressino to be evaluated.
+   * @param expression A string containing the expression to be evaluated.
    * @param ctx        The context object to evaluate against.
    * @param vars       A Map of variables to be injected
    * @return The resultant value
    * @see #eval(String, Map)
    */
+  @SuppressWarnings("unchecked,unused")
   public static String evalToString(String expression, Object ctx, Map vars) {
     return valueOf(eval(expression, ctx, vars));
   }
 
   /**
+   * 使用字符数组进行解释评估
    * Evaluate an expression and return the value.
    *
    * @param expression A char[] containing the expression to be evaluated.
@@ -378,6 +415,7 @@ public class MVEL {
   }
 
   /**
+   * 使用字符数组+上下文进行解释评估
    * Evaluate an expression against a context object and return the value
    *
    * @param expression A char[] containing the expression to be evaluated.
@@ -389,11 +427,13 @@ public class MVEL {
     return new MVELInterpretedRuntime(expression, ctx).parse();
   }
 
+  /** 使用字符数组进行解释评估，并转换为指定类型 */
   public static <T> T eval(char[] expression, Class<T> type) {
     return convert(new MVELInterpretedRuntime(expression).parse(), type);
   }
 
   /**
+   * 使用字符数组+上下文+变量工厂进行解释评估
    * Evaluate an expression against a context object and return the value
    *
    * @param expression A char[] containing the expression to be evaluated.
@@ -406,15 +446,18 @@ public class MVEL {
     return new MVELInterpretedRuntime(expression, ctx, vars).parse();
   }
 
+  /** 使用指定范围的字符数组+上下文+变量工厂进行解释评估 */
   public static Object eval(char[] expression, int start, int offset, Object ctx, VariableResolverFactory vars) {
     return new MVELInterpretedRuntime(expression, start, offset, ctx, vars).parse();
   }
 
+  /** 使用指定范围的字符数组+上下文+变量工厂进行解释评估,并转换为指定类型 */
   public static <T> T eval(char[] expression, int start, int offset, Object ctx, VariableResolverFactory vars, Class<T> toType) {
     return convert(new MVELInterpretedRuntime(expression, start, offset, ctx, vars).parse(), toType);
   }
 
   /**
+   * 使用字符数组+上下文+初始vars变量工厂进行解释评估
    * Evaluate an expression against a context object and return the value
    *
    * @param expression A char[] containing the expression to be evaluated.
@@ -423,11 +466,13 @@ public class MVEL {
    * @return The resultant value
    * @see #eval(String, Object, Map)
    */
+  @SuppressWarnings("unchecked")
   public static Object eval(char[] expression, Object ctx, Map vars) {
     return new MVELInterpretedRuntime(expression, ctx, vars).parse();
   }
 
   /**
+   * 使用字符数组+上下文+初始map变量工厂进行解释评估，并转换为指定类型
    * Evaluate an expression with a context object and injected variables and return the value. If necessary convert
    * the resultant value to the specified type.
    *
@@ -443,6 +488,7 @@ public class MVEL {
   }
 
   /**
+   * 使用字符数组+上下文进行解释评估，并转换为指定类型
    * Evaluate an expression with a context object and return the value. If necessary convert
    * the resultant value to the specified type.
    *
@@ -457,6 +503,7 @@ public class MVEL {
   }
 
   /**
+   * 使用字符数组+上下文+变量工厂进行解释评估，并将结果转换为指定类型
    * Evaluate an expression with a context object and injected variables and return the value. If necessary convert
    * the resultant value to the specified type.
    *
@@ -472,6 +519,7 @@ public class MVEL {
   }
 
   /**
+   * 使用字符数组+变量工厂进行解释评估，并转换为指定类型
    * Evaluate an expression with injected variables and return the value. If necessary convert
    * the resultant value to the specified type.
    *
@@ -486,6 +534,7 @@ public class MVEL {
   }
 
   /**
+   * 使用字符数组+初始map进行解释评估，并转换为指定类型
    * Evaluate an expression with injected variables and return the resultant value. If necessary convert
    * the resultant value to the specified type.
    *
@@ -500,21 +549,25 @@ public class MVEL {
   }
 
   /**
+   * 使用指定文件内的内容进行解释评估
    * Evaluate a script from a file and return the resultant value.
    *
    * @param file The file to process
    * @return The resultant value
    * @throws IOException Exception thrown if there is an IO problem accessing the file.
    */
+  @SuppressWarnings("unchecked")
   public static Object evalFile(File file) throws IOException {
     return _evalFile(file, null, new CachedMapVariableResolverFactory(new HashMap()));
   }
 
+  /** 使用指定文件+指定编码进行内容评估 */
   public static Object evalFile(File file, String encoding) throws IOException {
     return _evalFile(file, encoding, null, new CachedMapVariableResolverFactory(new HashMap()));
   }
 
   /**
+   * 使用指定文件内容，默认编码+指定上下文进行评估
    * Evaluate a script from a file, against a context object and return the resultant value.
    *
    * @param file The file to process
@@ -522,15 +575,18 @@ public class MVEL {
    * @return The resultant value
    * @throws IOException Exception thrown if there is an IO problem accessing the file.
    */
+  @SuppressWarnings("unchecked")
   public static Object evalFile(File file, Object ctx) throws IOException {
     return _evalFile(file, ctx, new CachedMapVariableResolverFactory(new HashMap()));
   }
 
+  /** 使用指定文件内容，指定编码+指定上下文进行解释评估 */
   public static Object evalFile(File file, String encoding, Object ctx) throws IOException {
     return _evalFile(file, encoding, ctx, new CachedMapVariableResolverFactory(new HashMap()));
   }
 
   /**
+   * 使用指定文件内容+指定map变量工厂进行解释评估
    * Evaluate a script from a file with injected variables and return the resultant value.
    *
    * @param file The file to process
@@ -549,6 +605,7 @@ public class MVEL {
   }
 
   /**
+   * 使用指定文件内容+上下文+指定map变量工厂进行解释评估
    * Evaluate a script from a file with injected variables and a context object, then return the resultant value.
    *
    * @param file The file to process
@@ -567,6 +624,7 @@ public class MVEL {
     }
   }
 
+  /** 使用指定文件内容+编码+上下文+变量工厂进行解释评估 */
   public static Object evalFile(File file, String encoding, Object ctx, Map<String, Object> vars) throws IOException {
     CachingMapVariableResolverFactory factory = new CachingMapVariableResolverFactory(vars);
     try {
@@ -578,6 +636,7 @@ public class MVEL {
   }
 
   /**
+   * 使用指定文件内容+上下文+变量工厂进行解释评估
    * Evaluate a script from a file with injected variables and a context object, then return the resultant value.
    *
    * @param file The file to process
@@ -590,6 +649,7 @@ public class MVEL {
     return _evalFile(file, ctx, vars);
   }
 
+  /** 使用指定文件内容+编码+上下文+变量工厂进行解释评估 */
   public static Object evalFile(File file, String encoding, Object ctx, VariableResolverFactory vars) throws IOException {
     return _evalFile(file, encoding, ctx, vars);
   }
@@ -603,6 +663,7 @@ public class MVEL {
   }
 
   /**
+   * 对指定内容+上下文+map变量工厂进行解释评估，并将结果转换为boolean类型
    * Evaluate an expression in Boolean-only mode against a root context object and injected variables.
    *
    * @param expression A string containing the expression to be evaluated.
@@ -615,6 +676,7 @@ public class MVEL {
   }
 
   /**
+   * 将表达式+上下文进行解释来评估，并将结果转换为boolean类型
    * Evaluate an expression in Boolean-only mode against a root context object.
    *
    * @param expression A string containing the expression to be evaluated.
@@ -626,6 +688,7 @@ public class MVEL {
   }
 
   /**
+   * 将表达式+上下文+变量工厂进行解释评估，并将结果转换为boolean类型
    * Evaluate an expression in Boolean-only mode against a root context object and injected variables.
    *
    * @param expression A string containing the expression to be evaluated.
@@ -638,6 +701,7 @@ public class MVEL {
   }
 
   /**
+   * 将表达式+变量工厂进行解释评估，并将结果转换为boolean类型
    * Evaluate an expression in Boolean-only with injected variables.
    *
    * @param expression A string containing the expression to be evaluated.
@@ -649,6 +713,7 @@ public class MVEL {
   }
 
   /**
+   * 将表达式+map变量工厂进行解释评估，并将结果转换为boolean类型
    * Evaluate an expression in Boolean-only with injected variables.
    *
    * @param expression A string containing the expression to be evaluated.
@@ -660,6 +725,7 @@ public class MVEL {
   }
 
   /**
+   * 对指定表达式+指定上下文进行语法上的分析，并进行验证，即仅验证语法上是否正确
    * Performs an analysis compileShared, which will populate the ParserContext with type, input and variable information,
    * but will not produce a payload.
    *
@@ -672,11 +738,12 @@ public class MVEL {
     compiler.compile();
   }
 
+  /** 对指定表达式+指定上下文进行语法上的分析，并进行验证 */
   public static void analysisCompile(String expression, ParserContext ctx) {
     analysisCompile(expression.toCharArray(), ctx);
   }
 
-  /** 分析一个表达式的最终返回类型 */
+  /** 分析一个表达式，进行语法验证分析，编译，并返回最终的处理结果 */
   public static Class analyze(char[] expression, ParserContext ctx) {
     ExpressionCompiler compiler = new ExpressionCompiler(expression, ctx);
     compiler.setVerifyOnly(true);
@@ -689,6 +756,7 @@ public class MVEL {
   }
 
   /**
+   * 将指定的表达式进行编译，无源文件，无引入，无拦截器
    * Compiles an expression and returns a Serializable object containing the compiled expression.  The returned value
    * can be reused for higher-performance evaluation of the expression.  It is used in a straight forward way:
    * <pre><code>
@@ -727,6 +795,7 @@ public class MVEL {
   }
 
   /**
+   * 将指定表达式+指定的import进行编译，无源文件，无拦截器
    * Compiles an expression and returns a Serializable object containing the compiled expression.  This method
    * also accept a Map of imports.  The Map's keys are String's representing the imported, short-form name of the
    * Classes or Methods imported.  An import of a Method is essentially a static import.  This is a substitute for
@@ -755,6 +824,7 @@ public class MVEL {
   }
 
   /**
+   * 将表达式+引入+拦截器进行编译，无源文件
    * Compiles an expression and returns a Serializable object containing the compiled expression. This method
    * accepts a Map of imports and Interceptors.  See {@link #compileExpression(String, Map)} for information on
    * imports.  The imports parameter in this method is <em>optional</em> and it is safe to pass a <tt>null</tt>
@@ -802,6 +872,7 @@ public class MVEL {
   }
 
   /**
+   * 使用表达式+解析上下文进行编译
    * Compiles an expression, and accepts a {@link ParserContext} instance.  The ParserContext object is the
    * fine-grained configuration object for the MVEL parser and compiler.
    *
@@ -813,26 +884,30 @@ public class MVEL {
     return optimizeTree(new ExpressionCompiler(expression, ctx).compile());
   }
 
+  /** 对指定的字符数组+解析上下文进行编译 */
   public static Serializable compileExpression(char[] expression, int start, int offset, ParserContext ctx) {
     ExpressionCompiler c = new ExpressionCompiler(expression, start, offset, ctx);
     return optimizeTree(c._compile());
   }
 
+  /** 对指定的字符串+导入+拦截器+源进行编译 */
   public static Serializable compileExpression(String expression, Map<String, Object> imports, Map<String, Interceptor> interceptors, String sourceName) {
     return compileExpression(expression, new ParserContext(imports, interceptors, sourceName));
   }
 
+  /** 使用字符数组+上下文进行编译 */
   public static Serializable compileExpression(char[] expression, ParserContext ctx) {
     return optimizeTree(new ExpressionCompiler(expression, ctx).compile());
   }
 
   /**
+   * 使用字符数组+导入+拦截器+源进行编译
    * Compiles an expression and returns a Serializable object containing the compiled
    * expression.
    *
    * @param expression   The expression to be compiled
    * @param imports      Imported classes
-   * @param interceptors Map of named interceptos
+   * @param interceptors Map of named interceptors
    * @param sourceName   The name of the source file being evaluated (optional)
    * @return The cacheable compiled payload
    */
@@ -840,75 +915,93 @@ public class MVEL {
     return compileExpression(expression, new ParserContext(imports, interceptors, sourceName));
   }
 
+  /** 使用字符数组进行编译,无导入，无拦截器 */
   public static Serializable compileExpression(char[] expression) {
     return compileExpression(expression, null, null, null);
   }
 
+  /** 使用字符数组+导入进行编译，无拦截器 */
   public static Serializable compileExpression(char[] expression, Map<String, Object> imports) {
     return compileExpression(expression, imports, null, null);
   }
 
+  /** 使用字符数组+导入+拦截器进行编译 */
   public static Serializable compileExpression(char[] expression, Map<String, Object> imports, Map<String, Interceptor> interceptors) {
     return compileExpression(expression, imports, interceptors, null);
   }
 
+  /** 将字符串编译为一个单个获取值的编译表达式 */
   public static Serializable compileGetExpression(String expression) {
     return new CompiledAccExpression(expression.toCharArray(), Object.class, new ParserContext());
   }
 
+  /** 使用字符串+解析上下文编译为单个取值的编译表达式 */
   public static Serializable compileGetExpression(String expression, ParserContext ctx) {
     return new CompiledAccExpression(expression.toCharArray(), Object.class, ctx);
   }
 
+  /** 将字符数组编译为单个取值的访问表达式 */
   public static Serializable compileGetExpression(char[] expression) {
     return new CompiledAccExpression(expression, Object.class, new ParserContext());
   }
 
+  /** 将字符数组+解析上下文编译为单个取值的访问表达式 */
   public static Serializable compileGetExpression(char[] expression, ParserContext ctx) {
     return new CompiledAccExpression(expression, Object.class, ctx);
   }
 
+  /** 将字符串编译为单个设置值的访问表达式 */
   public static Serializable compileSetExpression(String expression) {
     return new CompiledAccExpression(expression.toCharArray(), Object.class, new ParserContext());
   }
 
+  /** 将字符串+解析上下文编译为单个设置值的访问表达式 */
   public static Serializable compileSetExpression(String expression, ParserContext ctx) {
     return new CompiledAccExpression(expression.toCharArray(), Object.class, ctx);
   }
 
+  /** 将字符串+入参类型+上下文编译为单个设置值的访问表达式 */
   public static Serializable compileSetExpression(String expression, Class ingressType, ParserContext ctx) {
     return new CompiledAccExpression(expression.toCharArray(), ingressType, ctx);
   }
 
+  /** 将字符数组编译为单个设置值的访问表达式 */
   public static Serializable compileSetExpression(char[] expression) {
     return new CompiledAccExpression(expression, Object.class, new ParserContext());
   }
 
+  /** 将字符数组+解析上下文编译为单个设置值的访问表达式 */
   public static Serializable compileSetExpression(char[] expression, ParserContext ctx) {
     return new CompiledAccExpression(expression, Object.class, ctx);
   }
 
+  /** 将字符数组(指定区间)+解析上下文编译为单个设置值的访问表达式 */
   public static Serializable compileSetExpression(char[] expression, int start, int offset, ParserContext ctx) {
     return new CompiledAccExpression(expression, start, offset, Object.class, ctx);
   }
 
+  /** 将字符数组+入参类型+上下文编译为单个设置值的访问表达式 */
   public static Serializable compileSetExpression(char[] expression, Class ingressType, ParserContext ctx) {
     return new CompiledAccExpression(expression, ingressType, ctx);
   }
 
+  /** 对之前的set访问表达式进行执行，使用指定上下文+值 */
   public static void executeSetExpression(Serializable compiledSet, Object ctx, Object value) {
     ((CompiledAccExpression) compiledSet).setValue(ctx, ctx, new ImmutableDefaultFactory(), value);
   }
 
+  /** 对之前的set访问表达式进行执行，使用指定上下文，变量工厂+值 */
   public static void executeSetExpression(Serializable compiledSet, Object ctx, VariableResolverFactory vrf, Object value) {
     ((CompiledAccExpression) compiledSet).setValue(ctx, ctx, vrf, value);
   }
 
+  /** 执行之前编译好的表达式,无变量工厂 */
   public static Object executeExpression(Object compiledExpression) {
     return ((ExecutableStatement) compiledExpression).getValue(null, new ImmutableDefaultFactory());
   }
 
   /**
+   * 使用指定上下文+初始map变量工厂执行编译表达式
    * Executes a compiled expression.
    *
    * @param compiledExpression -
@@ -928,11 +1021,13 @@ public class MVEL {
     }
   }
 
+  /** 使用上下文+变量工厂执行编译表达式 */
   public static Object executeExpression(final Object compiledExpression, final Object ctx, final VariableResolverFactory resolverFactory) {
     return ((ExecutableStatement) compiledExpression).getValue(ctx, resolverFactory);
   }
 
   /**
+   * 使用变量工厂执行编译表达式
    * Executes a compiled expression.
    *
    * @param compiledExpression -
@@ -945,6 +1040,7 @@ public class MVEL {
   }
 
   /**
+   * 使用指定上下文执行编译表达式
    * Executes a compiled expression.
    *
    * @param compiledExpression -
@@ -957,6 +1053,7 @@ public class MVEL {
   }
 
   /**
+   * 使用初始map变量工厂执行编译表达式
    * Executes a compiled expression.
    *
    * @param compiledExpression -
@@ -976,6 +1073,7 @@ public class MVEL {
   }
 
   /**
+   * 使用上下文+初始map变量工厂执行编译表达式，将结果转换为指定类型
    * Execute a compiled expression and convert the result to a type
    *
    * @param compiledExpression -
@@ -989,11 +1087,13 @@ public class MVEL {
     return convert(executeExpression(compiledExpression, ctx, vars), toType);
   }
 
+  /** 使用指定上下文+变量工厂执行编译表达式，将结果转换为指定类型 */
   public static <T> T executeExpression(final Object compiledExpression, final Object ctx, final VariableResolverFactory vars, Class<T> toType) {
     return convert(executeExpression(compiledExpression, ctx, vars), toType);
   }
 
   /**
+   * 使用初始map变量工厂执行编译表达式，将结果转换为指定类型
    * Execute a compiled expression and convert the result to a type
    *
    * @param compiledExpression -
@@ -1007,6 +1107,7 @@ public class MVEL {
   }
 
   /**
+   * 使用上下文执行编译表达式，将结果转换为指定类型
    * Execute a compiled expression and convert the result to a type.
    *
    * @param compiledExpression -
@@ -1018,36 +1119,42 @@ public class MVEL {
     return convert(executeExpression(compiledExpression, ctx), toType);
   }
 
+  /** 批量执行编译表达式,无上下文，无变量工厂 */
   public static void executeExpression(Iterable<CompiledExpression> compiledExpression) {
     for (CompiledExpression ce : compiledExpression) {
       ce.getValue(null, null);
     }
   }
 
+  /** 使用同一个上下文批量执行编译表达式,意味着多个编译表达式可能修改同一个上下文 */
   public static void executeExpression(Iterable<CompiledExpression> compiledExpression, Object ctx) {
     for (CompiledExpression ce : compiledExpression) {
       ce.getValue(ctx, null);
     }
   }
 
+  /** 使用同一个初始map变量工厂执行多个编译表达式 */
   public static void executeExpression(Iterable<CompiledExpression> compiledExpression, Map vars) {
     CachingMapVariableResolverFactory factory = new CachingMapVariableResolverFactory(vars);
     executeExpression(compiledExpression, null, factory);
     factory.externalize();
   }
 
+  /** 使用初始上下文+初始map变量工厂批量执行多个编译表达式,上下文+变量共享 */
   public static void executeExpression(Iterable<CompiledExpression> compiledExpression, Object ctx, Map vars) {
     CachingMapVariableResolverFactory factory = new CachingMapVariableResolverFactory(vars);
     executeExpression(compiledExpression, ctx, factory);
     factory.externalize();
   }
 
+  /** 使用初始上下文+变量工厂批量执行多个编译表达式 */
   public static void executeExpression(Iterable<CompiledExpression> compiledExpression, Object ctx, VariableResolverFactory vars) {
     for (CompiledExpression ce : compiledExpression) {
       ce.getValue(ctx, vars);
     }
   }
 
+  /** 使用上下文+变量工厂执行多个编译表达式，并将每个编译表达式的结果进行组合返回 */
   public static Object[] executeAllExpression(Serializable[] compiledExpressions, Object ctx, VariableResolverFactory vars) {
     if (compiledExpressions == null) return GetterAccessor.EMPTY;
     Object[] o = new Object[compiledExpressions.length];
@@ -1057,6 +1164,7 @@ public class MVEL {
     return o;
   }
 
+  /** 以debug模式使用上下文+变量工厂执行编译表达式 */
   public static Object executeDebugger(CompiledExpression expression, Object ctx, VariableResolverFactory vars) {
     if (expression.isImportInjectionRequired()) {
       return execute(true, expression, ctx, new ClassImportResolverFactory(expression.getParserConfiguration(), vars, false));
@@ -1066,10 +1174,12 @@ public class MVEL {
     }
   }
 
+  /** 使用指定的宏来翻译表达式 */
   public static String parseMacros(String input, Map<String, Macro> macros) {
     return new MacroProcessor(macros).parse(input);
   }
 
+  /** 使用预处理器来处理表达式 */
   public static String preprocess(char[] input, PreProcessor[] preprocessors) {
     char[] ex = input;
     for (PreProcessor proc : preprocessors) {
@@ -1078,20 +1188,25 @@ public class MVEL {
     return new String(ex);
   }
 
+  /** 使用预处理器来处理字符串表达式 */
   public static String preprocess(String input, PreProcessor[] preprocessors) {
     return preprocess(input.toCharArray(), preprocessors);
   }
 
-  /** 从当前对象上获取一个属性值信息 */
+  /** 从当前对象上获取一个属性值信息,使用解释模式 */
   public static Object getProperty(String property, Object ctx) {
     return PropertyAccessor.get(property, ctx);
   }
 
+  /** 从上下文中对指定属性进行设置值操作,使用解释模式 */
   public static void setProperty(Object ctx, String property, Object value) {
     PropertyAccessor.set(ctx, property, value);
   }
 
   /**
+   * 从指定类上根据方法名+签名获取相应的静态方法对象
+   * 将相应的异常转换为runtimeException
+   * 工具方法
    * A simple utility method to get a static method from a class with no checked exception.  With throw a
    * RuntimeException if the method is not found or is not a static method.
    *
