@@ -22,6 +22,7 @@ import org.mvel2.ast.ASTNode;
 
 /**
  * 描述一个不能正确解析指定属性变量的异常
+ * 即当前解析器工厂不能解析此变量
  *
  * @author Christopher Brock
  */

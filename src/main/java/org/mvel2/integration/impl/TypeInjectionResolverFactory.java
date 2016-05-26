@@ -19,6 +19,7 @@
 package org.mvel2.integration.impl;
 
 /**
+ * 无用类
  * This is a marker interface
  */
 public interface TypeInjectionResolverFactory {

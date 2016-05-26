@@ -2,16 +2,16 @@
  * MVEL 2.0
  * Copyright (C) 2007 The Codehaus
  * Mike Brock, Dhanji Prasanna, John Graham, Mark Proctor
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -26,6 +26,11 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * 一个主要基于下标进行工作的变量工厂，即变量的存储均使用外部已经初始化好的数组来处理
+ * 内部对于变量的处理均采用下标来进行，不再使用父类的map变量表处理
+ * 此工厂实际上要求外部传入的变量表实际上已经存储了要操作的变量信息，否则后续地对不存在的变量操作将无效
+ */
 public class IndexedVariableResolverFactory extends BaseVariableResolverFactory {
 
   public IndexedVariableResolverFactory(String[] varNames, VariableResolver[] resolvers) {
@@ -64,6 +69,7 @@ public class IndexedVariableResolverFactory extends BaseVariableResolverFactory 
     return indexedVariableResolvers[index];
   }
 
+  /** 创建变量解析器，要求此变量必须之前已经在变量中存在了 */
   public VariableResolver createVariable(String name, Object value) {
     VariableResolver vr = getResolver(name);
     if (vr != null) {
@@ -102,6 +108,7 @@ public class IndexedVariableResolverFactory extends BaseVariableResolverFactory 
     return vr;
   }
 
+  /** 通过下标来查找相应的变量解析器 */
   private VariableResolver getResolver(String name) {
     for (int i = 0; i < indexedVariableNames.length; i++) {
       if (indexedVariableNames[i].equals(name)) {

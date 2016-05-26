@@ -18,12 +18,15 @@
 package org.mvel2.integration;
 
 /**
+ * 对解析器的工具类
  * A set of tools for dealing with factorys, specifically to make chaining issues easy to deal with.
  *
  * @author Christopher Brock
  */
 public class ResolverTools {
   /**
+   * 将相应的解析器工厂追加到委托的最后,即保底处理
+   * 此方法与basedVarFactory中的appendFactory重复
    * Based on a root factory, append the new factory to the end of the chain.
    *
    * @param root       The root factory
@@ -47,6 +50,8 @@ public class ResolverTools {
   }
 
   /**
+   * 插入中间变量工厂
+   * 此方法与basedVarFactory中的insertFactory重复
    * Based on the root factory, insert the new factory right after the root, and before any other in the chain.
    *
    * @param root       The root factory

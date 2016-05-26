@@ -47,7 +47,7 @@ public class ParserConfiguration implements Serializable {
   /** 无用属性 */
   private static final int MAX_NEGATIVE_CACHE_SIZE;
 
-  /** 使用到的引用的类名或方法名(不全是类名).也可能为方法句柄 */
+  /** 使用到的引用的类名或方法名(不全是类名).也可能为方法句柄，或者是静态字段值等 */
   protected Map<String, Object> imports;
   /** 使用到的引用的包名 */
   protected HashSet<String> packageImports;

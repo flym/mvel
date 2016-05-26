@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 
 
+/** 无用类 */
 public class TypeInjectionResolverFactoryImpl extends MapVariableResolverFactory implements TypeInjectionResolverFactory {
   public TypeInjectionResolverFactoryImpl() {
     this.variables = new HashMap();

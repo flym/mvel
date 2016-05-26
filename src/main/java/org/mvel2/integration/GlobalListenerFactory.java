@@ -3,8 +3,11 @@ package org.mvel2.integration;
 import java.util.LinkedList;
 import java.util.List;
 
+/** 全局使用的监听器工厂，用于维护全局的set和get监听器 */
 public class GlobalListenerFactory {
+  /** 相应的get类监听器 */
   private static List<Listener> propertyGetListeners;
+  /** 相应的set类监听器 */
   private static List<Listener> propertySetListeners;
 
   public static boolean hasGetListeners() {

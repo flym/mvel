@@ -503,6 +503,7 @@ public class CompilerTools {
   }
 
 
+  /** 获取在变量工厂中作为类引用已经引入的各项信息 */
   public static Map<String, Object> getInjectedImports(VariableResolverFactory factory) {
     if (factory == null) return null;
     do {

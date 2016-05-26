@@ -22,7 +22,9 @@ import org.mvel2.integration.VariableResolver;
 import org.mvel2.integration.VariableResolverFactory;
 
 
+/** 用于描述单个值的变量解析工厂，即可以理解为单个变量指定一个工厂 */
 public class ItemResolverFactory extends BaseVariableResolverFactory {
+  /** 相应单个解析的封装 */
   private final ItemResolver resolver;
 
   public ItemResolverFactory(ItemResolver resolver, VariableResolverFactory nextFactory) {

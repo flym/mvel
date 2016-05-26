@@ -2,16 +2,16 @@
  * MVEL 2.0
  * Copyright (C) 2007 The Codehaus
  * Mike Brock, Dhanji Prasanna, John Graham, Mark Proctor
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -28,17 +28,25 @@ import java.util.Map;
 import java.util.Set;
 
 /**
+ * 基础实现类，实现解析器工厂的主要处理逻辑
+ * 其它实现均继承自此类
  * Use this class to extend you own VariableResolverFactories. It contains most of the baseline implementation needed
  * for the vast majority of integration needs.
  */
 public abstract class BaseVariableResolverFactory implements VariableResolverFactory {
+  /** 当前解析器工厂能够处理的变量解析器 */
   protected Map<String, VariableResolver> variableResolvers = new HashMap<String, VariableResolver>();
+  /** 委托的下一个解析器工厂 */
   protected VariableResolverFactory nextFactory;
 
+  /** 用于描述在基于下标的存储中，当前工厂的处理偏移量，即相应的存储数组并不是完成用于存储当前工厂的 */
   protected int indexOffset = 0;
+  /** 用于存储当前能够解析的基于下标的变量名集合 */
   protected String[] indexedVariableNames;
+  /** 用于存储当前能够解析的基于下标的解析器数组 */
   protected VariableResolver[] indexedVariableResolvers;
 
+  /** 是否终止的标记位 */
   private boolean tiltFlag;
 
   public VariableResolverFactory getNextFactory() {
@@ -62,10 +70,12 @@ public abstract class BaseVariableResolverFactory implements VariableResolverFac
     throw new UnresolveablePropertyException("unable to resolve variable '" + name + "'");
   }
 
+  /** 委托解析器工厂能够解析此变量名 */
   public boolean isNextResolveable(String name) {
     return nextFactory != null && nextFactory.isResolveable(name);
   }
 
+  /** 将相应的解析器工厂追加到委托的最后,即保底处理 */
   public void appendFactory(VariableResolverFactory resolverFactory) {
     if (nextFactory == null) {
       nextFactory = resolverFactory;
@@ -79,6 +89,7 @@ public abstract class BaseVariableResolverFactory implements VariableResolverFac
     }
   }
 
+  /** 将特定的委托类插入到当前委托 之间，即先走参数的委托，再走原来的委托  */
   public void insertFactory(VariableResolverFactory resolverFactory) {
     if (nextFactory == null) {
       nextFactory = resolverFactory;
@@ -136,6 +147,7 @@ public abstract class BaseVariableResolverFactory implements VariableResolverFac
     this.variableResolvers = variableResolvers;
   }
 
+  /** 所获当前工厂已经的基于下标工作的变量名列表 */
   public String[] getIndexedVariableNames() {
     return indexedVariableNames;
   }
@@ -144,6 +156,7 @@ public abstract class BaseVariableResolverFactory implements VariableResolverFac
     this.indexedVariableNames = indexedVariableNames;
   }
 
+  /** 基于下标的变量列表，拿到指定变量名的下标信息 */
   public int variableIndexOf(String name) {
     if (indexedVariableNames != null)
       for (int i = 0; i < indexedVariableNames.length; i++) {
@@ -163,6 +176,7 @@ public abstract class BaseVariableResolverFactory implements VariableResolverFac
     }
   }
 
+  /** 默认不是全基于下标工作的 */
   public boolean isIndexedFactory() {
     return false;
   }

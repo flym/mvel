@@ -6,6 +6,10 @@ import org.mvel2.integration.VariableResolverFactory;
 import java.util.Set;
 
 /**
+ * 全程委托调用，但在使用委托类之前会将相应的结束标记重新标记为false
+ * 即重用之前可能被停止使用的工厂(如在上一条调用链中认为不再使用了，这里又重新使用)
+ * 主要工作在栈式处理当中
+ *
  * @author Mike Brock
  */
 public class StackResetResolverFactory implements VariableResolverFactory {

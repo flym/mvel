@@ -6,12 +6,15 @@ import org.mvel2.integration.VariableResolverFactory;
 import java.util.Set;
 
 /**
+ * 使用委托类进行各个变量解析的工厂类，与全部委托不一样的是，
+ * 针对结束标记，仅由当前类来持有，即在某些处理当中，可以将原来的工厂再次返回去重用
+ *
  * @author Mike Brock
  */
 public class StackDemarcResolverFactory implements VariableResolverFactory {
   private VariableResolverFactory delegate;
   private boolean tilt = false;
-  
+
   public StackDemarcResolverFactory(VariableResolverFactory delegate) {
     this.delegate = delegate;
   }

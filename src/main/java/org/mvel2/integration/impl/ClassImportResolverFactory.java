@@ -2,16 +2,16 @@
  * MVEL 2.0
  * Copyright (C) 2007 The Codehaus
  * Mike Brock, Dhanji Prasanna, John Graham, Mark Proctor
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -25,29 +25,40 @@ import org.mvel2.integration.VariableResolverFactory;
 
 import java.util.*;
 
-/** 用于保存类名与真实类信息的变量解析工厂,即拿来解析类名信息 */
+/**
+ * 用于保存类名与真实类信息的变量解析工厂,即拿来解析类名信息
+ * 其部分功能与parserConfiguration相同，不过两个的作用域不同，
+ * 一个用于在执行期处理变量的解析，另一个用于在整个编译期的处理
+ */
 public class ClassImportResolverFactory extends BaseVariableResolverFactory {
-  /** 引用的包名 */
+  /** 引用的包名(不一定全是包，也可能是类名,以用于引用类中的字段,枚举等) */
   private Set<String> packageImports;
+  /** 用于加载类的类加载器，直接使用于parseConfig */
   private ClassLoader classLoader;
+  /** 各种引用数据，类名，方法名，枚举等 */
   private Map<String, Object> imports;
-  /** 类名引用 */
+  /** 专门用于类名的引用 */
   private Map<String, Object> dynImports;
-  
-  public ClassImportResolverFactory(ParserConfiguration pCfg, VariableResolverFactory nextFactory, boolean compiled) {
-      if ( pCfg != null ) {
-        if (!compiled) {
-          packageImports = pCfg.getPackageImports();
-        }
-        classLoader =  pCfg.getClassLoader();
-        imports = Collections.unmodifiableMap(pCfg.getImports());        
-      } else {
-         classLoader =  Thread.currentThread().getContextClassLoader();
-      }
 
-    this.nextFactory = nextFactory;    
+  public ClassImportResolverFactory(ParserConfiguration pCfg, VariableResolverFactory nextFactory, boolean compiled) {
+    if (pCfg != null) {
+      if (!compiled) {
+        packageImports = pCfg.getPackageImports();
+      }
+      classLoader = pCfg.getClassLoader();
+      imports = Collections.unmodifiableMap(pCfg.getImports());
+    }
+    else {
+      classLoader = Thread.currentThread().getContextClassLoader();
+    }
+
+    this.nextFactory = nextFactory;
   }
 
+  /**
+   * 创建变量，因为当前工厂并不处理普通的变量，因此交由next来处理
+   * 如果委托不存在，则尝试创建,使用map变量工厂来处理
+   */
   public VariableResolver createVariable(String name, Object value) {
     if (nextFactory == null) {
       nextFactory = new MapVariableResolverFactory(new HashMap());
@@ -64,6 +75,7 @@ public class ClassImportResolverFactory extends BaseVariableResolverFactory {
     return nextFactory.createVariable(name, value);
   }
 
+  /** 直接使用类名引用一个类 */
   public Class addClass(Class clazz) {
     if (dynImports == null) dynImports = new HashMap<String, Object>();
     dynImports.put(clazz.getSimpleName(), clazz);
@@ -75,6 +87,7 @@ public class ClassImportResolverFactory extends BaseVariableResolverFactory {
     return (imports != null && imports.containsKey(name)) || (dynImports != null && dynImports.containsKey(name));
   }
 
+  /** 通过import,类名引用，以及包引用来判定指定的变量名是否能被成功解析 */
   public boolean isResolveable(String name) {
     if (name == null) return false;
     if ((imports != null && imports.containsKey(name)) || (dynImports != null && dynImports.containsKey(name))
@@ -119,10 +132,15 @@ public class ClassImportResolverFactory extends BaseVariableResolverFactory {
     //   variableResolvers.clear();
   }
 
+  /**
+   * 此处为获取到所有已加载的东西，并不单指类
+   * 可以理解为相应的方法定义存在问题
+   */
   public Map<String, Object> getImportedClasses() {
     return imports;
   }
 
+  /** 添加包引用 */
   public void addPackageImport(String packageName) {
     if (packageImports == null) packageImports = new HashSet<String>();
     packageImports.add(packageName);

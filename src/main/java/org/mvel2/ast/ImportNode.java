@@ -38,7 +38,7 @@ import static org.mvel2.util.ParseTools.findClassImportResolverFactory;
 public class ImportNode extends ASTNode {
   /** 当前引入的类名(如果是引入类) */
   private Class importClass;
-  /** 当前是否是引入包名 */
+  /** 当前是否是引入包名(或者是静态类) */
   private boolean packageImport;
   private int _offset;
 
