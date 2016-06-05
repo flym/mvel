@@ -2,16 +2,16 @@
  * MVEL 2.0
  * Copyright (C) 2007 The Codehaus
  * Mike Brock, Dhanji Prasanna, John Graham, Mark Proctor
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -53,12 +53,14 @@ public class ParserContext implements Serializable {
   private int lineCount = 1;
   private int lineOffset;
 
+  /** 父上下文,即在解析过程中,也存在递归解析的过程 */
   private ParserContext parent;
+  /** 相应的解析配置 */
   private ParserConfiguration parserConfiguration;
 
   private Object evaluationContext;
 
-  /** 存放当前有顺序的输入变量信息,顺序保证变量举随机分布，之后可以根据此顺序查找具体值 */
+  /** 存放当前有顺序的输入变量信息,顺序保证变量不会随机分布，之后可以根据此顺序查找具体值 */
   private ArrayList<String> indexedInputs;
   /** 存放当前有顺序的临时变量信息,顺序保证当前变量不会随机分布,之后可以根据此顺序查找具体值 */
   private ArrayList<String> indexedLocals;
@@ -91,6 +93,7 @@ public class ParserContext implements Serializable {
   /** 针对指定的编译表达式，缓存相应的返回类型 */
   private transient Map<String, Class> returnTypeCache;
 
+  /** 当前是否是一个函数上下文,即正在一个解析函数的过程当中 */
   private boolean functionContext = false;
   private boolean compiled = false;
   /** 是否是严格类型调用的 */
@@ -107,6 +110,10 @@ public class ParserContext implements Serializable {
   private boolean debugSymbols = false;
   private boolean blockSymbols = false;
   private boolean executableCodeReached = false;
+  /**
+   * 是否在解析过程中允许按下标进行变量存储和分配,即开启变量工厂的下标处理模式
+   * 或者是认为在处理过程中,是否允许添加新的变量信息
+   *  */
   private boolean indexAllocation = false;
   /** 判断在处理中，是否使用了新的变量 */
   protected boolean variablesEscape = false;
@@ -586,6 +593,7 @@ public class ParserContext implements Serializable {
     }
   }
 
+  /** 从入参中移除相应的变量信息,即认为这些信息不需要通过入参进行传递(因为变量中本身就有) */
   public void processTables() {
     for (String name : variables.keySet()) {
       inputs.remove(name);
@@ -849,6 +857,7 @@ public class ParserContext implements Serializable {
     return parserConfiguration.hasImports();
   }
 
+  /** 声明函数定义 */
   public void declareFunction(Function function) {
     if (globalFunctions == null) globalFunctions = new LinkedHashMap<String, Function>();
     globalFunctions.put(function.getName(), function);

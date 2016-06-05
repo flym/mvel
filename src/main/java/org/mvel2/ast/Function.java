@@ -2,16 +2,16 @@
  * MVEL 2.0
  * Copyright (C) 2007 The Codehaus
  * Mike Brock, Dhanji Prasanna, John Graham, Mark Proctor
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -51,6 +51,14 @@ public class Function extends ASTNode implements Safe {
   /** 是否是单列的，可以理解为是否是静态方法 */
   protected boolean singleton;
 
+  /**
+   * 构建出函数构建对象
+   *
+   * @param start       条件起始位置
+   * @param offset      条件长度位
+   * @param blockStart  执行语句起始位
+   * @param blockOffset 执行语句长度位
+   */
   public Function(String name,
                   char[] expr,
                   int start,
@@ -66,12 +74,14 @@ public class Function extends ASTNode implements Safe {
     }
     this.expr = expr;
 
+    //解析参数
     parmNum = (this.parameters = parseParameterDefList(expr, start, offset)).length;
 
     //pCtx.declareFunction(this);
 
     ParserContext ctx = new ParserContext(pCtx.getParserConfiguration(), pCtx, true);
 
+    //单独声明函数,即声明为全局静态,否则认为是在一个函数体内再声明函数,那么就不是一个全局的,可以理解为就是一个普通的闭包函数
     if (!pCtx.isFunctionContext()) {
       singleton = true;
       pCtx.declareFunction(this);
@@ -81,6 +91,7 @@ public class Function extends ASTNode implements Safe {
     }
 
     /**
+     * 显示的加入变量当中,以避免当外面有一个同名的参数时存在参数覆盖的问题
      * To prevent the function parameters from being counted as
      * external inputs, we must add them explicitly here.
      */
@@ -90,6 +101,7 @@ public class Function extends ASTNode implements Safe {
     }
 
     /**
+     * 检测代码块的表达式是否合法,即进行验证式编译
      * Compile the expression so we can determine the input-output delta.
      */
     ctx.setIndexAllocation(false);
@@ -100,7 +112,7 @@ public class Function extends ASTNode implements Safe {
     ctx.setIndexAllocation(true);
 
     /**
-     * 定义参数入参
+     * 这里认为在父上下文中的变量信息均已经存在,因此当前上下文中认为这里都是外部已输入的
      * Add globals as inputs
      */
     if (pCtx.getVariables() != null) {

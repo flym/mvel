@@ -97,6 +97,7 @@ public class ParseTools {
   }
 
 
+  /** 从一个字符串中解析出参数的定义信息,即通过,号进行分隔解析处理,用于自定义函数时进行参数解析 */
   public static String[] parseParameterDefList(char[] parm, int offset, int length) {
     List<String> list = new LinkedList<String>();
 
@@ -110,6 +111,7 @@ public class ParseTools {
 
     for (; i < end; i++) {
       switch (parm[i]) {
+        //---------------------------- 各种需要表示单个语句块 start ------------------------------//
         case '(':
         case '[':
         case '{':
@@ -124,8 +126,12 @@ public class ParseTools {
           i = captureStringLiteral('"', parm, i, parm.length);
           continue;
 
+          //---------------------------- 各种需要表示单个语句块 end ------------------------------//
+
+          //这里表示碰到一个, 即一个定义结束了,则将这个值加入到参数列表当中
         case ',':
           if (i > start) {
+            //在处理字符串参数时要求最前面不能是空格,如 __abc这种,则移除最前面的空格位
             while (isWhitespace(parm[start]))
               start++;
 
@@ -134,12 +140,14 @@ public class ParseTools {
             list.add(s);
           }
 
+          //以下这个while无用
           while (isWhitespace(parm[i]))
             i++;
 
           start = i + 1;
           continue;
 
+          //碰到不是以上的字符的,则要求必须是定义字段a-zA-Z0-9,或者是空格
         default:
           if (!isWhitespace(parm[i]) && !isIdentifierPart(parm[i])) {
             throw new CompileException("expected parameter", parm, start);
@@ -147,6 +155,8 @@ public class ParseTools {
       }
     }
 
+    //追加最末尾的参数信息
+    // 以下为什么使用if else未看明白,可能是之前的bug,看这里看不出来走else的情况
     if (start < (length + offset) && i > start) {
       if ((s = createStringTrimmed(parm, start, i - start)).length() > 0) {
         checkNameSafety(s);
@@ -2101,6 +2111,7 @@ public class ParseTools {
     return end > start + 2 && isPropertyOnly(array, start, end - 2) && array[end - 2] == '[' && array[end - 1] == ']';
   }
 
+  /** 检查一个字符串作为参数是否合法(即不能是关键字或者首位不能是数字) */
   public static void checkNameSafety(String name) {
     if (isReservedWord(name)) {
       throw new RuntimeException("illegal use of reserved word: " + name);

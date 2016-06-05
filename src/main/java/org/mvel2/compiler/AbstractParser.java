@@ -1863,6 +1863,7 @@ public class AbstractParser implements Parser, Serializable {
             || isNotValidNameorLabel(name))
           throw new CompileException("illegal function name or use of reserved word", expr, cursor);
 
+        //进行函数解析
         FunctionParser parser = new FunctionParser(name, cursor, end - cursor, expr, fields, pCtx, splitAccumulator);
         Function function = parser.parse();
         cursor = parser.getCursor();
@@ -1870,6 +1871,7 @@ public class AbstractParser implements Parser, Serializable {
         return lastNode = function;
       }
       case PROTO: {
+        //todo 原型解析
         if (ProtoParser.isUnresolvedWaiting()) {
           ProtoParser.checkForPossibleUnresolvedViolations(expr, cursor, pCtx);
         }
