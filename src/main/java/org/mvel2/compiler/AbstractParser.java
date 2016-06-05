@@ -128,8 +128,9 @@ public class AbstractParser implements Parser, Serializable {
   protected static final int OP_RESET_FRAME = 0;
   protected static final int OP_CONTINUE = 1;
 
+  /** 提前处理 = 操作 (而不是单独成项),即a=3,可以为a=3 1个赋值节点,也可以是a op 3 3个节点,这里的greedy即前者 */
   protected boolean greedy = true;
-  /** 最新节点是否是有效操作符 */
+  /** 最新节点是否是属性,引用变量等变量信息 */
   protected boolean lastWasIdentifier = false;
   /** 最新节点是否是代码行 */
   protected boolean lastWasLineLabel = false;
@@ -546,11 +547,14 @@ public class AbstractParser implements Parser, Serializable {
                 captureToNextTokenJunction();
                 return lastNode = new IsDef(expr, st, cursor - st, pCtx);
 
-              //解析import节点
+              //解析import节点,即引入特定信息
               case IMPORT:
                 st = cursor = trimRight(cursor);
                 captureToEOS();
                 ImportNode importNode = new ImportNode(expr, st, cursor - st, pCtx);
+
+                //因为在这里已经引入了,因此提前加入到解析上下文中,以方便在后面的解析中会直接使用到
+                //否则在后面的解析过程中可能就会出现解析冲突(如同类函数等)
 
                 if (importNode.isPackageImport()) {
                   pCtx.addPackageImport(importNode.getPackageImport());
@@ -560,11 +564,12 @@ public class AbstractParser implements Parser, Serializable {
                 }
                 return lastNode = importNode;
 
-              //解析import static节点
+              //解析import static节点 引用单个方法
               case IMPORT_STATIC:
                 st = cursor = trimRight(cursor);
                 captureToEOS();
                 StaticImportNode staticImportNode = new StaticImportNode(expr, st, trimLeft(cursor) - st, pCtx);
+                //提前加入到上下文中
                 pCtx.addImport(staticImportNode.getMethod().getName(), staticImportNode.getMethod());
                 return lastNode = staticImportNode;
 
@@ -589,13 +594,20 @@ public class AbstractParser implements Parser, Serializable {
                     if (end == (cursor = st))
                       throw new CompileException("illegal use of reserved word: var", expr, st);
 
+                    //有=号,即表示是一个正常的变量赋值操作,跳出整个操作循环,由后面的赋值处理程序来进行处理(=)
+                    //在这个处理过程中,可以认为这里的var没有什么作用
+                    //进一步认为,在mvel中,a=1这种赋值操作单元中,var是可选的
                     continue Mainloop;
                   }
                   else {
+                    //没有=,则认为是声明一个变量定义
                     name = new String(expr, st, end - st);
+                    //变量之前是有定义的(解析时定义),因此认为是重复定义,因此这里即直接引用
+                    //并且是按照指定的顺序进行定义,因此这里需要在执行时也要进入到相应的变量下标中
                     if (pCtx != null && (idx = pCtx.variableIndexOf(name)) != -1) {
                       splitAccumulator.add(lastNode = new IndexedDeclTypedVarNode(idx, st, end - st, Object.class, pCtx));
                     }
+                    //新定义变量,标识一下即可
                     else {
                       splitAccumulator.add(lastNode = new DeclTypedVarNode(name, expr, st, end - st, Object.class,
                           fields, pCtx));
@@ -603,6 +615,7 @@ public class AbstractParser implements Parser, Serializable {
                   }
 
                   if (cursor == this.end || expr[cursor] != ',') break;
+                    //如果后面存在,则表示要继续进行变量定义,因此这里继续这个循环,否则就跳出此循环
                   else {
                     cursor++;
                     skipWhitespace();
@@ -610,8 +623,10 @@ public class AbstractParser implements Parser, Serializable {
                   }
                 }
 
+                //因为可能会定义多个变量,因为这里将最后一个弹出来,即从右到左
                 return (ASTNode) splitAccumulator.pop();
 
+              //contains操作
               case CONTAINS:
                 lastWasIdentifier = false;
                 return lastNode = new OperatorNode(Operator.CONTAINS, expr, st, pCtx);
@@ -626,6 +641,7 @@ public class AbstractParser implements Parser, Serializable {
            * 但这里并不了解应该如何处理，那么这里跳过整个()，继续处理
            * 因为下面的逻辑只处理一个属性的方式，这里因为可能是一个单独的方法调用。
            * 因此这里单独处理，以避免与下面设计冲突
+           * 同时,这里会在最后处理一个propertyNode(即方法调用)
            * If we *were* capturing a token, and we just hit a non-identifier
            * character, we stop and figure out what to do.
            */
@@ -637,13 +653,15 @@ public class AbstractParser implements Parser, Serializable {
            * 进入到这里，即表示已经拿到一个 属性信息或值信息,接下来根据后面的符号以进行进一步处理
            * 以级联处理如 a++,a+=1 这种运算信息，对于像 a + 1这种，则不由此循环处理
            * 这下面的主要处理即处理 属性运算符或者是 ?= 的情况，即形成propertyNode或者是assignNode
+           *
+           * 对于不能处理,都将跳出captureLoop,以解析为属性操作,并保留现场,在下一次操作中解析为操作符节点
            * If we encounter any of the following cases, we are still dealing with
            * a contiguous token.
            */
           CaptureLoop:
           while (cursor != end) {
             switch (expr[cursor]) {
-              //.操作符，表示还会有进一步的处理，因此这里定义为联合操作
+              //.操作符，表示还会有进一步的处理，因此这里定义为联合操作,即会有多次属性访问这种
               case '.':
                 union = true;
                 cursor++;
@@ -653,14 +671,14 @@ public class AbstractParser implements Parser, Serializable {
 
                 // ? 操作符，有2种情况，一种是支持 nullSafe的属性访问，另一种是 3元操作符，因此这里分开进行处理
               case '?':
-                //a.?b这种访问，表示安全的属性访问，这里进行支持，即如果b值是null，则不会报NPE，而是提前返回
+                //a.?b这种访问，表示安全的属性访问，这里进行支持，即如果b值是null(或在map中不存在)，则不会报NPE，而是提前返回
                 if (lookToLast() == '.' || cursor == start) {
                   union = true;
                   cursor++;
                   continue;
                 }
                 else {
-                  //三元运算符处理
+                  //三元运算符处理,退出循环,先处理当前捕获组,然后在单独地处理?,就会将?解析为一个操作符了
                   break CaptureLoop;
                 }
 
@@ -691,7 +709,7 @@ public class AbstractParser implements Parser, Serializable {
 
                     captureToEOS();
 
-                    if (union) {
+                    if (union) {//之前有.号,表示深度属性赋值处理
                       //属性赋值操作
                       return lastNode = new DeepAssignmentNode(expr, st = trimRight(st), trimLeft(cursor) - st, fields,
                           ADD, name, pCtx);
@@ -717,6 +735,7 @@ public class AbstractParser implements Parser, Serializable {
                   //     capture = true;
                   continue Mainloop;
                 }
+                //正常的 加法操作
                 break CaptureLoop;
 
               //- 操作符 处理 -- 以及 -= 处理流程与+相同
@@ -765,6 +784,8 @@ public class AbstractParser implements Parser, Serializable {
                   capture = true;
                   continue Mainloop;
                 }
+
+                //正常操作符
                 break CaptureLoop;
 
               /**
@@ -779,7 +800,7 @@ public class AbstractParser implements Parser, Serializable {
               case ':':
                 break CaptureLoop;
 
-              //处理需要与 ?= 配合的情况
+              //处理需要与 ?=(如%=) 配合的情况
               case '\u00AB': // special compact code for recursive parses
               case '\u00BB':
               case '\u00AC':
@@ -949,7 +970,7 @@ public class AbstractParser implements Parser, Serializable {
                         SUB, fields, pCtx);
                   }
                 }
-                //处理正常的赋值操作
+                //处理正常的赋值操作 提前赋值,而不是单独成项
                 if (greedy && lookAhead() != '=') {
                   cursor++;
 
@@ -960,7 +981,8 @@ public class AbstractParser implements Parser, Serializable {
                         fields | ASTNode.ASSIGN, pCtx);
                   }
                   else if (lastWasIdentifier) {
-                    //这里表示处理如 int b = 4的这种情况，即前一个节点为一个声明节点
+                    //这里表示处理如 a.b = 4的这种情况，即前一个节点为一个声明节点
+                    //这种情况就是属性赋值处理
                     return procTypedNode(false);
                   }
                   else if (pCtx != null && ((idx = pCtx.variableIndexOf(t)) != -1
@@ -984,18 +1006,23 @@ public class AbstractParser implements Parser, Serializable {
                         fields | ASTNode.ASSIGN, pCtx);
                   }
                 }
+
+                //非greedy下的赋值处理
                 break CaptureLoop;
 
               default:
                 if (cursor != end) {
                   if (isIdentifierPart(expr[cursor])) {
                     //处理是否要进行级联处理的情况，如a.b.c这种，否则就跳过
+                    //因为前面已经属性,如果这里并不是.级联操作,那肯定是其它情况,否则就是级联下的属性访问等
                     if (!union) {
                       break CaptureLoop;
                     }
                     cursor++;
+                    //因为这里拿到的是定义符,则直接贪婪式处理
                     while (cursor != end && isIdentifierPart(expr[cursor])) cursor++;
                   }
+                  //其它操作符,并且后面继续接定义符,并由后面处理,如空格等
                   else if ((cursor + 1) != end && isIdentifierPart(expr[cursor + 1])) {
                     break CaptureLoop;
                   }
@@ -1014,6 +1041,7 @@ public class AbstractParser implements Parser, Serializable {
            */
           trimWhitespace();
 
+          //因为已经捕获取操作属性,因此这里认为是属性操作符节点,则创建出相应的属性信息
           return createPropertyToken(st, cursor);
         }
         else {
@@ -1022,13 +1050,14 @@ public class AbstractParser implements Parser, Serializable {
             case '.': {
               cursor++;
               //如果.后接数字，表示碰到了小数点，那么表示一个普通的浮点数
+              //因为是数字,则交由上面的属性处理来完成,即创建出propertyToken信息
               if (isDigit(expr[cursor])) {
                 capture = true;
                 continue;
               }
               expectNextChar_IW('{');
 
-              //处理with节点
+              //处理with节点 .{ 则表示with
               return lastNode = new ThisWithNode(expr, st, cursor - st - 1
                   , cursor + 1,
                   (cursor = balancedCaptureWithLineAccounting(expr,
@@ -1049,7 +1078,7 @@ public class AbstractParser implements Parser, Serializable {
               return lastNode = new InterceptorWrapper(pCtx.getInterceptors().get(name), nextToken(), pCtx);
             }
 
-            //这里的= 没有任何作用，走到这里的节点都是错误节点
+            //普通赋值
             case '=':
               return createOperator(expr, st, (cursor += 2));
 
@@ -1168,7 +1197,7 @@ public class AbstractParser implements Parser, Serializable {
                   case '"':
                     cursor = captureStringLiteral('"', expr, cursor, end);
                     break;
-                  //支持 in Fold表达式，忽略,这里不太明白这里的fold表示什么意思
+                  //支持 in Fold表达式
                   case 'i':
                     if (brace == 1 && isWhitespace(lookBehind()) && lookAhead() == 'n' && isWhitespace(lookAhead(2))) {
 
@@ -1259,6 +1288,7 @@ public class AbstractParser implements Parser, Serializable {
                       break;
                     }
 
+                    //认为是类型转换,则返回类型转换节点
                     if (isCast) {
                       st = cursor;
 
@@ -1276,6 +1306,7 @@ public class AbstractParser implements Parser, Serializable {
 
               }
 
+              //由idea可知这里肯定不会进这个if
               if (tmpStart != -1) {
                 return handleUnion(handleSubstatement(new Substatement(expr, tmpStart, cursor - tmpStart, fields, pCtx)));
               }
@@ -1467,6 +1498,7 @@ public class AbstractParser implements Parser, Serializable {
     }
   }
 
+  /** 如果子节点是一个纯字符串,则尝试直接进行解析,并转换为相应的常量节点 */
   public ASTNode handleSubstatement(Substatement stmt) {
     if (stmt.getStatement() != null && stmt.getStatement().isLiteralOnly()) {
       return new LiteralNode(stmt.getStatement().getValue(null, null, null), pCtx);
@@ -1542,7 +1574,7 @@ public class AbstractParser implements Parser, Serializable {
   }
 
   /**
-   * 根据当前区间范围创建节点信息,一般认为即只能创建属性节点
+   * 根据当前区间范围创建节点信息,可以是属性节点或者是纯字符串常量节点
    * Generate a property token
    *
    * @param st  the start offset
@@ -1611,9 +1643,11 @@ public class AbstractParser implements Parser, Serializable {
   }
 
   /**
+   * 处理当前节点,即当前节点还需要一些额外处理
    * Process the current typed node
    *
    * @param decl node is a declaration or not
+   *             是否是仅仅声明.如果是false,则表示当前还需要继续进行赋值操作,即对当前节点进行赋值处理
    * @return and ast node
    */
   private ASTNode procTypedNode(boolean decl) {
@@ -1703,6 +1737,7 @@ public class AbstractParser implements Parser, Serializable {
 
   /**
    * 生成一个带条件的语句块，即类似执行if while foreach这种语句块
+   * 相应的参数信息包括条件区间,执行块区间,这些信息足以创建出相应的节点信息
    * Generate a code block token.
    *
    * @param condStart  the start offset for the condition
@@ -1827,9 +1862,10 @@ public class AbstractParser implements Parser, Serializable {
   }
 
   /**
-   * 准备捕获块节点的内容信息
+   * 准备捕获块节点的内容信息,并针对相应的信息进行解析和处理
    *
    * @param cond 是否要处理条件信息，即后面需要带条件信息
+   * @param node 前一个节点,即要处理的节点的前一个节点信息,用于处理需要与前一个节点交互的情况,如else if
    */
   private ASTNode _captureBlock(ASTNode node, final char[] expr, boolean cond, int type) {
     skipWhitespace();
@@ -1916,6 +1952,7 @@ public class AbstractParser implements Parser, Serializable {
 
       }
       default:
+        //存在条件处理,因此需要使用(来捕获相应的参数信息
         if (cond) {
           //要求条件表达式前面必须要有小括号，这样以方便处理
           if (expr[cursor] != '(') {
@@ -1940,9 +1977,11 @@ public class AbstractParser implements Parser, Serializable {
     if (cursor >= end) {
       throw new CompileException("unexpected end of statement", expr, end);
     }
+    //带 {,语句块
     else if (expr[cursor] == '{') {
       blockEnd = cursor = balancedCaptureWithLineAccounting(expr, blockStart = cursor, end, '{', pCtx);
     }
+    //不带,半条语句
     else {
       blockStart = cursor - 1;
       captureToEOSorEOL();
@@ -1959,7 +1998,7 @@ public class AbstractParser implements Parser, Serializable {
           return ifNode.setElseBlock(expr, st = trimRight(blockStart + 1), trimLeft(blockEnd) - st, pCtx);
         }
         else {
-          //前一个节点存在，有条件表达式，即肯定 是else语句
+          //前一个节点存在，有条件表达式，即肯定 是else if语句
           return ifNode.setElseIf((IfNode) createBlockToken(startCond, endCond, trimRight(blockStart + 1),
               trimLeft(blockEnd), type));
         }
@@ -1979,13 +2018,13 @@ public class AbstractParser implements Parser, Serializable {
       if ("while".equals(name = new String(expr, st, cursor - st))) {
         skipWhitespace();
         startCond = cursor + 1;
-        endCond = cursor = balancedCaptureWithLineAccounting(expr, cursor, end, '(', pCtx);
+        endCond = cursor = balancedCaptureWithLineAccounting(expr, cursor, end, '(', pCtx);//while条件
         return createBlockToken(startCond, endCond, trimRight(blockStart + 1), trimLeft(blockEnd), type);
       }
       else if ("until".equals(name)) {
         skipWhitespace();
         startCond = cursor + 1;
-        endCond = cursor = balancedCaptureWithLineAccounting(expr, cursor, end, '(', pCtx);
+        endCond = cursor = balancedCaptureWithLineAccounting(expr, cursor, end, '(', pCtx);//until条件
         return createBlockToken(startCond, endCond, trimRight(blockStart + 1), trimLeft(blockEnd),
             ASTNode.BLOCK_DO_UNTIL);
       }
@@ -1993,6 +2032,7 @@ public class AbstractParser implements Parser, Serializable {
         throw new CompileException("expected 'while' or 'until' but encountered: " + name, expr, cursor);
       }
     }
+    //剩下的就按照通用解析规则来处理,如for循环等
     // DON"T REMOVE THIS COMMENT!
     // else if (isFlag(ASTNode.BLOCK_FOREACH) || isFlag(ASTNode.BLOCK_WITH)) {
     else {
@@ -2123,6 +2163,7 @@ public class AbstractParser implements Parser, Serializable {
 
   /**
    * 捕获一个单元逻辑执行块的处理语句
+   * 与eos不同,eos忽略换行,这里的换行表示当前语句需要结束了,因此要单独处理
    * From the current cursor position, capture to the end of statement, or the end of line, whichever comes first.
    */
   protected void captureToEOSorEOL() {
@@ -2501,6 +2542,7 @@ public class AbstractParser implements Parser, Serializable {
   }
 
   /**
+   * 期望下一个操作符,如果不是期望的操作符,则报相应的异常处理
    * Expect the next specified character or fail
    *
    * @param c character

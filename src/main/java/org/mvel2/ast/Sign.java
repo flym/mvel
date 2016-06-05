@@ -76,6 +76,7 @@ public class Sign extends ASTNode {
   }
 
 
+  /** 取 -接口,根据不同的类型进行处理 */
   private interface Signer extends Serializable {
     public Object sign(Object o);
   }

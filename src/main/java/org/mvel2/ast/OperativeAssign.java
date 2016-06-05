@@ -27,7 +27,7 @@ import org.mvel2.util.ParseTools;
 import static org.mvel2.MVEL.eval;
 import static org.mvel2.util.ParseTools.subCompileExpression;
 
-/** 描述变量赋值的操作节点 */
+/** 描述变量赋值(?=)的操作节点 */
 public class OperativeAssign extends ASTNode {
   /** 变量名 */
   private String varName;

@@ -52,7 +52,7 @@ public class ImportNode extends ASTNode {
     this.pCtx = pCtx;
 
     if (ParseTools.endsWith(expr, start, offset, WC_TEST)) {
-      //引入包
+      //引入包 或者是引入单个类的静态成员
       packageImport = true;
       _offset = (short) ParseTools.findLast(expr, start, offset, '.');
       if (_offset == -1) {
@@ -83,6 +83,8 @@ public class ImportNode extends ASTNode {
 
 
   public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
+    //执行过程即找到类变量工厂,然后将其导入
+
     if (!packageImport) {
       if (MVEL.COMPILER_OPT_ALLOCATE_TYPE_LITERALS_TO_SHARED_SYMBOL_TABLE) {
         factory.createVariable(importClass.getSimpleName(), importClass);
