@@ -86,6 +86,7 @@ public class ExecutionStack {
     else return element.value;
   }
 
+  /** 重新将相应的值复制一份并入栈 */
   public void dup() {
     size++;
     element = new StackElement(element, element.value);

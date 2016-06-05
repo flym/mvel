@@ -19,6 +19,7 @@ import java.util.Map;
 
 /**
  * 用于描述堆栈指令集的节点信息
+ *
  * @author Mike Brock <cbrock@redhat.com>
  */
 public class Stacklang extends BlockNode {
@@ -34,6 +35,7 @@ public class Stacklang extends BlockNode {
     this.blockOffset = blockOffset;
     this.fields = fields | ASTNode.STACKLANG;
 
+    //每个指令集以分号进行分隔
     String[] instructions = new String(expr, blockStart, blockOffset).split(";");
 
     instructionList = new ArrayList<Instruction>(instructions.length);
@@ -48,6 +50,7 @@ public class Stacklang extends BlockNode {
   public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
     ExecutionStack stk = new ExecutionStack();
     stk.push(getReducedValue(stk, thisValue, factory));
+    //如果栈中有多个值,则返回最之前的那个值(好奇怪...)
     if (stk.isReduceable()) {
       while (true) {
         stk.op();
@@ -73,6 +76,7 @@ public class Stacklang extends BlockNode {
 
 
       switch (instruction.opcode) {
+        //store即存储值语义 不会弹出栈值
         case Operator.STORE:
           if (instruction.cache == null) {
             instruction.cache = factory.createVariable(instruction.expr, stack.peek());
@@ -81,12 +85,14 @@ public class Stacklang extends BlockNode {
             ((VariableResolver) instruction.cache).setValue(stack.peek());
           }
           break;
+        //加载值语义,入栈
         case Operator.LOAD:
           if (instruction.cache == null) {
             instruction.cache = factory.getVariableResolver(instruction.expr);
           }
           stack.push(((VariableResolver) instruction.cache).getValue());
           break;
+        //获取字段语义 弹出class,入栈字段
         case Operator.GETFIELD:
           try {
             if (stack.isEmpty() || !(stack.peek() instanceof Class)) {
@@ -108,6 +114,7 @@ public class Stacklang extends BlockNode {
             throw new CompileException("field access error", expr, blockStart, e);
           }
           break;
+        //存储字段,弹出class和相应的值,设置值之后,重新入栈
         case Operator.STOREFIELD:
           try {
             if (stack.isEmpty() || !(stack.peek() instanceof Class)) {
@@ -124,6 +131,7 @@ public class Stacklang extends BlockNode {
           }
           break;
 
+        //压入类型信息
         case Operator.LDTYPE:
           try {
             if (instruction.cache == null) {
@@ -136,6 +144,7 @@ public class Stacklang extends BlockNode {
           }
           break;
 
+        //方法 调用 出栈参数列表+类,压入相应的处理值
         case Operator.INVOKE:
           Object[] parms;
           ExecutionStack call = new ExecutionStack();
@@ -186,6 +195,7 @@ public class Stacklang extends BlockNode {
             }
           }
           break;
+        //压入执行值
         case Operator.PUSH:
           if (instruction.cache == null) {
             instruction.cache = MVEL.eval(instruction.expr, ctx, factory);
@@ -203,6 +213,7 @@ public class Stacklang extends BlockNode {
         case Operator.JUMPIF:
           if (!stack.popBoolean()) continue;
 
+          //指令跳转
         case Operator.JUMP:
           if (instruction.cache != null) {
             i1 = (Integer) instruction.cache;
@@ -230,6 +241,7 @@ public class Stacklang extends BlockNode {
         case Operator.XSWAP:
           stack.xswap2();
           break;
+        //交换值
         case Operator.SWAP:
           Object o = stack.pop();
           Object o2 = stack.pop();
@@ -252,16 +264,19 @@ public class Stacklang extends BlockNode {
 
   /** 解析指令集，对于不能解析的指令实际上会忽略掉 */
   private static Instruction parseInstruction(String s) {
+    //每个指令集中间以空格进行分隔
     int split = s.indexOf(' ');
 
     Instruction instruction = new Instruction();
 
     String keyword = split == -1 ? s : s.substring(0, split);
 
+    //进行进行指令代码赋值,如果没有匹配上,在最终处理时将会在case中忽略掉
     if (opcodes.containsKey(keyword)) {
       instruction.opcode = opcodes.get(keyword);
     }
 
+    //指令集后面的表达式,即判定是否是单指令集,否则就认为后面的是其它参数信息
     //noinspection StringEquality
     if (keyword != s) {
       instruction.expr = s.substring(split + 1);
