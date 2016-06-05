@@ -179,6 +179,7 @@ public interface Operator {
   /** isdef 是否有定义此变量 */
   public static final int ISDEF = 47;
 
+  /** 原型指令声明 */
   public static final int PROTO = 48;
 
   /** ++ a */

@@ -27,7 +27,9 @@ import org.mvel2.optimizers.OptimizerFactory;
 
 /** 表示基于主节点然后再继续香处理的节点信息,通常用于表示主节点之后的某个属性调用或者方法调用 */
 public class Union extends ASTNode {
+  /** 当前访问的主节点,即先处理主节点,再处理后续数据 */
   private ASTNode main;
+  /** 相应的优化器(与父类中的accessor作用一致) */
   private transient Accessor accessor;
 
   public Union(char[] expr, int start, int offset, int fields, ASTNode main, ParserContext pCtx) {

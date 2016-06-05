@@ -123,7 +123,7 @@ public class ASTNode implements Cloneable, Serializable {
   /** 描述当前节点的解析属性值 */
   public int fields = 0;
 
-  /** 当前节点的处理类型 */
+  /** 当前节点的处理类型(声明类型) */
   protected Class egressType;
   /** 描述当前节点所引用的字符串 */
   protected char[] expr;
@@ -450,6 +450,7 @@ public class ASTNode implements Cloneable, Serializable {
     this.fields |= PCTX_STORED;
   }
 
+  /** 判定是否是调试节点 */
   public boolean isDebuggingSymbol() {
     return this.fields == -1;
   }

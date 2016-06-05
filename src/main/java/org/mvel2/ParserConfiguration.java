@@ -101,7 +101,7 @@ public class ParserConfiguration implements Serializable {
     this.packageImports = packageImports;
   }
 
-  /** 通过引用名获取之前已import进来的类名，或者是常量类名 */
+  /** 通过引用名获取之前已import进来的类名，并且期望相应的类型为class类型 */
   public Class getImport(String name) {
     if (imports != null && imports.containsKey(name) && imports.get(name) instanceof Class) {
       return (Class) imports.get(name);

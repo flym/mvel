@@ -5,12 +5,17 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /**
+ * 行映射处理
+ *
  * @author Mike Brock <cbrock@redhat.com>
  */
 public class LineMapper {
+  /** 整个表达式 */
   private char[] expr;
 
+  /** 每一行的具体映射 */
   private ArrayList<Node> lineMapping;
+  /** 有哪些行 */
   private Set<Integer> lines;
 
   public LineMapper(char[] expr) {
@@ -58,13 +63,18 @@ public class LineMapper {
 
   public static interface LineLookup {
     public int getLineFromCursor(int cursor);
+
     public boolean hasLine(int line);
   }
 
+  /** 描述每一行的位置信息 */
   private static class Node implements Comparable<Node> {
+    /** 起始点 */
     private int cursorStart;
+    /** 结束点 */
     private int cursorEnd;
 
+    /** 当前第几行 */
     private int line;
 
 
@@ -85,9 +95,11 @@ public class LineMapper {
     public int compareTo(Node node) {
       if (node.cursorStart >= cursorEnd) {
         return 1;
-      } else if (node.cursorEnd < cursorStart) {
+      }
+      else if (node.cursorEnd < cursorStart) {
         return -1;
-      } else {
+      }
+      else {
         return 0;
       }
     }

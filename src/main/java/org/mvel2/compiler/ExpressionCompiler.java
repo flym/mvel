@@ -37,9 +37,11 @@ import static org.mvel2.util.ParseTools.subCompileExpression;
 import static org.mvel2.util.ParseTools.unboxPrimitive;
 
 /**
+ * 描述相应的表达式编译器
  * This is the main MVEL compiler.
  */
 public class ExpressionCompiler extends AbstractParser {
+  /** 当前编译表达式返回的类型 */
   private Class returnType;
 
   /** 是否只是验证表达式是否合法 */
@@ -49,12 +51,15 @@ public class ExpressionCompiler extends AbstractParser {
   /** 是否需要二次优化(即去and操作) */
   private boolean secondPassOptimization = false;
 
+  /** 主要的编译操作，返回编译表达式 */
   public CompiledExpression compile() {
     try {
       this.debugSymbols = pCtx.isDebugSymbols();
       return _compile();
     }
     finally {
+      //如果有严重的编译错误，报相应的异常
+      //当前很少会有严重错误，因此一般情况下都不会走到这里来，而是直接throw出相应的异常
       if (pCtx.isFatalError()) {
         StringAppender err = new StringAppender();
 
@@ -83,6 +88,7 @@ public class ExpressionCompiler extends AbstractParser {
   }
 
   /**
+   * 进行实际的编译操作
    * Initiate an in-context compileShared.  This method should really only be called by the internal API.
    *
    * @return compiled expression object
@@ -100,6 +106,7 @@ public class ExpressionCompiler extends AbstractParser {
     ASTLinkedList astBuild = new ASTLinkedList();
     stk = new ExecutionStack();
     dStack = new ExecutionStack();
+    //开启编译状态
     compileMode = true;
 
     boolean firstLA;
@@ -109,11 +116,12 @@ public class ExpressionCompiler extends AbstractParser {
         pCtx.initializeTables();
       }
 
-      //首先表示当前为编译阶段，以便各个阶段进行信息编译
+      //首先表示当前为编译阶段，以便各个阶段进行信息编译，即状态值调整
       fields |= COMPILE_IMMEDIATE;
 
       while ((tk = nextToken()) != null) {
         /**
+         * 调试节点？继续处理
          * If this is a debug symbol, just add it and continue.
          */
         if (tk.fields == -1) {

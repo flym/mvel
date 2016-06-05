@@ -2,16 +2,16 @@
  * MVEL 2.0
  * Copyright (C) 2007 The Codehaus
  * Mike Brock, Dhanji Prasanna, John Graham, Mark Proctor
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -45,11 +45,14 @@ public class AbstractOptimizer extends AbstractParser {
   protected boolean nullSafe = false;
   /** 当前处理属性的类型 */
   protected Class currType = null;
+  /** 当前是否是静态方法，即静态访问字段，类等 */
   protected boolean staticAccess = false;
 
+  /** 当前处理的表达式在整个语句中的起始下标,为一个在处理过程中会变化的下标位,其可认为在start和end当中作于其它作用的临时变量 */
   protected int tkStart;
 
-  protected AbstractOptimizer() { }
+  protected AbstractOptimizer() {
+  }
 
   protected AbstractOptimizer(ParserContext pCtx) {
     super(pCtx);
@@ -85,18 +88,21 @@ public class AbstractOptimizer extends AbstractParser {
               String test = new String(expr, start, (cursor = last) - start);
               try {
                 if (MVEL.COMPILER_OPT_SUPPORT_JAVA_STYLE_CLASS_LITERALS && test.endsWith(".class"))
-                    test = test.substring(0, test.length() - 6);
+                  test = test.substring(0, test.length() - 6);
 
                 return Class.forName(test, true, classLoader);
-              } catch (ClassNotFoundException cnfe) {
+              }
+              catch (ClassNotFoundException cnfe) {
                 try {
-                  return findInnerClass( test, classLoader, cnfe );
-                } catch (ClassNotFoundException e) { /* ignore */ }
+                  return findInnerClass(test, classLoader, cnfe);
+                }
+                catch (ClassNotFoundException e) { /* ignore */ }
                 Class cls = forNameWithInner(new String(expr, start, i - start), classLoader);
                 String name = new String(expr, i + 1, end - i - 1);
                 try {
                   return cls.getField(name);
-                } catch (NoSuchFieldException nfe) {
+                }
+                catch (NoSuchFieldException nfe) {
                   for (Method m : cls.getMethods()) {
                     if (name.equals(m.getName())) return m;
                   }
@@ -189,7 +195,7 @@ public class AbstractOptimizer extends AbstractParser {
       //集合调用
       case '[':
         return COL;
-      //with调用，先忽略
+      //with调用
       case '{':
         if (expr[cursor - 1] == '.') {
           return WITH;
@@ -208,6 +214,7 @@ public class AbstractOptimizer extends AbstractParser {
 
               fields = -1;
               break;
+            //.后面接{,表示with调用
             case '{':
               return WITH;
             default:
@@ -230,6 +237,7 @@ public class AbstractOptimizer extends AbstractParser {
         }
     }
 
+    //表示没有特殊字段,则是正常的字符,则继续找到下一个非字符处理
     //noinspection StatementWithEmptyBody
     while (++cursor < end && isIdentifierPart(expr[cursor])) ;
 
@@ -250,7 +258,7 @@ public class AbstractOptimizer extends AbstractParser {
     return 0;
   }
 
-  /** 当前捕获的属性名(字符串) */
+  /** 当前捕获的属性名(字符串),即在刚才的处理过程中处理的字符串 */
   protected String capture() {
     /**
      * Trim off any whitespace.
@@ -269,6 +277,7 @@ public class AbstractOptimizer extends AbstractParser {
 
   /**
    * 查找指定的字符，直到找到为止
+   *
    * @param c - character to scan to.
    * @return - returns true is end of statement is hit, false if the scan scar is countered.
    */

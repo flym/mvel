@@ -129,18 +129,26 @@ public class AbstractParser implements Parser, Serializable {
   protected static final int OP_CONTINUE = 1;
 
   protected boolean greedy = true;
+  /** 最新节点是否是有效操作符 */
   protected boolean lastWasIdentifier = false;
+  /** 最新节点是否是代码行 */
   protected boolean lastWasLineLabel = false;
+  /** 最新节点是否是注释 */
   protected boolean lastWasComment = false;
+  /** 当前是否是编译模式，在编译模式下某些操作不能马上进行执行(如变量处理等) */
   protected boolean compileMode = false;
 
   protected int literalOnly = -1;
 
+  /** 最新处理行的行头的下标值 */
   protected int lastLineStart = 0;
+  /** 当前正在处理的代码行(以\n作标识区分) */
   protected int line = 0;
 
+  /** 当前处理解析的最新的节点信息 */
   protected ASTNode lastNode;
 
+  /** 使用一个弱引用来维护从原始表达式到去掉前后空格的表达式的映射，以减少处理空格的时间 */
   private static final WeakHashMap<String, char[]> EX_PRECACHE = new WeakHashMap<String, char[]>(15);
 
   /** 各种常量集合,如true,false等 */
@@ -152,14 +160,21 @@ public class AbstractParser implements Parser, Serializable {
 
   /** 编译期执行栈 */
   protected ExecutionStack stk;
-  /** 用于描述一个分段的解析表达式，表示一个正常的执行节点 */
+  /**
+   * 用于描述一个分段的解析表达式，表示一个正常的执行节点
+   * 在整个编译期，此栈可能会在编译期add多个节点，同时会在相应的nextToken中进行还原出来
+   */
   protected ExecutionStack splitAccumulator = new ExecutionStack();
 
+  /** 当前解析上下文 */
   protected ParserContext pCtx;
   protected ExecutionStack dStack;
+  /** 解释模式下所使用的当前上下文 */
   protected Object ctx;
+  /** 当前所使用的变量工厂 */
   protected VariableResolverFactory variableFactory;
 
+  /** 判定是否是调试模式 */
   protected boolean debugSymbols = false;
 
   static {
@@ -175,6 +190,7 @@ public class AbstractParser implements Parser, Serializable {
   }
 
   /**
+   * 初始化相应的常量信息，类常量 以及操作常量信息
    * This method is internally called by the static initializer for AbstractParser in order to setup the parser.
    * The static initialization populates the operator and literal tables for the parser.  In some situations, like
    * OSGi, it may be necessary to utilize this manually.
@@ -221,6 +237,7 @@ public class AbstractParser implements Parser, Serializable {
       CLASS_LITERALS.put("Object", Object.class);
       CLASS_LITERALS.put("Number", Number.class);
 
+      //java.lang包下的各项常量
       CLASS_LITERALS.put("Class", Class.class);
       CLASS_LITERALS.put("ClassLoader", ClassLoader.class);
       CLASS_LITERALS.put("Runtime", Runtime.class);
@@ -251,9 +268,10 @@ public class AbstractParser implements Parser, Serializable {
     }
   }
 
-  /** 实际上就是获取下一个节点 */
+  /** 实际上就是获取下一个节点，即跳过调试节点 */
   protected ASTNode nextTokenSkipSymbols() {
     ASTNode n = nextToken();
+    //如果是调试节点，则跳过
     if (n != null && n.getFields() == -1) n = nextToken();
     return n;
   }
@@ -267,6 +285,8 @@ public class AbstractParser implements Parser, Serializable {
   protected ASTNode nextToken() {
     try {
       /**
+       * 这里先尝试从相应的处理栈中获取，但如果拿出来的节点是一个end节点，并且当前也已经到达处理末尾了
+       * 则直接返回null，即lastNode没有什么意义
        * If the cursor is at the end of the expression, we have nothing more to do:
        * return null.
        */
@@ -279,6 +299,7 @@ public class AbstractParser implements Parser, Serializable {
           return lastNode;
         }
       }
+      //已经到末尾，则直接返回null
       else if (cursor >= end) {
         return null;
       }
@@ -295,10 +316,12 @@ public class AbstractParser implements Parser, Serializable {
 
       boolean capture = false, union = false;
 
+      //当前正在编译阶段，因此从上下文中获取调试标识，以便进行处理
       if ((fields & ASTNode.COMPILE_IMMEDIATE) != 0) {
         debugSymbols = pCtx.isDebugSymbols();
       }
 
+      //如果在调试模式下，则每次调用nextToken，都将一个代码行节点加入到处理当中，以描述当前的处理状态
       if (debugSymbols) {
         if (!lastWasLineLabel) {
           if (pCtx.getSourceFile() == null) {
@@ -317,6 +340,7 @@ public class AbstractParser implements Parser, Serializable {
 
           int line = pCtx.getLineFor(pCtx.getSourceFile(), cursor);
 
+          //当前行是否已经处理过，即在调试中是否已经认为此行处理了，仅在未处理时，才会返回此调试行
           if (!pCtx.isVisitedLine(pCtx.getSourceFile(), pCtx.setLineCount(line)) && !pCtx.isBlockSymbols()) {
             lastWasLineLabel = true;
             pCtx.visitLine(pCtx.getSourceFile(), line);
@@ -325,6 +349,7 @@ public class AbstractParser implements Parser, Serializable {
           }
         }
         else {
+          //因为刚才处理过代码行，因此将相应的标识置false,表示要处理正常的节点了
           lastWasComment = lastWasLineLabel = false;
         }
       }
@@ -347,7 +372,7 @@ public class AbstractParser implements Parser, Serializable {
       Mainloop:
       //主要用于支持，像 ,这种处理
       while (cursor != end) {
-        //先尝试捕获,变量，数字等
+        //先尝试捕获,变量，数字等,即找到第一个操作数 或者是 操作关键字
         if (isIdentifierPart(expr[cursor])) {
           capture = true;
           cursor++;
@@ -360,9 +385,10 @@ public class AbstractParser implements Parser, Serializable {
          * part of an identifier, we keep capturing.
          */
 
+        //因为第一个操作关键字已经找到，则根据不同的类型看怎么进行处理
         if (capture) {
-          String t;
-          //判断是否指定的操作关键字 以根据不同的关键字作相应的处理
+          String t;//当前处理的操作符
+          //首先看其是否是语法关键字,判断是否指定的操作关键字 以根据不同的关键字作相应的处理
           if (OPERATORS.containsKey(t = new String(expr, st, cursor - st)) && !Character.isDigit(expr[st])) {
             switch (OPERATORS.get(t)) {
               //new 关键字处理，表示是一个新建对象操作
@@ -375,11 +401,11 @@ public class AbstractParser implements Parser, Serializable {
                 }
 
                 /**
+                 * 找到new后面的连续的操作数，如果后面有带xx[这种，则尝试捕获多维数组块
+                 * 即这里会出现两种情况 new Abc 或者是 new Abc[xxx] 以及new Abc[xxx][yyy]这种
                  * Capture the beginning part of the token.
                  */
                 do {
-                  //这里拿到下一个捕获组,如{},(),[] 或者是以空格分组的组 如 _abc_ 的开始位置
-                  //如果捕获组为[，则捕获整个结束位置
                   captureToNextTokenJunction();
                   skipWhitespace();
                 }
@@ -387,26 +413,35 @@ public class AbstractParser implements Parser, Serializable {
 
                 /**
                  * 这里实际上就是跳到下一个空格前结束，会把整个 new Abc(123).ef xyz中，跳到xyz之前的数据
+                 * 同时，这里判定最后一个有效符不能为]，即不能是类似[]这种，对于[]这种，只会有一种情况，就是后面
+                 * 接{，这种会在后面继续处理，因此这里需要排除这种处理，即针对普通的new Abc，将整个表达式一直延伸
+                 * 到语句结束
                  * If it's not a dimentioned array, continue capturing if necessary.
                  */
                 if (cursor < end && !lastNonWhite(']')) captureToEOT();
 
+                //因为当前是new 关键字，因此开始进行类型声明
+                //虽然传递了整个语句，但是在typeDesc中会自动提取相应的类型
                 TypeDescriptor descr = new TypeDescriptor(expr, st, trimLeft(cursor) - st, fields);
 
+                //如果是函数,则使用函数式的处理方式
                 if (pCtx.getFunctions().containsKey(descr.getClassName())) {
                   return lastNode = new NewObjectPrototype(pCtx, pCtx.getFunction(descr.getClassName()));
                 }
 
+                //如果是相应的原型引用,则使用新建原型节点来描述
                 if (pCtx.hasProtoImport(descr.getClassName())) {
                   return lastNode = new NewPrototypeNode(descr, pCtx);
                 }
 
-
+                //默认情况下,创建正常的新建对象节点
                 lastNode = new NewObjectNode(descr, fields, pCtx);
 
+                //---------------------------- 专门处理新建数组的逻辑 start ------------------------------//
                 skipWhitespace();
                 //这里表示，如果是数组 ，后面允许追加{这种，如[]{2,3,4}这种情况
                 if (cursor != end && expr[cursor] == '{') {
+                  //无size数组判定
                   if (!((NewObjectNode) lastNode).getTypeDescr().isUndimensionedArray()) {
                     throw new CompileException(
                         "conflicting syntax: dimensioned array with initializer block",
@@ -417,6 +452,7 @@ public class AbstractParser implements Parser, Serializable {
                   Class egressType = lastNode.getEgressType();
 
                   //前面解析类型没有取到，这里再次尝试一下
+                  //这里的逻辑本应该不会放在这里,估计是临时修正
                   if (egressType == null) {
                     try {
                       egressType = getClassReference(pCtx, descr);
@@ -427,9 +463,11 @@ public class AbstractParser implements Parser, Serializable {
                   }
 
 
+                  //跳过整个{块结束
                   cursor = balancedCaptureWithLineAccounting(expr, st, end, expr[cursor], pCtx) + 1;
                   //如果是new int[]{1,23}.length，则使用联合节点，否则使用默认的内联节点
                   if (tokenContinues()) {
+                    //将主节点(即集合)与后续的属性访问链接起来
                     lastNode = new InlineCollectionNode(expr, st, cursor - st, fields,
                         egressType, pCtx);
                     st = cursor;
@@ -441,11 +479,13 @@ public class AbstractParser implements Parser, Serializable {
                         egressType, pCtx);
                   }
                 }
-                //这是表示如果是[]这种情况，如果没有{}，则必须带长度信息
+                //集合对象,但后面没有{1,2}这种即时声明,即必须在内部有长度信息
                 else if (((NewObjectNode) lastNode).getTypeDescr().isUndimensionedArray()) {
                   throw new CompileException("array initializer expected", expr, st);
                 }
                 st = cursor;
+
+                //---------------------------- 专门处理新建数组的逻辑 end ------------------------------//
 
                 return lastNode;
 
@@ -1729,14 +1769,22 @@ public class AbstractParser implements Parser, Serializable {
    * @return an ast node
    */
   private ASTNode captureCodeBlock(int type) {
+    //相应处理的节点内需要有条件表达式,即类似 if(xxx),for(yyy)这种内部语句
+    //这里的cond不一样必须是单个条件,也可能表示for中的多个块
     boolean cond = true;
 
+    //第一个节点,在if处理中使用第一个if来表示整个逻辑
     ASTNode first = null;
+    //用于在if else中进行上下联接
     ASTNode tk = null;
 
     switch (type) {
+      //单元处理if else,因此有多个嵌套
       case ASTNode.BLOCK_IF: {
         do {
+          //这里判定上一个节点非空(即不是起始节点),那么后续节点需要看其是否是if语句
+          //主要即判定其是否是else if
+          //那么就需要里面带条件
           if (tk != null) {
             captureToNextTokenJunction();
             skipWhitespace();
@@ -1744,7 +1792,8 @@ public class AbstractParser implements Parser, Serializable {
                 && expr[cursor = incNextNonBlank()] == '(';
           }
 
-          //这里使用循环处理，保证第1个为if，后面的为else if或者是else，如果是else节点，则表示整个语句结束
+          //这里使用循环处理，保证第1个为if,或者是else if中的if
+          //后面的为else if或者是else，如果是else节点，则表示整个语句结束
           if (((IfNode) (tk = _captureBlock(tk, expr, cond, type))).getElseBlock() != null) {
             cursor++;
             return first;
@@ -1752,6 +1801,9 @@ public class AbstractParser implements Parser, Serializable {
 
           if (first == null) first = tk;
 
+          //表达式并没有以;结束,表示后续还可能有else if
+          //这里的强行下标+1,会在ifthenelse判定中-1
+          //这里下标往前一位,主要是让判定提前结束,即如果是; 提前返回即可
           if (cursor != end && expr[cursor] != ';') {
             cursor++;
           }
@@ -1804,7 +1856,7 @@ public class AbstractParser implements Parser, Serializable {
         }
 
         /**
-         * 保证没有定义过
+         * 判定此函数不是是已知关键字或操作符
          * Check to see if the name is legal.
          */
         if (isReservedWord(name = createStringTrimmed(expr, st, cursor - st))
@@ -2105,13 +2157,20 @@ public class AbstractParser implements Parser, Serializable {
   }
 
   /**
-   * 匹配到当前节点结束
+   * 匹配到当前节点结束,这里的节点结束，即在语义中可以表示一整个调用语句的
+   * 如下列的列表
+   * a[xx][yyy]
+   * ab(xxx)
+   * ab{xxxx}
+   * abc.xyz.xxx
+   * 如果碰到 操作符这种，如 +-* / 这种，则中止
    * From the current cursor position, capture to the end of the current token.
    */
   protected void captureToEOT() {
     skipWhitespace();
     do {
       switch (expr[cursor]) {
+        //如果是([{，则表示调用块,被认为整个语句的一部分
         case '(':
         case '[':
         case '{':
@@ -2120,6 +2179,7 @@ public class AbstractParser implements Parser, Serializable {
           }
           break;
 
+        //碰到操作符，提前返回
         case '*':
         case '/':
         case '+':
@@ -2135,6 +2195,7 @@ public class AbstractParser implements Parser, Serializable {
           skipWhitespace();
           break;
 
+        //字符串块
         case '\'':
           cursor = captureStringLiteral('\'', expr, cursor, end);
           break;
@@ -2143,6 +2204,9 @@ public class AbstractParser implements Parser, Serializable {
           break;
 
         default:
+          //默认情况下，其它字符，如果是正常的 abc，则继续认为是调用语句的一部分
+
+          //以下专门处理空格后存在.的这种情况,即认为 ___.和普通的.都是一样的,即abc . 和 abc.一样
           if (isWhitespace(expr[cursor])) {
             skipWhitespace();
 
@@ -2154,6 +2218,7 @@ public class AbstractParser implements Parser, Serializable {
             }
             else {
               //没有碰到 abc . 则跳回去，只处理abc
+              //即认为是语句间的分隔，后面视为不同的语句
               trimWhitespace();
               return;
             }
@@ -2164,6 +2229,7 @@ public class AbstractParser implements Parser, Serializable {
   }
 
 
+  /** 往回跳，找到第一个非空白的字符,并且判定找到的字符是否是指定的字符 */
   protected boolean lastNonWhite(char c) {
     int i = cursor - 1;
     while (isWhitespace(expr[i])) i--;
@@ -2171,6 +2237,7 @@ public class AbstractParser implements Parser, Serializable {
   }
 
   /**
+   * 往回走,如果是空格或者是; 继续往回走,返回可以停止的位置
    * From the specified cursor position, trim out any whitespace between the current position and the end of the
    * last non-whitespace character.
    *
@@ -2184,7 +2251,7 @@ public class AbstractParser implements Parser, Serializable {
   }
 
   /**
-   * 即跳过空格的意思
+   * 即跳过空格的意思,往右走,到第一个满足条件下标为止
    * From the specified cursor position, trim out any whitespace between the current position and beginning of the
    * first non-whitespace character.
    *
@@ -2197,6 +2264,8 @@ public class AbstractParser implements Parser, Serializable {
   }
 
   /**
+   * 跳过空白以及换行符，注释等
+   * 在处理中，同时针对//以及/*这种注解，将原表达式中的信息替换掉，以避免下次再处理同样的信息
    * If the cursor is currently pointing to whitespace, move the cursor forward to the first non-whitespace
    * character, but account for carriage returns in the script (updates parser field: line).
    */
@@ -2263,7 +2332,8 @@ public class AbstractParser implements Parser, Serializable {
   }
 
   /**
-   * 找到下一个可以隔离代码块的语句
+   * 找到下一个可以隔离代码块的语句,包括[xxx]以及正常的连续性操作数
+   * 即查找到第一个可以进行条件式处理的下标位
    * From the current cursor position, capture to the end of the next token junction.
    */
   protected void captureToNextTokenJunction() {

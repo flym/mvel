@@ -15,3 +15,6 @@ flym
 - mvel的几种运行模式
 - MVEL类中的方法分类及作用
 - ExecutableStatement的不同子类区分及作用
+
+## 缺陷
+- 语法完备性,在数据中进行即时操作问题

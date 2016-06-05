@@ -38,8 +38,10 @@ public interface AccessorOptimizer {
   public Accessor optimizeSetAccessor(ParserContext pCtx, char[] property, int start, int offset, Object ctx, Object thisRef,
                                       VariableResolverFactory factory, boolean rootThisRef, Object value, Class ingressType);
 
+  /** 创建一个用于集合访问的优化器 */
   public Accessor optimizeCollection(ParserContext pCtx, Object collectionGraph, Class type, char[] property, int start, int offset, Object ctx, Object thisRef, VariableResolverFactory factory);
 
+  /** 创建一个用于对象创建的访问器 */
   public Accessor optimizeObjectCreation(ParserContext pCtx, char[] property, int start, int offset, Object ctx, Object thisRef, VariableResolverFactory factory);
 
   /** 获取当前创建的优化访问器处理的结果值 */

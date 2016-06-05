@@ -2,16 +2,16 @@
  * MVEL 2.0
  * Copyright (C) 2007 The Codehaus
  * Mike Brock, Dhanji Prasanna, John Graham, Mark Proctor
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -36,13 +36,16 @@ import static org.mvel2.util.ParseTools.*;
 
 /**
  * 表示一个内部的集合表达式,使用[ 或 {均可以用来表示集合
+ *
  * @author Christopher Brock
  */
 public class InlineCollectionNode extends ASTNode {
+  /** 用于描述数组内部的数据类型及值描述,可能是数组,集合,map的一种 */
   private Object collectionGraph;
   int trailingStart;
   int trailingOffset;
 
+  /** 初始化,但未指定数据类型 */
   public InlineCollectionNode(char[] expr, int start, int end, int fields, ParserContext pctx) {
     super(expr, start, end, fields | INLINE_COLLECTION, pctx);
 
@@ -59,6 +62,7 @@ public class InlineCollectionNode extends ASTNode {
     }
   }
 
+  /** 初始化,并使用已知的内部类型进行解析 */
   public InlineCollectionNode(char[] expr, int start, int end, int fields, Class type, ParserContext pctx) {
     super(expr, start, end, fields | INLINE_COLLECTION, pctx);
 
@@ -108,6 +112,8 @@ public class InlineCollectionNode extends ASTNode {
   private void parseGraph(boolean compile, Class type, ParserContext pCtx) {
     CollectionParser parser = new CollectionParser();
 
+    //以下因为是以内部集合的方式进行解析,即外层通过[或者{使用,即认为外层表示为集合
+    //因此下层的解析返回值肯定为list,然后再单独返回内层对象
     if (type == null) {
       collectionGraph = ((List) parser.parseCollection(expr, start, offset, compile, pCtx)).get(0);
     }

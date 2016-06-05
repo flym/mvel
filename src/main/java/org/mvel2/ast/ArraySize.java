@@ -20,10 +20,12 @@ package org.mvel2.ast;
 
 import java.io.Serializable;
 
+/** 表示相应的数组长度信息 */
 public class ArraySize implements Serializable {
   public ArraySize(char[] value) {
     this.value = value;
   }
 
+  /** 表示长度的字符信息 */
   public char[] value;
 }

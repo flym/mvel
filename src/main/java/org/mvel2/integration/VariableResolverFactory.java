@@ -26,6 +26,7 @@ import java.util.Set;
  * 主要的工作围绕着相应的变量名以及相应的下标(处理数组)进行处理
  * 多个变量解析器工厂可以协同工作，通过next来进行委托处理(类似于classLoader的机制)
  * 根据内部实现的不同，不同的解析器工厂在其中所处理的数据以及所处理变量也会有所不同
+ * 同时变量工厂也承担了一个称之为作用域和概念,即不同的变量工厂,可以叠加以描述不同的作用域概念
  * A VariableResolverFactory is the primary integration point for tying in external variables.  The factory is
  * responsible for returing {@link org.mvel2.integration.VariableResolver}'s to the MVEL runtime.  Factories are
  * also structured in a chain to maintain locality-of-reference.

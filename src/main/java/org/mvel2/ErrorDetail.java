@@ -22,6 +22,7 @@ public class ErrorDetail {
 
   private char[] expr;
   private int cursor;
+  /** 此错误是否是严重的 */
   private boolean critical;
   private String message;
 

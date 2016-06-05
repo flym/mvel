@@ -2,16 +2,16 @@
  * MVEL 2.0
  * Copyright (C) 2007 The Codehaus
  * Mike Brock, Dhanji Prasanna, John Graham, Mark Proctor
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -34,6 +34,7 @@ import static org.mvel2.util.ParseTools.*;
 import static org.mvel2.util.PropertyTools.getFieldOrAccessor;
 
 /**
+ * 属性验证器,用于验证相应的属性与指定的类型之间是否兼容
  * This verifier is used by the compiler to enforce rules such as type strictness.  It is, as side-effect, also
  * responsible for extracting type information.
  *
@@ -42,12 +43,17 @@ import static org.mvel2.util.PropertyTools.getFieldOrAccessor;
  */
 public class PropertyVerifier extends AbstractOptimizer {
   private static final int DONE = -1;
+  /** 标记位,表示属性访问 */
   private static final int NORM = 0;
+  /** 标记位,方法调用 */
   private static final int METH = 1;
+  /** 标记位,数组操作,对应[ */
   private static final int COL = 2;
+  /** 标记位,with操作,对应.{ */
   private static final int WITH = 3;
 
   private List<String> inputs = new LinkedList<String>();
+  /** 逻辑处理,当前是否在首次处理.即在处理上刚处理到第1个节点 */
   private boolean first = false;
   /** 是否是类常量 */
   private boolean classLiteral = false;
@@ -57,11 +63,12 @@ public class PropertyVerifier extends AbstractOptimizer {
   private boolean methodCall = false;
   /** 是否有多层属性调用,如a.b.c */
   private boolean deepProperty = false;
+  /** 是否是全名调用,即静态方法 */
   private boolean fqcn = false;
 
   private Map<String, Type> paramTypes;
 
-  /** 当前上下文类型信息,即表示当前验证的表达式的类型 */
+  /** 当前上下文类型信息,即表示当前验证的表达式的类型,即使用哪个root类型作为起始点.可能为null */
   private Class ctx = null;
 
   public PropertyVerifier(char[] property, ParserContext parserContext) {
@@ -111,6 +118,7 @@ public class PropertyVerifier extends AbstractOptimizer {
   public Class analyze() {
     cursor = start;
     resolvedExternally = true;
+    //根class不存在,则尝试使用object来作为root,仅作标识使用
     if (ctx == null) {
       ctx = Object.class;
       first = true;
@@ -119,22 +127,28 @@ public class PropertyVerifier extends AbstractOptimizer {
     while (cursor < end) {
       classLiteral = false;
       switch (nextSubToken()) {
+        //属性,返回属性类型
         case NORM:
           ctx = getBeanProperty(ctx, capture());
           break;
+        //方法,返回方法类型
         case METH:
           ctx = getMethod(ctx, capture());
           break;
+        //数组,返回数组内数据类型
         case COL:
           ctx = getCollectionProperty(ctx, capture());
           break;
+        //with,返回当前类型
         case WITH:
           ctx = getWithProperty(ctx);
           break;
 
+        //已处理完
         case DONE:
           break;
       }
+      //还没有处理完,即还需要继续处理,则置相应的深度标记
       if (cursor < length && !first) deepProperty = true;
 
       first = false;
@@ -210,7 +224,8 @@ public class PropertyVerifier extends AbstractOptimizer {
             for (int i = 0; i < gpt.length; i++) {
               paramTypes.put(classArgs[i].toString(), gpt[i]);
             }
-          } else if (f.getGenericType() instanceof TypeVariable) {
+          }
+          else if (f.getGenericType() instanceof TypeVariable) {
             TypeVariable tv = (TypeVariable) f.getGenericType();
             Type paramType = paramTypes.remove(tv.getName());
             if (paramType != null && paramType instanceof Class) {
@@ -261,7 +276,7 @@ public class PropertyVerifier extends AbstractOptimizer {
       if (tryStaticMethodRef instanceof Class) {
         classLiteral = !(MVEL.COMPILER_OPT_SUPPORT_JAVA_STYLE_CLASS_LITERALS &&
             new String(expr, end - 6, 6).equals(".class"));
-          return classLiteral ? (Class) tryStaticMethodRef : Class.class;
+        return classLiteral ? (Class) tryStaticMethodRef : Class.class;
       }
       else if (tryStaticMethodRef instanceof Field) {
         try {
@@ -290,7 +305,7 @@ public class PropertyVerifier extends AbstractOptimizer {
       }
     }
 
-    if (pCtx!=null&& pCtx.getParserConfiguration()!=null?pCtx.getParserConfiguration().isAllowNakedMethCall():MVEL.COMPILER_OPT_ALLOW_NAKED_METH_CALL) {
+    if (pCtx != null && pCtx.getParserConfiguration() != null ? pCtx.getParserConfiguration().isAllowNakedMethCall() : MVEL.COMPILER_OPT_ALLOW_NAKED_METH_CALL) {
       Class cls = getMethod(ctx, property);
       if (cls != Object.class) {
         return cls;
@@ -311,7 +326,7 @@ public class PropertyVerifier extends AbstractOptimizer {
     }
     Type returnType = m.getGenericReturnType();
     if (returnType instanceof TypeVariable) {
-      String typeName = ((TypeVariable)returnType).getName();
+      String typeName = ((TypeVariable) returnType).getName();
       Type superType = context.getGenericSuperclass();
       Class superClass = context.getSuperclass();
       while (superClass != null && superClass != declaringClass) {
@@ -333,8 +348,8 @@ public class PropertyVerifier extends AbstractOptimizer {
         if (typePos < 0) {
           return returnGenericType(m);
         }
-        Type actualType = ((ParameterizedType)superType).getActualTypeArguments()[typePos];
-        return actualType instanceof Class ? (Class)actualType : returnGenericType(m);
+        Type actualType = ((ParameterizedType) superType).getActualTypeArguments()[typePos];
+        return actualType instanceof Class ? (Class) actualType : returnGenericType(m);
       }
     }
     return returnGenericType(m);
@@ -363,14 +378,14 @@ public class PropertyVerifier extends AbstractOptimizer {
 
     //push return type parameters onto parser context, only if this is a parametric type
     if (parametricReturnType instanceof ParameterizedType) {
-        pCtx.setLastTypeParameters(((ParameterizedType) parametricReturnType).getActualTypeArguments());
+      pCtx.setLastTypeParameters(((ParameterizedType) parametricReturnType).getActualTypeArguments());
     }
 
     if (paramTypes != null && paramTypes.containsKey(returnTypeArg)) {
-        /**
-         * If the paramTypes Map contains the known type, return that type.
-         */
-        return (Class) paramTypes.get(returnTypeArg);
+      /**
+       * If the paramTypes Map contains the known type, return that type.
+       */
+      return (Class) paramTypes.get(returnTypeArg);
     }
 
     return m.getReturnType();
@@ -402,12 +417,13 @@ public class PropertyVerifier extends AbstractOptimizer {
         ctx = (Class) (pCtx.getLastTypeParameters().length != 0 ? pCtx.getLastTypeParameters()[1] : Object.class);
       }
       else if (Collection.class.isAssignableFrom(ctx)) {
-        if (pCtx.getLastTypeParameters().length == 0 ) {
+        if (pCtx.getLastTypeParameters().length == 0) {
           ctx = Object.class;
-        } else {
+        }
+        else {
           Type type = pCtx.getLastTypeParameters()[0];
-          if (type instanceof Class) ctx = (Class)type;
-          else ctx = (Class)((ParameterizedType)type).getRawType();
+          if (type instanceof Class) ctx = (Class) type;
+          else ctx = (Class) ((ParameterizedType) type).getRawType();
         }
       }
       else if (ctx.isArray()) {
@@ -474,9 +490,9 @@ public class PropertyVerifier extends AbstractOptimizer {
         if (f != null && f.getEgressType() != null) {
           resolvedExternally = false;
           f.checkArgumentCount(
-                  parseParameterList(
-                          (((cursor = balancedCapture(expr, cursor, end, '(')) - st) > 1 ?
-                           ParseTools.subset(expr, st + 1, cursor - st - 1) : new char[0]), 0, -1).size());
+              parseParameterList(
+                  (((cursor = balancedCapture(expr, cursor, end, '(')) - st) > 1 ?
+                      ParseTools.subset(expr, st + 1, cursor - st - 1) : new char[0]), 0, -1).size());
 
           return f.getEgressType();
         }

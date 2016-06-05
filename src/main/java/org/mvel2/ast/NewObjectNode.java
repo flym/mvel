@@ -2,16 +2,16 @@
  * MVEL 2.0
  * Copyright (C) 2007 The Codehaus
  * Mike Brock, Dhanji Prasanna, John Graham, Mark Proctor
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -74,12 +74,15 @@ public class NewObjectNode extends ASTNode {
       this.name = expr;
     }
 
+    //编译期处理
     if ((fields & COMPILE_IMMEDIATE) != 0) {
+      //之前有引用此类名,则直接使用相应的信息
       if (pCtx != null && pCtx.hasImport(typeDescr.getClassName())) {
         pCtx.setAllowBootstrapBypass(false);
         egressType = pCtx.getImport(typeDescr.getClassName());
       }
       else {
+        //尝试初始化
         try {
           egressType = Class.forName(typeDescr.getClassName(), true, getClassLoader());
         }
@@ -93,6 +96,7 @@ public class NewObjectNode extends ASTNode {
 
       if (egressType != null) {
         rewriteClassReferenceToFQCN(fields);
+        //如果是数组,则重新按数组的方式进行处理
         if (typeDescr.isArray()) {
           try {
             egressType = egressType.isPrimitive() ?
@@ -107,6 +111,7 @@ public class NewObjectNode extends ASTNode {
       }
 
       if (pCtx != null) {
+        //上面的getImport并没有找到相应的类型信息
         if (egressType == null) {
           pCtx.addError(new ErrorDetail(expr, start, true, "could not resolve class: " + typeDescr.getClassName()));
           return;
@@ -116,9 +121,12 @@ public class NewObjectNode extends ASTNode {
         if (!typeDescr.isArray()) {
           String[] cnsResid = captureContructorAndResidual(expr, start, offset);
 
+          //构建参数
           final List<char[]> constructorParms
               = parseMethodOrConstructor(cnsResid[0].toCharArray());
 
+          //处理构建的参数类型信息,准备查找到最能够满足要求的constructor
+          //如果不能找到,则表示相应的语法出了问题
           final Class[] parms = new Class[constructorParms.size()];
           for (int i = 0; i < parms.length; i++) {
             parms[i] = analyze(constructorParms.get(i), pCtx);
@@ -130,7 +138,7 @@ public class NewObjectNode extends ASTNode {
                   + Arrays.toString(parms)));
           }
 
-          //这里表示当前的处理节点其实还需要处理相应的属性数据，这里不仅仅是进行一个new操作，实际上是获取newbi对象之后的属性或数据信息
+          //这里表示当前的处理节点其实还需要处理相应的属性数据，这里不仅仅是进行一个new操作，实际上是获取new对象之后的属性或数据信息
           //如 new Abc().efg 就是取efg这个属性的信息，因此这里的实际类型就是 efg属性的类型
           if (cnsResid.length == 2) {
             String residualProperty =

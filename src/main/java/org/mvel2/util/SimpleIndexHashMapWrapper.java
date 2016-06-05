@@ -3,6 +3,7 @@ package org.mvel2.util;
 import java.util.*;
 
 /**
+ * 一个即记录相应的对象kv映射,又记录相应的下标的map
  * As most use-cases of the VariableResolverFactory's rely on Maps, this is meant to implement a simple wrapper
  * which records index positions for use by the optimizing facilities.
  * <p/>
@@ -109,6 +110,7 @@ public class SimpleIndexHashMapWrapper<K, V> implements Map<K, V> {
     return indexBasedLookup.get(index).getKey();
   }
 
+  /** 获取相应key的下标 */
   public int indexOf(K key) {
     return wrappedMap.get(key).getIndex();
   }

@@ -7,7 +7,7 @@ import org.mvel2.ast.Function;
 
 import static org.mvel2.util.ParseTools.balancedCaptureWithLineAccounting;
 
-/** 函数解析器 */
+/** 函数解析器,用于解析相应的函数,以及相应的调用参数信息 */
 public class FunctionParser {
   /** 当前函数名 */
   private String name;
@@ -24,6 +24,7 @@ public class FunctionParser {
   /** 上下文 */
   private ParserContext pCtx;
 
+  /** 整个函数体的执行栈 */
   private ExecutionStack splitAccumulator;
 
   public FunctionParser(String functionName,
@@ -97,6 +98,7 @@ public class FunctionParser {
       }
       else {
         /**
+         * 单指令函数
          * This is a single statement function declaration.  We only capture the statement.
          */
         blockStart = cursor - 1;

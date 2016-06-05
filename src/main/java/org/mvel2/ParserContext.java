@@ -77,9 +77,12 @@ public class ParserContext implements Serializable {
 
   private transient List<ErrorDetail> errorList;
 
+  /** 表达式对应表达式行的一些映射(调试使用) */
   private transient Map<String, LineMapper.LineLookup> sourceLineLookups;
+  /** 描述已经在编译过程中处理过的行(调试使用) */
   private transient Map<String, Set<Integer>> visitedLines;
 
+  /** 最新的代码行(调试使用) */
   private LineLabel lastLineLabel;
 
   private transient Parser rootParser;
@@ -97,8 +100,10 @@ public class ParserContext implements Serializable {
   /** 设置当前的优化状态，表示正在进行优化 */
   private boolean optimizationMode = false;
 
+  /** 表示在过程中是否有严重的错误发生 */
   private boolean fatalError = false;
   private boolean retainParserState = false;
+  /** 是否有调试标识 */
   private boolean debugSymbols = false;
   private boolean blockSymbols = false;
   private boolean executableCodeReached = false;
@@ -390,6 +395,7 @@ public class ParserContext implements Serializable {
     return parserConfiguration.hasImport(name);
   }
 
+  /** 是否存在相应的引用,并且此引用为一个原型引用 */
   public boolean hasProtoImport(String name) {
     if (parserConfiguration.getImports() == null) return false;
     Object o = parserConfiguration.getImports().get(name);
@@ -460,12 +466,14 @@ public class ParserContext implements Serializable {
   }
 
   /**
+   * 初始化各项变量表
    * Initializes internal Maps.  Called by the compiler.
    */
   public void initializeTables() {
     if (variables == null) variables = new LinkedHashMap<String, Class>();
     if (inputs == null) inputs = new LinkedHashMap<String, Class>();
 
+    //开启当前作用域，并将相应的变量和输入信息加到当前作用域当中
     if (variableVisibility == null) {
       initVariableVisibility();
       pushVariableScope();
@@ -478,9 +486,11 @@ public class ParserContext implements Serializable {
       if (parserConfiguration.getImports() != null)
         scope.addAll(parserConfiguration.getImports().keySet());
 
+      //如果当前输入类型包括this属性，则加入相应的静态字段以及属性或方法名
       if (inputs.containsKey("this")) {
         Class<?> ctxType = inputs.get("this");
 
+        //加入静态字段
         for (Field field : ctxType.getFields()) {
           if ((field.getModifiers() & (Modifier.PUBLIC | Modifier.STATIC)) != 0) {
             scope.add(field.getName());
@@ -489,6 +499,7 @@ public class ParserContext implements Serializable {
 
         for (Method m : ctxType.getMethods()) {
           if ((m.getModifiers() & Modifier.PUBLIC) != 0) {
+            //加入属性名,包括首字母大写，或小写的
             if (m.getName().startsWith("get")
                 || (m.getName().startsWith("is")
                 && (m.getReturnType().equals(boolean.class) || m.getReturnType().equals(Boolean.class)))) {
@@ -498,6 +509,7 @@ public class ParserContext implements Serializable {
               scope.add(propertyName);
             }
             else {
+              //加入方法名
               scope.add(m.getName());
             }
           }
@@ -790,6 +802,7 @@ public class ParserContext implements Serializable {
     return sourceLineLookups != null && sourceLineLookups.containsKey(sourceName);
   }
 
+  /** 在整个字符串中将每一行进行初始化并进行标识好，即多少行，起始点，结束点等 */
   public void initLineMapping(String sourceName, char[] expr) {
     if (sourceLineLookups == null) {
       sourceLineLookups = new HashMap<String, LineMapper.LineLookup>();
@@ -797,18 +810,21 @@ public class ParserContext implements Serializable {
     sourceLineLookups.put(sourceName, new LineMapper(expr).map());
   }
 
+  /** 针对一个下标值拿到此下标所对应的行数 */
   public int getLineFor(String sourceName, int cursor) {
     return (sourceLineLookups != null
         && sourceLineLookups.containsKey(sourceName)) ?
         sourceLineLookups.get(sourceName).getLineFromCursor(cursor) : -1;
   }
 
+  /** 指定行是否已标识过 */
   public boolean isVisitedLine(String sourceName, int lineNumber) {
     return visitedLines != null
         && visitedLines.containsKey(sourceName)
         && visitedLines.get(sourceName).contains(lineNumber);
   }
 
+  /** 设置此行已经处理过了 */
   public void visitLine(String sourceName, int lineNumber) {
     if (visitedLines == null) {
       visitedLines = new HashMap<String, Set<Integer>>();

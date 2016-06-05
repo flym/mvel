@@ -2,16 +2,16 @@
  * MVEL 2.0
  * Copyright (C) 2007 The Codehaus
  * Mike Brock, Dhanji Prasanna, John Graham, Mark Proctor
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -80,6 +80,7 @@ public class ParseTools {
   public static final Object[] EMPTY_OBJ_ARR = new Object[0];
   public static final Class[] EMPTY_CLS_ARR = new Class[0];
 
+  /** 处理构造函数或方法的参数信息 */
   public static List<char[]> parseMethodOrConstructor(char[] parm) {
     int start = -1;
     for (int i = 0; i < parm.length; i++) {
@@ -258,7 +259,7 @@ public class ParseTools {
         if (method.equals(meth.getName())) {
           parmTypes = meth.getParameterTypes();
           if (parmTypes.length == 0 && arguments.length == 0) {
-            if (bestCandidate == null || isMoreSpecialized(meth, bestCandidate) ) {
+            if (bestCandidate == null || isMoreSpecialized(meth, bestCandidate)) {
               bestCandidate = meth;
             }
             continue;
@@ -314,9 +315,9 @@ public class ParseTools {
   }
 
   /** 判定一个方法是否比另一个方法更合适 判定依据即是返回类型更加细化，声明的参数类型也更细化 */
-  private static boolean isMoreSpecialized( Method newCandidate, Method oldCandidate ) {
-    return oldCandidate.getReturnType().isAssignableFrom( newCandidate.getReturnType()) &&
-           oldCandidate.getDeclaringClass().isAssignableFrom( newCandidate.getDeclaringClass());
+  private static boolean isMoreSpecialized(Method newCandidate, Method oldCandidate) {
+    return oldCandidate.getReturnType().isAssignableFrom(newCandidate.getReturnType()) &&
+        oldCandidate.getDeclaringClass().isAssignableFrom(newCandidate.getDeclaringClass());
   }
 
   private static int getMethodScore(Class[] arguments, boolean requireExact, Class<?>[] parmTypes, boolean varArgs) {
@@ -391,8 +392,8 @@ public class ParseTools {
 
   /** 获取在相应类上具备指定名字，参数类型以及返回类型的方法 */
   public static Method getExactMatch(String name, Class[] args, Class returnType, Class cls) {
-	outer:
-	for (Method meth : cls.getMethods()) {
+    outer:
+    for (Method meth : cls.getMethods()) {
       if (name.equals(meth.getName()) && returnType == meth.getReturnType()) {
         Class[] parameterTypes = meth.getParameterTypes();
         if (parameterTypes.length != args.length) continue;
@@ -443,7 +444,7 @@ public class ParseTools {
   }
 
   private static final Map<Constructor, WeakReference<Class[]>> CONSTRUCTOR_PARMS_CACHE
-      = Collections.synchronizedMap( new WeakHashMap<Constructor, WeakReference<Class[]>>(10) );
+      = Collections.synchronizedMap(new WeakHashMap<Constructor, WeakReference<Class[]>>(10));
 
   private static Class[] getConstructors(Constructor cns) {
     WeakReference<Class[]> ref = CONSTRUCTOR_PARMS_CACHE.get(cns);
@@ -495,28 +496,33 @@ public class ParseTools {
   }
 
 
+  /** 对加载过的类进行的一个全局缓存,优化查找速度 */
   private static final Map<ClassLoader, Map<String, WeakReference<Class>>> CLASS_RESOLVER_CACHE
-      = Collections.synchronizedMap( new WeakHashMap<ClassLoader, Map<String, WeakReference<Class>>>(1, 1.0f) );
+      = Collections.synchronizedMap(new WeakHashMap<ClassLoader, Map<String, WeakReference<Class>>>(1, 1.0f));
+  /** 对加载过的构建函数进行一个全局缓存,优化查找速度 */
   private static final Map<Class, WeakReference<Constructor[]>> CLASS_CONSTRUCTOR_CACHE
-      = Collections.synchronizedMap( new WeakHashMap<Class, WeakReference<Constructor[]>>(10) );
+      = Collections.synchronizedMap(new WeakHashMap<Class, WeakReference<Constructor[]>>(10));
 
 
+  /** 进行类加载,使用编译上下文中的类加载器 */
   public static Class createClass(String className, ParserContext pCtx) throws ClassNotFoundException {
     ClassLoader classLoader = pCtx != null ? pCtx.getClassLoader() : currentThread().getContextClassLoader();
 
     Map<String, WeakReference<Class>> cache = CLASS_RESOLVER_CACHE.get(classLoader);
 
     if (cache == null) {
-      CLASS_RESOLVER_CACHE.put(classLoader, cache = Collections.synchronizedMap( new WeakHashMap<String, WeakReference<Class>>(10) ) );
+      CLASS_RESOLVER_CACHE.put(classLoader, cache = Collections.synchronizedMap(new WeakHashMap<String, WeakReference<Class>>(10)));
     }
 
     WeakReference<Class> ref;
     Class cls;
 
+    //如果缓存中存在,则直接使用缓存
     if ((ref = cache.get(className)) != null && (cls = ref.get()) != null) {
       return cls;
     }
     else {
+      //使用上下文中的加载器或者是线程类加载器进行加载
       try {
         cls = Class.forName(className, true, classLoader);
       }
@@ -552,7 +558,7 @@ public class ParseTools {
   }
 
 
-  /** 捕获构建函数参数以及剩下的数据信息 */
+  /** 捕获构建函数参数以及剩下的数据信息,即将构建的参数内容以及后续的内容拆分开 */
   public static String[] captureContructorAndResidual(char[] cs, int start, int offset) {
     int depth = 0;
     int end = start + offset;
@@ -931,17 +937,22 @@ public class ParseTools {
     return appendFactory(factory, new ClassImportResolverFactory(null, null, false));
   }
 
+  /** 从变量工厂+当前类型名+编译上下文中查找或者创建出类型信息 */
   public static Class findClass(VariableResolverFactory factory, String name, ParserContext pCtx) throws ClassNotFoundException {
     try {
+      //常量类型 fast path
       if (LITERALS.containsKey(name)) {
         return (Class) LITERALS.get(name);
       }
+      //变量工厂可以处理的
       else if (factory != null && factory.isResolveable(name)) {
         return (Class) factory.getVariableResolver(name).getValue();
       }
+      //上下文中引用的
       else if (pCtx != null && pCtx.hasImport(name)) {
         return pCtx.getImport(name);
       }
+      //默认情况下,尝试进行类加载
       else {
         return createClass(name, pCtx);
       }
@@ -977,6 +988,7 @@ public class ParseTools {
     return subset(array, start, length);
   }
 
+  /** 拿到字符数组的中间一段信息,相当于str.substring */
   public static char[] subset(char[] array, int start, int length) {
 
 
@@ -1200,7 +1212,7 @@ public class ParseTools {
     return cursor;
   }
 
-  /** 表示从当前下标起，有没有 表示 结束的; 符号 */
+  /** 表示从当前下标起，有没有结束符的; 符号 */
   public static boolean isStatementNotManuallyTerminated(char[] expr, int cursor) {
     if (cursor >= expr.length) return false;
     int c = cursor;
@@ -1297,7 +1309,7 @@ public class ParseTools {
     return balancedCapture(chars, start, chars.length, type);
   }
 
-  /** 获取相对应捕获组的中间数据信息 */
+  /** 获取相对应捕获组的中间数据信息,并返回相对应位置的下标 */
   public static int balancedCapture(char[] chars, int start, int end, char type) {
     int depth = 1;
     char term = type;
@@ -1936,6 +1948,7 @@ public class ParseTools {
     return true;
   }
 
+  /** 判定当前符号是否是一个有效的操作数，即包括 字母，数字 _ $等 */
   public static boolean isIdentifierPart(final int c) {
     return ((c > 96 && c < 123)//小写字母
         //大写字母 数字
@@ -2023,6 +2036,7 @@ public class ParseTools {
     }
   }
 
+  /** 尝试将当前符号查找为操作符 */
   public static int opLookup(char c) {
     switch (c) {
       case '|':
@@ -2105,20 +2119,24 @@ public class ParseTools {
         || clazz == Float.class || clazz == Character.class || clazz == Short.class || clazz == Byte.class;
   }
 
+  /** 对指定的字符数组进行一段编译,sub表示此编译是整个外层编译的一部分 */
   public static Serializable subCompileExpression(char[] expression) {
     return _optimizeTree(new ExpressionCompiler(expression)._compile());
   }
 
+  /** 对指定的字符数组+编译上下文进行一段编译,sub即子编译 */
   public static Serializable subCompileExpression(char[] expression, ParserContext ctx) {
     ExpressionCompiler c = new ExpressionCompiler(expression, ctx);
     return _optimizeTree(c._compile());
   }
 
+  /** 对指定区间的字符数组+上下文进行子编译 */
   public static Serializable subCompileExpression(char[] expression, int start, int offset, ParserContext ctx) {
     ExpressionCompiler c = new ExpressionCompiler(expression, start, offset, ctx);
     return _optimizeTree(c._compile());
   }
 
+  /** 对指定的字符串+上下文进行子编译 */
   public static Serializable subCompileExpression(String expression, ParserContext ctx) {
     ExpressionCompiler c = new ExpressionCompiler(expression, ctx);
     return _optimizeTree(c._compile());
@@ -2233,17 +2251,19 @@ public class ParseTools {
   public static Class forNameWithInner(String className, ClassLoader classLoader) throws ClassNotFoundException {
     try {
       return Class.forName(className, true, classLoader);
-    } catch (ClassNotFoundException cnfe) {
-      return findInnerClass( className, classLoader, cnfe );
+    }
+    catch (ClassNotFoundException cnfe) {
+      return findInnerClass(className, classLoader, cnfe);
     }
   }
 
-  public static Class findInnerClass( String className, ClassLoader classLoader, ClassNotFoundException cnfe ) throws ClassNotFoundException {
+  public static Class findInnerClass(String className, ClassLoader classLoader, ClassNotFoundException cnfe) throws ClassNotFoundException {
     for (int lastDotPos = className.lastIndexOf('.'); lastDotPos > 0; lastDotPos = className.lastIndexOf('.')) {
-      className = className.substring(0, lastDotPos) + "$" + className.substring(lastDotPos+1);
+      className = className.substring(0, lastDotPos) + "$" + className.substring(lastDotPos + 1);
       try {
         return Class.forName(className, true, classLoader);
-      } catch (ClassNotFoundException e) { /* ignore */ }
+      }
+      catch (ClassNotFoundException e) { /* ignore */ }
     }
     throw cnfe;
   }

@@ -18,10 +18,18 @@ import java.util.Set;
 import static org.mvel2.DataConversion.canConvert;
 import static org.mvel2.DataConversion.convert;
 
+/**
+ * 用于描述一个原型的结构,原型具有相应name以及各个内部的属性,以用于各项数据的处理
+ * 原型在处理上与function不同,function仅用于声明相应的调用函数,proto可以理解为是一个新的class
+ */
 public class Proto extends ASTNode {
+  /** 原型的name */
   private String name;
+  /** 原型内的各个属性,可以是普通属性,也可以是函数function */
   private Map<String, Receiver> receivers;
+  /** 原型块的起始位置 */
   private int cursorStart;
+  /** 原型块的结束位置 */
   private int cursorEnd;
 
   public Proto(String name, ParserContext pCtx) {
@@ -30,24 +38,31 @@ public class Proto extends ASTNode {
     this.receivers = new SimpleIndexHashMapWrapper<String, Receiver>();
   }
 
+  /** 声明函数调用处理器 */
   public Receiver declareReceiver(String name, Function function) {
     Receiver r = new Receiver(null, ReceiverType.FUNCTION, function);
     receivers.put(name, r);
     return r;
   }
 
+  /** 声明属性调用处理器,并且赋予相应的初始化值 */
   public Receiver declareReceiver(String name, Class type, ExecutableStatement initCode) {
     Receiver r = new Receiver(null, ReceiverType.PROPERTY, initCode);
     receivers.put(name, r);
     return r;
   }
 
+  /**
+   * 使用指定的属性名,类型以及相应的初始化表达式进行处理器声明
+   * 这里的initCode只是声明,并不会直接被调用,只有在运行期才会处理
+   */
   public Receiver declareReceiver(String name, ReceiverType type, ExecutableStatement initCode) {
     Receiver r = new Receiver(null, type, initCode);
     receivers.put(name, r);
     return r;
   }
 
+  /** 创建一个相应的实例信息 */
   public ProtoInstance newInstance(Object ctx, Object thisCtx, VariableResolverFactory factory) {
     return new ProtoInstance(this, ctx, thisCtx, factory);
   }
@@ -64,10 +79,15 @@ public class Proto extends ASTNode {
     return this;
   }
 
+  /** 用于描述原型属性的封装 */
   public class Receiver implements CallableProxy {
+    /** 属性的类型 */
     private ReceiverType type;
+    /** 实际的属性值表示(function或value) */
     private Object receiver;
+    /** 其初始值,也是一个执行块 */
     private ExecutableStatement initValue;
+    /** 对实际的原型实例的引用(可能是null),即认为class可以是静态调用,也可以是instance调用 */
     private ProtoInstance instance;
 
     public Receiver(ProtoInstance protoInstance, ReceiverType type, Object receiver) {
@@ -82,6 +102,7 @@ public class Proto extends ASTNode {
       this.initValue = stmt;
     }
 
+    /** 进行实际处理器的调用 */
     public Object call(Object ctx, Object thisCtx, VariableResolverFactory factory, Object[] parms) {
       switch (type) {
         case FUNCTION:
@@ -94,6 +115,10 @@ public class Proto extends ASTNode {
       return null;
     }
 
+    /**
+     * 初始化一个实例的属性处理器
+     * 即认为在定义时,相应的instance是null的,这里采用init以填充一个相对应的实例信息
+     */
     public Receiver init(ProtoInstance instance, Object ctx, Object thisCtx, VariableResolverFactory factory) {
       return new Receiver(instance, type,
           type == ReceiverType.PROPERTY && initValue != null ? initValue.getValue(ctx, thisCtx, factory) :
@@ -113,11 +138,16 @@ public class Proto extends ASTNode {
     DEFERRED, FUNCTION, PROPERTY
   }
 
+  /** 对于原型的一个实例描述 */
   public class ProtoInstance implements Map<String, Receiver> {
+    /** 相应的原型定义描述 */
     private Proto protoType;
+    /** 当前所使用的实例scope作用域 */
     private VariableResolverFactory instanceStates;
+    /** 内部各个属性相对应的处理器 */
     private SimpleIndexHashMapWrapper<String, Receiver> receivers;
 
+    /** 创建起实例信息,并初始化相应的属性处理器,创建好相应的scope信息 */
     public ProtoInstance(Proto protoType, Object ctx, Object thisCtx, VariableResolverFactory factory) {
       this.protoType = protoType;
 
@@ -129,6 +159,7 @@ public class Proto extends ASTNode {
       instanceStates = new ProtoContextFactory(receivers);
     }
 
+    @SuppressWarnings("unused")
     public Proto getProtoType() {
       return protoType;
     }
@@ -190,9 +221,15 @@ public class Proto extends ASTNode {
     return "proto " + name;
   }
 
+  /**
+   * 用于描述一个原型的上下文变量工厂,即可认为是一个原型对象内的各项property
+   * 参考js对object prototype属性的处理
+   */
   public class ProtoContextFactory extends MapVariableResolverFactory {
+    /** 使用下标+kv映射的map来进行数据存储 */
     private final SimpleIndexHashMapWrapper<String, VariableResolver> variableResolvers;
 
+    @SuppressWarnings("unchecked")
     public ProtoContextFactory(SimpleIndexHashMapWrapper variables) {
       super(variables);
       variableResolvers = new SimpleIndexHashMapWrapper<String, VariableResolver>(variables, true);
@@ -367,6 +404,7 @@ public class Proto extends ASTNode {
     }
   }
 
+  /** 设置相应的定义位置 */
   public void setCursorPosition(int start, int end) {
     this.cursorStart = start;
     this.cursorEnd = end;
