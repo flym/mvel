@@ -25,9 +25,11 @@ import org.mvel2.integration.VariableResolverFactory;
 import org.mvel2.math.MathProcessor;
 
 /**
+ * 描述一个 a-- 的算术节点
  * @author Christopher Brock
  */
 public class PostFixDecNode extends ASTNode {
+  /** 相应的属性名 */
   private String name;
 
   public PostFixDecNode(String name, ParserContext pCtx) {

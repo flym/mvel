@@ -51,6 +51,8 @@ public class DoNode extends BlockNode {
 
     expectType(pCtx, this.condition, Boolean.class, ((fields & COMPILE_IMMEDIATE) != 0));
 
+    //因为要编译子块,因此这里如果有上下文,则需要在新的上下文中进行编译和处理
+
     if (pCtx != null) {
       pCtx.pushVariableScope();
     }
@@ -63,8 +65,10 @@ public class DoNode extends BlockNode {
   }
 
   public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
+    //接下来的while循环,如果有相应的变量,则表示在整个循环中变量都是重用的,因此这里采用mapVarFactory以重用相应的处理
     VariableResolverFactory ctxFactory = new MapVariableResolverFactory(new HashMap<String, Object>(0), factory);
 
+    //整个过程即采用标准的do while循环处理
     do {
       compiledBlock.getValue(ctx, thisValue, ctxFactory);
     }

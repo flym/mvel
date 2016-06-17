@@ -22,6 +22,7 @@ import org.mvel2.integration.VariableResolverFactory;
 
 import static org.mvel2.util.CompilerTools.expectType;
 
+/** 描述一个 a || b 的节点信息 为一个优化性节点 */
 public class Or extends BooleanNode {
 
   public Or(ASTNode left, ASTNode right, boolean strongTyping, ParserContext pCtx) {

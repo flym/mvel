@@ -27,7 +27,11 @@ import org.mvel2.util.ParseTools;
 import static org.mvel2.MVEL.eval;
 import static org.mvel2.util.ParseTools.subCompileExpression;
 
-/** 描述变量赋值(?=)的操作节点 */
+/**
+ * 描述变量赋值(?=)的操作节点
+ * 这里的变量在当前上下文中没有被定义
+ * 如果是a[i] += 3 这种表达式,这里会报错
+ * */
 public class OperativeAssign extends ASTNode {
   /** 变量名 */
   private String varName;
@@ -61,6 +65,7 @@ public class OperativeAssign extends ASTNode {
   }
 
   public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
+    //因为在前面并没有对varName作特殊处理,因此这里如果varName为a[i]这里即会出错
     VariableResolver resolver = factory.getVariableResolver(varName);
     resolver.setValue(ctx = MathProcessor.doOperations(resolver.getValue(), operation, knownInType, statement.getValue(ctx, thisValue, factory)));
     return ctx;

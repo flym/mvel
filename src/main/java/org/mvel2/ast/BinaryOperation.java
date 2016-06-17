@@ -63,7 +63,7 @@ public class BinaryOperation extends BooleanNode {
     switch (operation) {
       case Operator.ADD:
         /**
-         * 处理可能为字符串相加的情况
+         * 处理可能为字符串相加的情况,则设置相应的声明类型为字符串
          * In the special case of Strings, the return type may leftward propogate.
          */
         if (left.getEgressType() == String.class || right.getEgressType() == String.class) {
@@ -79,13 +79,16 @@ public class BinaryOperation extends BooleanNode {
         if (!ctx.isStrongTyping()) break;
 
         //处理可能的左右类型转换
+        //这里即左边类型和右边类型不能类型上兼容,即int和long
         if (!left.getEgressType().isAssignableFrom(right.getEgressType()) && !right.getEgressType().isAssignableFrom(left.getEgressType())) {
+          //如果右边是常量,并且可以和左边进行转换,则根据算数符来决定常量转换为哪个类型
           if (right.isLiteral() && canConvert(left.getEgressType(), right.getEgressType())) {
             Class targetType = isAritmeticOperation(operation) ? egressType : left.getEgressType();
             this.right = new LiteralNode(convert(right.getReducedValueAccelerated(null, null, null), targetType), pCtx);
           } else if ( !(areCompatible(left.getEgressType(), right.getEgressType()) ||
                   (( operation == Operator.EQUAL || operation == Operator.NEQUAL) &&
                      CompatibilityStrategy.areEqualityCompatible(left.getEgressType(), right.getEgressType()))) ) {
+            //即在算术上不兼容,同时也不是== 或 != 这种,则报错
 
             throw new CompileException("incompatible types in statement: " + right.getEgressType()
                     + " (compared from: " + left.getEgressType() + ")",
@@ -98,6 +101,7 @@ public class BinaryOperation extends BooleanNode {
 
     // }
 
+    //都是常量,则可以认为都可以直接拿到相应的类型了
     if (this.left.isLiteral() && this.right.isLiteral()) {
       if (this.left.egressType == this.right.egressType) {
         lType = rType = ParseTools.__resolveType(left.egressType);
@@ -113,6 +117,7 @@ public class BinaryOperation extends BooleanNode {
     return operation <= Operator.POWER;
   }
 
+  /** 判定2个类型在计算上是否是兼容的 */
   private boolean areCompatible(Class<?> leftClass, Class<?> rightClass) {
     return leftClass.equals(NullType.class) || rightClass.equals(NullType.class) ||
            ( Number.class.isAssignableFrom(rightClass) && Number.class.isAssignableFrom(leftClass) ) ||

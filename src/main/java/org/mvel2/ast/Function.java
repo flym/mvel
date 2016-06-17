@@ -35,7 +35,7 @@ import static org.mvel2.util.ParseTools.parseParameterDefList;
 import static org.mvel2.util.ParseTools.subCompileExpression;
 
 
-/** 描述函数定义的节点 */
+/** 描述函数定义的节点,在执行时,即创建一个 */
 @SuppressWarnings({"unchecked"})
 public class Function extends ASTNode implements Safe {
   /** 函数名 */
@@ -146,6 +146,7 @@ public class Function extends ASTNode implements Safe {
   }
 
   public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
+    //执行即创建起整个函数,如果有name就加入到变量作用域中,同时返回其处理,以方便在后续处理
     PrototypalFunctionInstance instance = new PrototypalFunctionInstance(this, new MapVariableResolverFactory());
     if (name != null) {
       if (!factory.isIndexedFactory() && factory.isResolveable(name))
@@ -166,14 +167,19 @@ public class Function extends ASTNode implements Safe {
     return instance;
   }
 
+  /** 执行真正的调用过程 */
   public Object call(Object ctx, Object thisValue, VariableResolverFactory factory, Object[] parms) {
     if (parms != null && parms.length != 0) {
       // detect tail recursion
+      //这里处理递归化调用,则当前函数递归调用当前函数,那么相应的工厂就是之前在当前函数内创建好地变量工厂
+      //同时这里需要判定相应的函数定义必须为当前函数才是递归调用,否则就不被支持
       if (factory instanceof FunctionVariableResolverFactory
           && ((FunctionVariableResolverFactory) factory).getIndexedVariableResolvers().length == parms.length) {
         FunctionVariableResolverFactory fvrf = (FunctionVariableResolverFactory) factory;
+        //这里判定函数对象是同一个
         if (fvrf.getFunction().equals(this)) {
           VariableResolver[] swapVR = fvrf.getIndexedVariableResolvers();
+          //先替换参数,在调用完之后,再替换回来,即递归调用内的参数值不会影响到外面的值
           fvrf.updateParameters(parms);
           try {
             return compiledBlock.getValue(ctx, thisValue, fvrf);
@@ -183,9 +189,11 @@ public class Function extends ASTNode implements Safe {
           }
         }
       }
+      //正常的调用,有参数信息,就使用函数变量工厂来表示相应的作用域
       return compiledBlock.getValue(thisValue,
           new StackDemarcResolverFactory(new FunctionVariableResolverFactory(this, factory, parameters, parms)));
     }
+    //因为没有参数信息,则直接使用一个默认的变量工厂即可,因为不需要对参数作处理,函数内部的值都是由新的作用域来处理
     else if (compiledMode) {
       return compiledBlock.getValue(thisValue,
           new StackDemarcResolverFactory(new DefaultLocalVariableResolverFactory(factory, parameters)));

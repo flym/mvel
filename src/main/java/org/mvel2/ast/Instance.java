@@ -5,14 +5,18 @@ import org.mvel2.integration.VariableResolverFactory;
 import org.mvel2.util.CompilerTools;
 
 
+/** 描述一个instanceof的操作节点,为一个优化节点 */
 public class Instance extends ASTNode {
+  /** 主对象表达式 */
   private ASTNode stmt;
+  /** 类型的表达式 */
   private ASTNode clsStmt;
 
   public Instance(ASTNode stmt, ASTNode clsStmt, ParserContext pCtx) {
     super(pCtx);
     this.stmt = stmt;
     this.clsStmt = clsStmt;
+    //要求后面的clsStmt返回值为class类型
     CompilerTools.expectType(pCtx, clsStmt, Class.class, true);
   }
 

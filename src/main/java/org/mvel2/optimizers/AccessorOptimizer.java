@@ -30,7 +30,7 @@ public interface AccessorOptimizer {
    */
   public void init();
 
-  /** 在相应的解析上下文中，对指定属性，在相应的当前对象以及相应的变量处理中读取相应的属性值信息,创建出相应的优化访问器 */
+  /** 在相应的解析上下文中，对指定属性，在相应的当前对象以及相应的变量处理中读取相应的属性值信息,创建出相应的优化访问器,并进行访问 */
   public Accessor optimizeAccessor(ParserContext pCtx, char[] property, int start, int offset, Object ctx, Object thisRef,
                                    VariableResolverFactory factory, boolean rootThisRef, Class ingressType);
 

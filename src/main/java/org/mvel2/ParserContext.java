@@ -60,7 +60,11 @@ public class ParserContext implements Serializable {
 
   private Object evaluationContext;
 
-  /** 存放当前有顺序的输入变量信息,顺序保证变量不会随机分布，之后可以根据此顺序查找具体值 */
+  /**
+   * 存放当前有顺序的输入变量信息,顺序保证变量不会随机分布，之后可以根据此顺序查找具体值
+   * 因为这里专指输入参数,因此在最终执行时,相应的变量工厂也会以相同的顺序存储相应的变量解析器
+   * 同时此顺序也与在具体执行的作用域的变量顺序相一致
+   */
   private ArrayList<String> indexedInputs;
   /** 存放当前有顺序的临时变量信息,顺序保证当前变量不会随机分布,之后可以根据此顺序查找具体值 */
   private ArrayList<String> indexedLocals;
@@ -113,7 +117,7 @@ public class ParserContext implements Serializable {
   /**
    * 是否在解析过程中允许按下标进行变量存储和分配,即开启变量工厂的下标处理模式
    * 或者是认为在处理过程中,是否允许添加新的变量信息
-   *  */
+   */
   private boolean indexAllocation = false;
   /** 判断在处理中，是否使用了新的变量 */
   protected boolean variablesEscape = false;
@@ -525,7 +529,11 @@ public class ParserContext implements Serializable {
     }
   }
 
-  /** 添加一个变量信息 */
+  /**
+   * 添加一个变量信息
+   *
+   * @param failIfNewAssignment 如果变量已存在,则抛出相应的异常
+   */
   public void addVariable(String name, Class type, boolean failIfNewAssignment) {
     initializeTables();
     if (variables.containsKey(name) && failIfNewAssignment)
@@ -950,6 +958,7 @@ public class ParserContext implements Serializable {
     this.executableCodeReached = executableCodeReached;
   }
 
+  /** 声明当前正在进行优化 */
   public void optimizationNotify() {
     this.optimizationMode = true;
   }

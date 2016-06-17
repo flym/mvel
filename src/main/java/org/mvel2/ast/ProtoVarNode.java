@@ -26,11 +26,14 @@ import static org.mvel2.MVEL.eval;
 import static org.mvel2.util.ParseTools.*;
 
 /**
+ * 描述对原型对象中的某个属性的声明处理,如var x = a.b, 其中a为一个原型类型
  * @author Christopher Brock
  */
 public class ProtoVarNode extends ASTNode implements Assignment {
+  /** 相应的变量名 */
   private String name;
 
+  /** 相应具体的表达式语句 */
   private ExecutableStatement statement;
 
   public ProtoVarNode(char[] expr, int start, int offset, int fields, Proto type, ParserContext pCtx) {

@@ -46,6 +46,7 @@ public class ForNode extends BlockNode {
   /** 第3段语句 */
   protected ExecutableStatement after;
 
+  /** 当前上下文是否支持新变量创建 */
   protected boolean indexAlloc = false;
 
   public ForNode(char[] expr, int start, int offset, int blockStart, int blockEnd, int fields, ParserContext pCtx) {
@@ -61,6 +62,7 @@ public class ForNode extends BlockNode {
       throw new RedundantCodeException();
     }
 
+    //在build过程中有入栈,因此这里进行出栈
     if (pCtx != null) {
       pCtx.popVariableScope();
     }
@@ -71,6 +73,7 @@ public class ForNode extends BlockNode {
     Object v;
     for (initializer.getValue(ctx, thisValue, ctxFactory); (Boolean) condition.getValue(ctx, thisValue, ctxFactory); after.getValue(ctx, thisValue, ctxFactory)) {
       v = compiledBlock.getValue(ctx, thisValue, ctxFactory);
+      //因为过程中可能有相应的return 语句,因此这里进行判定,以支持在for循环中提前返回
       if (ctxFactory.tiltFlag()) return v;
     }
     return null;
@@ -151,6 +154,7 @@ public class ForNode extends BlockNode {
     return varsEscape;
   }
 
+  /** for循环中的条件域,根据分号来确定相应的分隔信息 */
   private static int nextCondPart(char[] condition, int cursor, int end, boolean allowEnd) {
     for (; cursor < end; cursor++) {
       if (condition[cursor] == ';') return ++cursor;

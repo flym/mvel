@@ -436,8 +436,10 @@ public class CompilerTools {
     }
   }
 
+  /** 期望相应的节点的声明类型为指定的类型 */
   public static void expectType(ParserContext pCtx, ASTNode node, Class type, boolean compileMode) {
     Class retType = boxPrimitive(node.getEgressType());
+    //编译期不能确定相应的类型,因此编译期当声明类型不能确定时,还需要对当前上下文作处理,即只有在严格模式下才进行异常处理
     if (compileMode) {
       if ((retType == null || !boxPrimitive(type).isAssignableFrom(retType)) && (!Object.class.equals(retType) && pCtx.isStrictTypeEnforcement())) {
         throw new CompileException("was expecting type: " + type.getName() + "; but found type: "

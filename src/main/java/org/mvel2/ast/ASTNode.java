@@ -102,6 +102,7 @@ public class ASTNode implements Cloneable, Serializable {
   public static final int DEFERRED_TYPE_RES = 1 << 23;
   /** 当前处理是否是强类型处理 */
   public static final int STRONG_TYPING = 1 << 24;
+  /** 描述当前是否存储的是一个上下文引用 */
   public static final int PCTX_STORED = 1 << 25;
   /** 表示当前节点是一个 数组类型的空常量,如[]，即用来标识数组 */
   public static final int ARRAY_TYPE_LITERAL = 1 << 26;
@@ -117,13 +118,15 @@ public class ASTNode implements Cloneable, Serializable {
 
   // *** //
 
+  /** 即在 a[x] 或 xy(xxx)中第一次出现[符号的位置 与endOfName不同的地方在于后者认为a.x是一起的,则firstUnion则认定下标在第1个.处 */
   protected int firstUnion;
+  /** 用于描述在a[x] 或者是 xy(xxx)这种结构中第一次出现[或(的下标值,那么前面部分就可以认为是实际可用的name值 */
   protected int endOfName;
 
   /** 描述当前节点的解析属性值 */
   public int fields = 0;
 
-  /** 当前节点的处理类型(声明类型) */
+  /** 当前节点的处理类型(声明类型) 如果是object,则表示此类型还不太确定(需要在运行期再处理) */
   protected Class egressType;
   /** 描述当前节点所引用的字符串 */
   protected char[] expr;
@@ -146,6 +149,7 @@ public class ASTNode implements Cloneable, Serializable {
    */
   protected volatile Accessor safeAccessor;
 
+  //无任何用处
   protected int cursorPosition;
   /** 当前节点的下一步节点(顺序上的下一步) */
   public ASTNode nextASTNode;
@@ -168,6 +172,7 @@ public class ASTNode implements Cloneable, Serializable {
     }
   }
 
+  /** 反向优化,即声明DEOP标记以及NOJIT,以使用默认的反射访问方式来运行 */
   private Object deop(Object ctx, Object thisValue, VariableResolverFactory factory, RuntimeException e) {
     if ((fields & DEOP) == 0) {
       accessor = null;
@@ -182,6 +187,7 @@ public class ASTNode implements Cloneable, Serializable {
     }
   }
 
+  /** 尝试使用相应的优化器对表达式进行优化,以形成executeStatement以优化式执行.同时 */
   private Object optimize(Object ctx, Object thisValue, VariableResolverFactory factory) {
     if ((fields & DEOP) != 0) {
       fields ^= DEOP;
@@ -211,6 +217,7 @@ public class ASTNode implements Cloneable, Serializable {
       setAccessor(optimizer.optimizeAccessor(pCtx, expr, start, offset, ctx, thisValue, factory, true, egressType));
     }
     catch (OptimizationNotSupported ne) {
+      //这里优化失败了,那么就使用默认的reflect进行反射访问
       setAccessor((optimizer = getAccessorCompiler(SAFE_REFLECTIVE))
           .optimizeAccessor(pCtx, expr, start, offset, ctx, thisValue, factory, true, null));
     }
@@ -271,6 +278,7 @@ public class ASTNode implements Cloneable, Serializable {
     return subArray(expr, start, start + offset);
   }
 
+  /** 获取在变量名或者是表达式中,最前面一个变量或表达式的下标 */
   private int getAbsoluteFirstPart() {
     if ((fields & COLLECTION) != 0) {
       if (firstUnion < 0 || endOfName < firstUnion) return endOfName;
@@ -284,6 +292,7 @@ public class ASTNode implements Cloneable, Serializable {
     }
   }
 
+  /** 获取最靠前的变量,以提供临时变量的能力,即认为最靠前的变量已经在之前有过声明了 */
   public String getAbsoluteName() {
     if (firstUnion > start) {
       return new String(expr, start, getAbsoluteFirstPart() - start);
@@ -303,10 +312,12 @@ public class ASTNode implements Cloneable, Serializable {
     return "";
   }
 
+  /** 获取相应的常量值 */
   public Object getLiteralValue() {
     return literal;
   }
 
+  /** 临时将上下文存储在常量值当中,以提供特殊处理 */
   public void storeInLiteralRegister(Object o) {
     this.literal = o;
   }
@@ -339,11 +350,13 @@ public class ASTNode implements Cloneable, Serializable {
     Scan:
     for (int i = start; i < end; i++) {
       switch (name[i]) {
+        //有.表示深度属性,设置相应的联合标记
         case '.':
           if (firstUnion == 0) {
             firstUnion = i;
           }
           break;
+        //有[或者(同时设定相应的联合 标记以及首变量下标
         case '[':
         case '(':
           if (firstUnion == 0) {
@@ -361,6 +374,7 @@ public class ASTNode implements Cloneable, Serializable {
       return;
     }
 
+    //因为具备联合标记,则设定相应的深度属性标记
     if (firstUnion > start) {
       fields |= DEEP_PROPERTY | IDENTIFIER;
     }
@@ -410,6 +424,7 @@ public class ASTNode implements Cloneable, Serializable {
     return ((fields & ASSIGN) != 0);
   }
 
+  /** 是否是深度属性,即有.或者是[( */
   public boolean isDeepProperty() {
     return ((fields & DEEP_PROPERTY) != 0);
   }

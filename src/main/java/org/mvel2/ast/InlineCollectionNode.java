@@ -42,7 +42,9 @@ import static org.mvel2.util.ParseTools.*;
 public class InlineCollectionNode extends ASTNode {
   /** 用于描述数组内部的数据类型及值描述,可能是数组,集合,map的一种 */
   private Object collectionGraph;
+  /** 用于描述如,在]. 或 }.后面的表达式的起始点 */
   int trailingStart;
+  /** 用于描述整个表达式的结束点到后面表达式的长度,如 new int[]{1,2,3}.length中的 length长度值 */
   int trailingOffset;
 
   /** 初始化,但未指定数据类型 */

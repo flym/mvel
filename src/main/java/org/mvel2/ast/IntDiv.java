@@ -5,6 +5,7 @@ import org.mvel2.ParserContext;
 import org.mvel2.integration.VariableResolverFactory;
 
 
+/** 描述 a / b 并且 a b 类型均为int类型的计算节点,为优化节点 */
 public class IntDiv extends BinaryOperation implements IntOptimized {
   public IntDiv(ASTNode left, ASTNode right, ParserContext pCtx) {
     super(Operator.MULT, pCtx);

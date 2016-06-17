@@ -4,6 +4,7 @@ import org.mvel2.Operator;
 import org.mvel2.ParserContext;
 import org.mvel2.integration.VariableResolverFactory;
 
+/** 用于描述 a + b并且 a b 类型均为int类型的优化计算节点 */
 public class IntAdd extends BinaryOperation implements IntOptimized {
 
   public IntAdd(ASTNode left, ASTNode right, ParserContext pCtx) {

@@ -7,6 +7,7 @@ import org.mvel2.util.CompilerTools;
 
 import static org.mvel2.util.ParseTools.similarity;
 
+/** 用于描述字符串匹配度的节点处理 */
 public class Strsim extends ASTNode {
   private ASTNode stmt;
   private ASTNode soundslike;

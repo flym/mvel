@@ -34,6 +34,7 @@ import static org.mvel2.util.ParseTools.subCompileExpression;
 public class AssertNode extends ASTNode {
   /** 断言的表达式 */
   public ExecutableStatement assertion;
+  //无用语句
   public ExecutableStatement fail;
 
   public AssertNode(char[] expr, int start, int offset, int fields, ParserContext pCtx) {
@@ -49,6 +50,7 @@ public class AssertNode extends ASTNode {
 
   public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
     try {
+      //这里进行强转,并且在catch中进行判定,即要求assert后面的结果就是一个boolean值
       if (!((Boolean) assertion.getValue(ctx, thisValue, factory))) {
         throw new AssertionError("assertion failed in expression: " + new String(this.expr, start, offset));
       }

@@ -45,6 +45,7 @@ public class IfNode extends BlockNode implements NestedStatement {
   /** 后面的else 节点(与elseIf冲突) */
   protected ExecutableStatement elseBlock;
 
+  /** 当前解析上下文是否可创建新变量 */
   protected boolean idxAlloc = false;
 
   public IfNode(char[] expr, int start, int offset, int blockStart, int blockOffset, int fields, ParserContext pCtx) {
@@ -76,6 +77,7 @@ public class IfNode extends BlockNode implements NestedStatement {
   }
 
   public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
+    //标准的if elseif else逻辑,在创建变量作用域时,需要根据当前的作用域是否可创建新变量才判定是否要使用新的作用域
     if ((Boolean) condition.getValue(ctx, thisValue, factory)) {
       return nestedStatement.getValue(ctx, thisValue, idxAlloc ? factory : new MapVariableResolverFactory(new HashMap(0), factory));
     }

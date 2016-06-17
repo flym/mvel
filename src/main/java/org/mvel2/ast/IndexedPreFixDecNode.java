@@ -25,7 +25,7 @@ import org.mvel2.integration.VariableResolverFactory;
 import org.mvel2.math.MathProcessor;
 
 /**
- * 表示一个前值操作处理的节点，如++x，或--x,当前属性已在上下文中下标定位(入参或本地变量)
+ * 表示一个前值操作处理的节点，如--x,当前属性已在上下文中下标定位(入参或本地变量)
  * @author Christopher Brock
  */
 public class IndexedPreFixDecNode extends ASTNode {

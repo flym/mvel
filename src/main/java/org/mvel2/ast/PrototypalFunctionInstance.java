@@ -3,9 +3,11 @@ package org.mvel2.ast;
 import org.mvel2.integration.VariableResolverFactory;
 
 /**
+ * 描述一个函数产生的调用实例,即每一次的function调用都是一个调用实例
  * @author Mike Brock
  */
 public class PrototypalFunctionInstance extends FunctionInstance {
+  /** 原定义时的作用域 */
   private final VariableResolverFactory resolverFactory;
 
   public PrototypalFunctionInstance(Function function, VariableResolverFactory resolverFactory) {

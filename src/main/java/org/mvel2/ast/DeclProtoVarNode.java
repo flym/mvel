@@ -25,22 +25,27 @@ import org.mvel2.integration.VariableResolverFactory;
 import static org.mvel2.util.ParseTools.checkNameSafety;
 
 /**
+ * 描述原型变量声明节点
  * @author Christopher Brock
  */
 public class DeclProtoVarNode extends ASTNode implements Assignment {
+  /** 原型的变量名 */
   private String name;
 
   public DeclProtoVarNode(String name, Proto type, int fields, ParserContext pCtx) {
     super(pCtx);
+    //其出参为原型实例
     this.egressType = Proto.ProtoInstance.class;
     checkNameSafety(this.name = name);
 
+    //编译期加入到当前上下文
     if ((fields & COMPILE_IMMEDIATE) != 0) {
       pCtx.addVariable(name, egressType, true);
     }
   }
 
   public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
+    //因为是新建声明,因此直接在当前变量域中加入指定类型的声明即可
     if (!factory.isResolveable(name)) factory.createVariable(name, null, egressType);
     else throw new RuntimeException("variable defined within scope: " + name);
     return null;

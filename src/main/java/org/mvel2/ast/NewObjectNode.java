@@ -51,6 +51,7 @@ import static org.mvel2.util.ReflectionUtil.toPrimitiveArrayType;
  */
 @SuppressWarnings({"ManualArrayCopy"})
 public class NewObjectNode extends ASTNode {
+  /** 相应的new 处理优化器,在第一次执行时创建 */
   private transient Accessor newObjectOptimizer;
   /** 类型描述符 */
   private TypeDescriptor typeDescr;
@@ -186,7 +187,9 @@ public class NewObjectNode extends ASTNode {
   }
 
   public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
+    //第一次,开始创建起优化器
     if (newObjectOptimizer == null) {
+      //如果之前类型未能成功解析,则重新解析相应的类型信息
       if (egressType == null) {
         /**
          * This means we couldn't resolve the type at the time this AST node was created, which means
@@ -216,11 +219,13 @@ public class NewObjectNode extends ASTNode {
         }
       }
 
+      //如果是数组,则使用数组优化器
       if (typeDescr.isArray()) {
         return (newObjectOptimizer = new NewObjectArray(getBaseComponentType(egressType.getComponentType()), typeDescr.getCompiledArraySize()))
             .getValue(ctx, thisValue, factory);
       }
 
+      //不是数组,则由优化器本身创建起new Object优化器
       try {
         AccessorOptimizer optimizer = getThreadAccessorOptimizer();
 
@@ -332,8 +337,11 @@ public class NewObjectNode extends ASTNode {
     return function.getReducedValueAccelerated(ctx, thisRef, factory);
   }
 
+  /** 描述一个new Integer[] 创建数组对象的访问器 */
   public static class NewObjectArray implements Accessor, Serializable {
+    /** 多维数组的长度信息 */
     private ExecutableStatement[] sizes;
+    /** 相应的原类型信息 */
     private Class arrayType;
 
     public NewObjectArray(Class arrayType, ExecutableStatement[] sizes) {
@@ -342,6 +350,7 @@ public class NewObjectNode extends ASTNode {
     }
 
     public Object getValue(Object ctx, Object elCtx, VariableResolverFactory variableFactory) {
+      //这里即直接根据长度信息,创建起数组对象即可
       int[] s = new int[sizes.length];
       for (int i = 0; i < s.length; i++) {
         s[i] = convert(sizes[i].getValue(ctx, elCtx, variableFactory), Integer.class);

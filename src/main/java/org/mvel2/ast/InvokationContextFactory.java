@@ -5,9 +5,14 @@ import org.mvel2.integration.VariableResolverFactory;
 import org.mvel2.integration.impl.MapVariableResolverFactory;
 
 /**
-* @author Mike Brock
-*/
+ * 描述一个采用原定义作用域+当前执行作用域的双重作用域工厂
+ * 即在定义时,此对象有一个内部作用域(可以理解为对象内部属性范围),然后在执行时,加入了外部的作用域,
+ * 这2者都能控制相应的变量处理
+ *
+ * @author Mike Brock
+ */
 public class InvokationContextFactory extends MapVariableResolverFactory {
+  /** 原定义作用域 */
   private VariableResolverFactory protoContext;
 
   public InvokationContextFactory(VariableResolverFactory next, VariableResolverFactory protoContext) {
@@ -17,6 +22,7 @@ public class InvokationContextFactory extends MapVariableResolverFactory {
 
   @Override
   public VariableResolver createVariable(String name, Object value) {
+    //处理变量时,需要根据2者,看哪个能解析,如果外部不能解析,则退回到定义作用域来处理
     if (isResolveable(name) && !protoContext.isResolveable(name)) {
       return nextFactory.createVariable(name, value);
     }
@@ -37,6 +43,7 @@ public class InvokationContextFactory extends MapVariableResolverFactory {
 
   @Override
   public VariableResolver getVariableResolver(String name) {
+    //获取相应的值信息时也是采用双重处理,先外部后内部
     if (isResolveable(name) && !protoContext.isResolveable(name)) {
       return nextFactory.getVariableResolver(name);
     }

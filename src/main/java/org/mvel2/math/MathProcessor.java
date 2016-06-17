@@ -2,16 +2,16 @@
  * MVEL 2.0
  * Copyright (C) 2007 The Codehaus
  * Mike Brock, Dhanji Prasanna, John Graham, Mark Proctor
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -40,11 +40,13 @@ import static org.mvel2.util.Soundex.soundex;
 
 /**
  * 数学处理，进行各项数学运算
+ *
  * @author Christopher Brock
  */
 public strictfp class MathProcessor {
   private static final MathContext MATH_CONTEXT = MathContext.DECIMAL128;
 
+  /** 2个对象进行计算,并获取相应的值 */
   public static Object doOperations(Object val1, int operation, Object val2) {
     return doOperations(val1 == null ? DataTypes.OBJECT : __resolveType(val1.getClass()),
         val1, operation,
@@ -55,6 +57,13 @@ public strictfp class MathProcessor {
     return doOperations(val1 == null ? DataTypes.OBJECT : __resolveType(val1.getClass()), val1, operation, type2, val2);
   }
 
+  /**
+   * 根据2个值,2个值的类型,操作符计算出相应的值
+   *
+   * @param type1     左边的值类型,可能未计算
+   * @param type2     右边的值类型,可能未计算
+   * @param operation 操作符
+   */
   public static Object doOperations(int type1, Object val1, int operation, int type2, Object val2) {
     //-1 表示要重新计算处理
     if (type1 == -1)
@@ -64,6 +73,7 @@ public strictfp class MathProcessor {
       type2 = val2 == null ? DataTypes.OBJECT : __resolveType(val2.getClass());
 
     switch (type1) {
+      //单独处理bigDecimal系列,因为右边的类型可能要进行转型处理
       case BIG_DECIMAL:
 
         switch (type2) {
@@ -214,11 +224,12 @@ public strictfp class MathProcessor {
     return null;
   }
 
+  /** 进行普通的运算 */
   private static Object _doOperations(int type1, Object val1, int operation, int type2, Object val2) {
     if (operation < 20) {//操作符小于20,表示是数学操作
       //第一种情况，表示是同类型操作，包括==和 != 以及整数操作
       if (((type1 > 49 || operation == EQUAL || operation == NEQUAL) && type1 == type2) ||
-              (isIntegerType(type1) && isIntegerType(type2) && operation >= BW_AND && operation <= BW_NOT)) {
+          (isIntegerType(type1) && isIntegerType(type2) && operation >= BW_AND && operation <= BW_NOT)) {
         return doOperationsSameType(type1, val1, operation, val2);
       }
       //确实是数字操作
@@ -235,6 +246,7 @@ public strictfp class MathProcessor {
         return doOperationNonNumeric(type1, convert(val1, Boolean.class), operation, convert(val2, Boolean.class));
       }
       // Fix for: MVEL-56
+      //字符串与字符操作,就进行联接处理
       else if ((type1 == 1 || type2 == 1) && (type1 == 8 || type1 == 112 || type2 == 8 || type2 == 112)) {
         if (type1 == 1) {
           return doOperationNonNumeric(type1, val1, operation, valueOf(val2));
@@ -271,9 +283,11 @@ public strictfp class MathProcessor {
           return valueOf(val1) + valueOf(val2);
         }
 
+        //相等性判定
       case EQUAL:
         return safeEquals(val2, val1) ? Boolean.TRUE : Boolean.FALSE;
 
+      //不相等判定
       case NEQUAL:
         return safeNotEquals(val2, val1) ? Boolean.TRUE : Boolean.FALSE;
 
@@ -296,6 +310,7 @@ public strictfp class MathProcessor {
         }
         //     break;
 
+        //>= 判定,使用comparable来判定
       case GETHAN:
         if (val1 instanceof Comparable) {
           //noinspection unchecked
@@ -312,6 +327,7 @@ public strictfp class MathProcessor {
         }
 
 
+        // < 判定,使用comparable来判定
       case LTHAN:
         if (val1 instanceof Comparable) {
           //noinspection unchecked
@@ -347,6 +363,7 @@ public strictfp class MathProcessor {
       case SOUNDEX:
         return soundex(String.valueOf(val1)).equals(soundex(String.valueOf(val2)));
 
+      // #操作,直接字符串拼接
       case STR_APPEND:
         return valueOf(val1) + valueOf(val2);
     }
@@ -357,6 +374,7 @@ public strictfp class MathProcessor {
         + " [vals (" + valueOf(val1) + ", " + valueOf(val2) + ") operation=" + DebugTools.getOperatorName(operation) + " (opcode:" + operation + ") ]");
   }
 
+  /** 安全地eq判定,即处理null值 */
   private static Boolean safeEquals(final Object val1, final Object val2) {
     if (val1 != null) {
       return val1.equals(val2) ? Boolean.TRUE : Boolean.FALSE;
@@ -364,6 +382,7 @@ public strictfp class MathProcessor {
     else return val2 == null || (val2.equals(val1) ? Boolean.TRUE : Boolean.FALSE);
   }
 
+  /** 安全地notEq判定,即处理null值 */
   private static Boolean safeNotEquals(final Object val1, final Object val2) {
     if (val1 != null) {
       return !val1.equals(val2) ? Boolean.TRUE : Boolean.FALSE;
@@ -667,6 +686,7 @@ public strictfp class MathProcessor {
     return null;
   }
 
+  /** 装箱,以将装箱后的类型进行宽化比较 */
   private static int box(int type) {
     switch (type) {
       case DataTypes.INTEGER:

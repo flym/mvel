@@ -33,8 +33,10 @@ public interface ExecutableStatement extends Accessor, Serializable, Cloneable {
   /** 设置相应的出参类型，表示当前单元应该返回的类型信息 */
   public void setKnownEgressType(Class type);
 
+  /** 获取相应的已知入参类型 */
   public Class getKnownIngressType();
 
+  /** 执行节点, 能够拿到确定的声明返回类型 */
   public Class getKnownEgressType();
 
   /** 当前单元是否是classCast计算单元) */

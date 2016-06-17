@@ -59,6 +59,7 @@ public class DoUntilNode extends BlockNode {
   }
 
   public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
+    //整个逻辑与do while相同,除了在while的判定不同
     VariableResolverFactory lc = new MapVariableResolverFactory(new HashMap(0), factory);
 
     do {

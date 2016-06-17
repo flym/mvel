@@ -26,11 +26,14 @@ import static org.mvel2.MVEL.eval;
 import static org.mvel2.util.ParseTools.*;
 
 /**
+ * 用于描述对指定类型变量的声明,如 var x = 3这种声明节点
  * @author Christopher Brock
  */
 public class TypedVarNode extends ASTNode implements Assignment {
+  /** 相应的变量信息 */
   private String name;
 
+  /** 声明附带的表达式 */
   private ExecutableStatement statement;
 
   public TypedVarNode(char[] expr, int start, int offset, int fields, Class type, ParserContext pCtx) {

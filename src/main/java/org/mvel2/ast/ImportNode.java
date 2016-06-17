@@ -2,16 +2,16 @@
  * MVEL 2.0
  * Copyright (C) 2007 The Codehaus
  * Mike Brock, Dhanji Prasanna, John Graham, Mark Proctor
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -63,16 +63,16 @@ public class ImportNode extends ASTNode {
       String clsName = new String(expr, start, offset);
 
       ClassLoader classLoader = getClassLoader();
-      
+
       try {
-        this.importClass = Class.forName(clsName, true, classLoader );
+        this.importClass = Class.forName(clsName, true, classLoader);
       }
       catch (ClassNotFoundException e) {
         int idx;
         clsName = (clsName.substring(0, idx = clsName.lastIndexOf('.')) + "$" + clsName.substring(idx + 1)).trim();
 
         try {
-          this.importClass = Class.forName(clsName, true, classLoader );
+          this.importClass = Class.forName(clsName, true, classLoader);
         }
         catch (ClassNotFoundException e2) {
           throw new CompileException("class not found: " + new String(expr), expr, start);
@@ -119,6 +119,7 @@ public class ImportNode extends ASTNode {
     this.packageImport = packageImport;
   }
 
+  /** 获取相引用的包,因为在引入之后,下一步就会使用此包下的类,因此需要将其提前加入到解析上下文中 */
   public String getPackageImport() {
     return new String(expr, start, _offset - start);
   }

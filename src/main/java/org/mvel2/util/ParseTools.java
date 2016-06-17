@@ -593,6 +593,7 @@ public class ParseTools {
   }
 
 
+  /** 如果类型为基本类型,返回其包装类型,其它不变 */
   public static Class<?> boxPrimitive(Class cls) {
     if (cls == int.class || cls == Integer.class) {
       return Integer.class;
@@ -700,15 +701,21 @@ public class ParseTools {
     return cls;
   }
 
+  /** 对2个值进行contains判定,以返回相应的处理值 */
   public static boolean containsCheck(Object compareTo, Object compareTest) {
+    //null处理
     if (compareTo == null)
       return false;
+    //字符串
     else if (compareTo instanceof String)
       return ((String) compareTo).contains(valueOf(compareTest));
+    //集合
     else if (compareTo instanceof Collection)
       return ((Collection) compareTo).contains(compareTest);
+    //map
     else if (compareTo instanceof Map)
       return ((Map) compareTo).containsKey(compareTest);
+    //数组,分为基本类型和非基本类型
     else if (compareTo.getClass().isArray()) {
       if (compareTo.getClass().getComponentType().isPrimitive())
         return containsCheckOnPrimitveArray(compareTo, compareTest);
@@ -719,9 +726,11 @@ public class ParseTools {
           return true;
       }
     }
+    //其它情况直接返回false,如 x.contains(null)这种
     return false;
   }
 
+  /** 在基本类型数组中判定相应的值是否满足contains的处理 */
   private static boolean containsCheckOnPrimitveArray(Object primitiveArray, Object compareTest) {
     Class<?> primitiveType = primitiveArray.getClass().getComponentType();
     if (primitiveType == boolean.class)
@@ -740,51 +749,61 @@ public class ParseTools {
       return compareTest instanceof Short && containsCheckOnShortArray((short[]) primitiveArray, (Short) compareTest);
     if (primitiveType == byte.class)
       return compareTest instanceof Byte && containsCheckOnByteArray((byte[]) primitiveArray, (Byte) compareTest);
+
+    //类型不兼容则直接返回false
     return false;
   }
 
+  /** boolean数组判定是否contains */
   private static boolean containsCheckOnBooleanArray(boolean[] array, Boolean compareTest) {
     boolean test = compareTest;
     for (boolean b : array) if (b == test) return true;
     return false;
   }
 
+  /** int数组判定是否contains */
   private static boolean containsCheckOnIntArray(int[] array, Integer compareTest) {
     int test = compareTest;
     for (int i : array) if (i == test) return true;
     return false;
   }
 
+  /** long数组判定是否contains */
   private static boolean containsCheckOnLongArray(long[] array, Long compareTest) {
     long test = compareTest;
     for (long l : array) if (l == test) return true;
     return false;
   }
 
+  /** double数组判定是否contains */
   private static boolean containsCheckOnDoubleArray(double[] array, Double compareTest) {
     double test = compareTest;
     for (double d : array) if (d == test) return true;
     return false;
   }
 
+  /** float数组判定是否contains */
   private static boolean containsCheckOnFloatArray(float[] array, Float compareTest) {
     float test = compareTest;
     for (float f : array) if (f == test) return true;
     return false;
   }
 
+  /** char数组判定是否contains */
   private static boolean containsCheckOnCharArray(char[] array, Character compareTest) {
     char test = compareTest;
     for (char c : array) if (c == test) return true;
     return false;
   }
 
+  /** short数组判定是否contains */
   private static boolean containsCheckOnShortArray(short[] array, Short compareTest) {
     short test = compareTest;
     for (short s : array) if (s == test) return true;
     return false;
   }
 
+  /** byte数组判定是否contains */
   private static boolean containsCheckOnByteArray(byte[] array, Byte compareTest) {
     byte test = compareTest;
     for (byte b : array) if (b == test) return true;
@@ -881,11 +900,14 @@ public class ParseTools {
     }
   }
 
+  /** 将变量名+赋值表达式+相应的算术符解析联合成一个 类似 a + b的表达式 */
   public static char[] createShortFormOperativeAssignment(String name, char[] statement, int start, int offset, int operation) {
+    //没有操作符,则默认就是后面的表达式
     if (operation == -1) {
       return statement;
     }
 
+    //反向查找操作符
     char[] stmt;
     char op = 0;
     switch (operation) {
@@ -924,6 +946,7 @@ public class ParseTools {
         break;
     }
 
+    //将3者联合起来 a + b
     arraycopy(name.toCharArray(), 0, (stmt = new char[name.length() + offset + 1]), 0, name.length());
     stmt[name.length()] = op;
     arraycopy(statement, start, stmt, name.length() + 1, offset);

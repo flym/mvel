@@ -20,12 +20,17 @@ package org.mvel2.ast;
 
 import org.mvel2.compiler.ExecutableStatement;
 
+/** 赋值节点的抽象描述 */
 public interface Assignment {
+  /** 获取要进行赋值的变量名 */
   public String getAssignmentVar();
 
+  /** 当前节点的表达式 */
   public char[] getExpression();
 
+  /** 是否是new 新建声明,如 a = new X()这种 */
   public boolean isNewDeclaration();
 
+  /** 具体赋值后面的值信息 */
   public void setValueStatement(ExecutableStatement stmt);
 }

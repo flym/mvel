@@ -5,6 +5,7 @@ import org.mvel2.ParserContext;
 import org.mvel2.integration.VariableResolverFactory;
 
 
+/** 描述 a - b 并且 a b 类型均为整数的优化计算节点 */
 public class IntSub extends BinaryOperation implements IntOptimized {
   public IntSub(ASTNode left, ASTNode right, ParserContext pCtx) {
     super(Operator.SUB, pCtx);

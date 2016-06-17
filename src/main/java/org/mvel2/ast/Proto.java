@@ -21,6 +21,7 @@ import static org.mvel2.DataConversion.convert;
 /**
  * 用于描述一个原型的结构,原型具有相应name以及各个内部的属性,以用于各项数据的处理
  * 原型在处理上与function不同,function仅用于声明相应的调用函数,proto可以理解为是一个新的class
+ * 注:在当前的版本中proto并不被支持,因此可以认为function及proto这块的支持均不完善
  */
 public class Proto extends ASTNode {
   /** 原型的name */

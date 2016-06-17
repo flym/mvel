@@ -25,6 +25,7 @@ import static java.lang.String.valueOf;
 import static java.util.regex.Pattern.compile;
 import static org.mvel2.MVEL.eval;
 
+/** 对于 ~= 正确表达式的优化节点(实际上正式表达式由RegExMatch描述) 此对象并不会实际存在用处 */
 public class RegExMatchNode extends ASTNode {
   private ASTNode node;
   private ASTNode patternNode;

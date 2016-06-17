@@ -31,18 +31,26 @@ import static org.mvel2.util.ArrayTools.findFirst;
 import static org.mvel2.util.ParseTools.*;
 
 /**
+ * 描述一个正常的变量声明节点,即如var a, a = new X()这种节点
  * @author Christopher Brock
  */
 public class AssignmentNode extends ASTNode implements Assignment {
+  /** 整个赋值变量名(包括数组下标) 如a[3]整个部分 */
   private String assignmentVar;
+  /** 变量名(如果是集合访问,则集合访问的前面部分,如a[3]中的a */
   private String varName;
+  /** 如果是基于集合访问,那么这个集合的变量值,即a[3]的引用对象 */
   private transient CompiledAccExpression accExpr;
 
+  /** 如果是基于集合访问,相应的数组目标字符串(相当于varName) */
   private char[] indexTarget;
+  /** 基于集合访问的下标描述字符串 如a[3]中的3 */
   private String index;
 
   // private char[] stmt;
+  /** 右侧值的执行表达式 */
   private ExecutableStatement statement;
+  /** 是否变量中存在集合标记,即a[1]这种 */
   private boolean col = false;
 
 
@@ -87,6 +95,7 @@ public class AssignmentNode extends ASTNode implements Assignment {
         throw new CompileException(e.getMessage(), expr, start);
       }
     }
+    //以下表示可能为纯粹的变量声明,但从程序的引用来看以下场景不存在
     else {
       try {
         checkNameSafety(this.varName = new String(expr, start, offset));
@@ -97,24 +106,29 @@ public class AssignmentNode extends ASTNode implements Assignment {
       }
     }
 
+    //此变量加入到上下文中,表示已被占用
     if ((fields & COMPILE_IMMEDIATE) != 0) {
       pCtx.addVariable(this.varName, egressType);
     }
   }
 
   public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
+    //如果没有提前编译,则这里要重新编译一下
     if (accExpr == null && indexTarget != null) {
       accExpr = (CompiledAccExpression) compileSetExpression(indexTarget);
     }
 
+    //集合访问,则读取相应的变量,设置值即可
     if (col) {
       return accExpr.setValue(ctx, thisValue, factory, statement.getValue(ctx, thisValue, factory));
     }
+    //普通的赋值访问,则在当前变量工厂中创建出相应的变量以及相对应的值即可
     else if (statement != null) {
       if (factory == null)
         throw new CompileException("cannot assign variables; no variable resolver factory available", expr, start);
       return factory.createVariable(varName, statement.getValue(ctx, thisValue, factory)).getValue();
     }
+    //单独声明变量
     else {
       if (factory == null)
         throw new CompileException("cannot assign variables; no variable resolver factory available", expr, start);
