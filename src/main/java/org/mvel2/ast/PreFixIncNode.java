@@ -42,12 +42,15 @@ public class PreFixIncNode extends ASTNode {
   }
 
   public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
+    //获取之前的变量, 先运算,最终返回运算后的值,同时将相应的值重新设置
+    //整个流程为 var tmp = get(a); a = tmp + 1; set(a);return a;
     VariableResolver vResolver = factory.getVariableResolver(name);
     vResolver.setValue(ctx = MathProcessor.doOperations(vResolver.getValue(), Operator.ADD, DataTypes.INTEGER, 1));
     return ctx;
   }
 
   public Object getReducedValue(Object ctx, Object thisValue, VariableResolverFactory factory) {
+    //与编译期相同
     return getReducedValueAccelerated(ctx, thisValue, factory);
   }
 }

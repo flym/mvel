@@ -421,8 +421,11 @@ public class CompilerTools {
     return allFunctions;
   }
 
+  /** 期望指定访问器的已知返回格式与预期的类型相兼容 */
   public static void expectType(ParserContext pCtx, Accessor expression, Class type, boolean compileMode) {
     Class retType = expression.getKnownEgressType();
+    //编译模式下,如果 (返回类型为null 或者 类型不兼容)的情况下,同时解析上下文要求严格类型调用或者不是object类型
+    //即允许的情况包括 当前返回类型不能为null,可以为object但要求上下文解析非严格,或者是类型兼容
     if (compileMode) {
       if ((retType == null || !boxPrimitive(type).isAssignableFrom(boxPrimitive(retType))) && (!Object.class.equals(retType)
           || pCtx.isStrictTypeEnforcement())) {
@@ -430,6 +433,9 @@ public class CompilerTools {
             + (retType != null ? retType.getName() : "<Unknown>"), new char[0], 0);
       }
     }
+    //如果当前不是编译模式,则当返回值为null 或 在不是object的情况下与预期的类型不兼容,则认为是异常
+    //因为返回object表示当前类型不确定
+    //允许的情况为返回类型不为null,可以为object,或者是类型相兼容
     else if (retType == null || !Object.class.equals(retType) && !boxPrimitive(type).isAssignableFrom(boxPrimitive(retType))) {
       throw new CompileException("was expecting type: " + type.getName() + "; but found type: "
           + (retType != null ? retType.getName() : "<Unknown>"), new char[0], 0);

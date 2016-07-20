@@ -47,5 +47,6 @@ public abstract class BooleanNode extends ASTNode {
    */
   public abstract void setRightMost(ASTNode right);
 
+  /** 获取最右侧的处理节点 */
   public abstract ASTNode getRightMost();
 }

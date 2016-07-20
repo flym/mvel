@@ -41,12 +41,16 @@ public class PostFixIncNode extends ASTNode {
   }
 
   public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
+    //此变量之前定义过,因此从解析工厂中获取值,处理再设置回去即可
+    //整个表达式翻译为 var tmp = get(a);a = tmp + 1; set(a);return tmp;
     VariableResolver vResolver = factory.getVariableResolver(name);
+    //因为是后置,所以先取值,再计算,然后返回之前的值
     vResolver.setValue(MathProcessor.doOperations(ctx = vResolver.getValue(), Operator.ADD, DataTypes.INTEGER, 1));
     return ctx;
   }
 
   public Object getReducedValue(Object ctx, Object thisValue, VariableResolverFactory factory) {
+    //与编译执行相同
     return getReducedValueAccelerated(ctx, thisValue, factory);
   }
 }

@@ -68,7 +68,7 @@ public class ParserContext implements Serializable {
   private ArrayList<String> indexedInputs;
   /** 存放当前有顺序的临时变量信息,顺序保证当前变量不会随机分布,之后可以根据此顺序查找具体值 */
   private ArrayList<String> indexedLocals;
-  /** 变量作用域,描述每个变量是否在指定的变量域中 */
+  /** 变量作用域,描述每个变量是否在指定的变量域中,此变量作用域为编译期作用域 */
   private ArrayList<Set<String>> variableVisibility;
 
   /** 变量声明以及变量类型定义 */

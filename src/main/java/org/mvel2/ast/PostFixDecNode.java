@@ -41,12 +41,15 @@ public class PostFixDecNode extends ASTNode {
   }
 
   public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
+    //当前属性是之前声明的,因此从变量解析器中获取相应的值,翻译为 a = a - 1,然后再设置回去
     VariableResolver vResolver = factory.getVariableResolver(name);
+    //后置运算,先取原来值,处理,最后返回原来的值
     vResolver.setValue(MathProcessor.doOperations(ctx = vResolver.getValue(), Operator.SUB, DataTypes.INTEGER, 1));
     return ctx;
   }
 
   public Object getReducedValue(Object ctx, Object thisValue, VariableResolverFactory factory) {
+    //与编译运行相同
     return getReducedValueAccelerated(ctx, thisValue, factory);
   }
 

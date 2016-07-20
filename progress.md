@@ -188,7 +188,7 @@
 |   ExpressionCompiler  |   表达式编译器    |   未完成 |
 |   Parser  |   编译器接口定义 |   未完成 |
 |   PropertyVerifier    |   属性验证器   |   未完成 |
-|   And |   &&节点    |   未完成 |
+|   And |   &&节点    |   已完成 |
 |   ArraySize   |   数组长度表示  |   已完成 |
 |   AssertNode  |   断言节点    |   未完成 |
 |   Assignment  |   赋值节点接口  |   未完成 |
@@ -240,11 +240,11 @@
 |   NewPrototypeNode    |   new原型节点 |   未完成 |
 |   OperativeAssign |   变量操作赋值节点    |   未完成 |
 |   OperatorNode    |   操作符节点   |   未完成 |
-|   Or  |   or操作节点  |   未完成 |
-|   PostFixDecNode  |   后置--节点  |   未完成 |
-|   PostFixIncNode  |   后置++节点  |   未完成 |
-|   PreFixDecNode   |   前置--节点  |   未完成 |
-|   PreFixIncNode   |   前置++节点  |   未完成 |
+|   Or  |   or操作节点  |   已完成 |
+|   PostFixDecNode  |   后置--节点  |   已完成 |
+|   PostFixIncNode  |   后置++节点  |   已完成 |
+|   PreFixDecNode   |   前置--节点  |   已完成 |
+|   PreFixIncNode   |   前置++节点  |   已完成 |
 |   Proto   |   原型结构节点  |   未完成 |
 |   PrototypalFunctionInstance  |   原型函数调用实例    |   未完成 |
 |   ProtoVarNode    |   原型属性声明节点    |   未完成 |
@@ -264,7 +264,7 @@
 |   TypeCast    |   类型转换节点  |   未完成 |
 |   TypeDescriptor  |   类型声明节点  |   未完成 |
 |   TypedVarNode    |   指定类型声明节点    |   未完成 |
-|   Union   |   联合节点    |   未完成 |
-|   UntilNode   |   until节点(与while相对)   |   未完成 |
-|   WhileNode   |   while循环节点   |   未完成 |
+|   Union   |   联合节点    |   已完成 |
+|   UntilNode   |   until节点(与while相对)   |   已完成 |
+|   WhileNode   |   while循环节点   |   已完成 |
 |   WithNode    |   with节点  |   未完成 |

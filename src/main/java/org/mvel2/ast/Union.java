@@ -38,11 +38,14 @@ public class Union extends ASTNode {
   }
 
   public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
+    //如果之前相应的访问器已处理好,则直接通过访问处理
     if (accessor != null) {
+      //先调用主节点,再调用访问器
       return accessor.getValue(main.getReducedValueAccelerated(ctx, thisValue, factory), thisValue, factory);
     }
     else {
       try {
+        //构建出访问器,使用主节点的相应的值作为新访问器的上下文
         AccessorOptimizer o = OptimizerFactory.getThreadAccessorOptimizer();
         accessor = o.optimizeAccessor(pCtx, expr, start, offset,
             main.getReducedValueAccelerated(ctx, thisValue, factory), thisValue, factory, false, main.getEgressType());
@@ -63,11 +66,13 @@ public class Union extends ASTNode {
   }
 
   public Object getReducedValue(Object ctx, Object thisValue, VariableResolverFactory factory) {
+    //因为是解释运行,因此能够执行这里的肯定是属性访问,因此这里采用属性值获取的方式来获取相应的值
     return PropertyAccessor.get(
         expr, start, offset,
         main.getReducedValue(ctx, thisValue, factory), factory, thisValue, pCtx);
   }
 
+  /** 返回主节点返回类型 这里也认为是左节点,因为先main,后当前节点 */
   public Class getLeftEgressType() {
     return main.getEgressType();
   }

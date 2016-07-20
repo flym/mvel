@@ -40,10 +40,12 @@ public class WhileNode extends BlockNode {
 
   public WhileNode(char[] expr, int start, int offset, int blockStart, int blockEnd, int fields, ParserContext pCtx) {
     super(pCtx);
+    //期望条件的执行结果为boolean
     expectType(pCtx, this.condition = (ExecutableStatement) subCompileExpression(expr, start, offset, pCtx),
         Boolean.class, ((fields & COMPILE_IMMEDIATE) != 0));
 
 
+    //为执行块单独开启变量作用域,编译执行块,最后弹出相应的作用域
     if (pCtx != null) {
       pCtx.pushVariableScope();
     }
@@ -56,15 +58,19 @@ public class WhileNode extends BlockNode {
   }
 
   public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
+    //为执行作用域单独创建变量解析域,在整个处理完之后,即不会再使用
     VariableResolverFactory ctxFactory = new MapVariableResolverFactory(new HashMap<String, Object>(), factory);
+    //标准的while执行过程
     while ((Boolean) condition.getValue(ctx, thisValue, factory)) {
       compiledBlock.getValue(ctx, thisValue, ctxFactory);
     }
 
+    //因为是循环语句,因此只影响过程,不影响相应的
     return null;
   }
 
   public Object getReducedValue(Object ctx, Object thisValue, VariableResolverFactory factory) {
+    //解释模式与编译模式一致
     VariableResolverFactory ctxFactory = new MapVariableResolverFactory(new HashMap<String, Object>(), factory);
 
     while ((Boolean) condition.getValue(ctx, thisValue, factory)) {

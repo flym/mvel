@@ -157,7 +157,12 @@ public class ASTNode implements Cloneable, Serializable {
   /** 当前解析上下文 */
   protected ParserContext pCtx;
 
-  /** 获取相应的执行值，采用快速优化模式运行 */
+  /**
+   * 获取相应的执行值，采用快速优化模式运行
+   *
+   * @param ctx       当前上下文,随着程序的调用会产生变化
+   * @param thisValue 程序调用时传递的this变量,即最开始传递的ctx
+   */
   public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
     if (accessor != null) {
       try {
