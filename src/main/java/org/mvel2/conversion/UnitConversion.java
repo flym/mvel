@@ -22,6 +22,7 @@ import org.mvel2.ConversionHandler;
 import org.mvel2.Unit;
 
 
+@Deprecated
 public class UnitConversion implements ConversionHandler {
   public Object convertFrom(Object in) {
     try {

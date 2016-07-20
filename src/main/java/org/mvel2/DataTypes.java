@@ -51,10 +51,14 @@ public interface DataTypes {
 
   /** long 包装 */
   public static final int W_LONG = 107;
+  /** float 包装 */
   public static final int W_FLOAT = 108;
+  /** double 包装 */
   public static final int W_DOUBLE = 109;
 
+  /** char 包装 */
   public static final int W_CHAR = 112;
+  /** byte 包装 */
   public static final int W_BYTE = 113;
 
   public static final int BIG_DECIMAL = 110;

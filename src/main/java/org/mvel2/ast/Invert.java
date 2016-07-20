@@ -27,7 +27,7 @@ import org.mvel2.integration.VariableResolverFactory;
 import static org.mvel2.util.CompilerTools.expectType;
 import static org.mvel2.util.ParseTools.subCompileExpression;
 
-/** 表示一个处理 异或的节点信息 */
+/** 表示一个处理 取反的节点信息 */
 public class Invert extends ASTNode {
   /** 后面真实的执行语句 */
   private ExecutableStatement stmt;

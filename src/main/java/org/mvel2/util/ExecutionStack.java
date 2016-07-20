@@ -30,6 +30,7 @@ import static org.mvel2.math.MathProcessor.doOperations;
  * 即下一个要入栈的元素将引用之前在栈内的数据，这样在整个计算栈中，只需要维护最上层的引用即可
  * 如 a + b，在栈内即表现为a b +，这种后缀表达式结构，然后再通过最上层的操作符来进行op操作，
  * 得到的结果c再重新入栈
+ * 方法命名上 peek->获取 pop->弹出 push->入栈  swap交换  带数字的为操作多个节点
  */
 public class ExecutionStack {
   /** 当前最新值 */
@@ -42,6 +43,7 @@ public class ExecutionStack {
     return size == 0;
   }
 
+  /** 将值追加到栈中的栈底,即所有节点的末尾位置 */
   public void add(Object o) {
     size++;
     StackElement el = element;
@@ -56,6 +58,7 @@ public class ExecutionStack {
     }
   }
 
+  /** 入栈1个对象 */
   public void push(Object o) {
     size++;
     element = new StackElement(element, o);
@@ -74,6 +77,7 @@ public class ExecutionStack {
 
   }
 
+  /** 入栈3个对象, 其中第3个对象为操作数,即插入的数据为 a b + */
   public void push(Object obj1, Object obj2, Object obj3) {
     size += 3;
     element = new StackElement(new StackElement(new StackElement(element, obj1), obj2), obj3);
@@ -81,6 +85,7 @@ public class ExecutionStack {
 
   }
 
+  /** 获取第1个节点值 */
   public Object peek() {
     if (size == 0) return null;
     else return element.value;
@@ -94,12 +99,14 @@ public class ExecutionStack {
 
   }
 
+  /** 获取当前第1个节点值,并期望为boolean属性 */
   public Boolean peekBoolean() {
     if (size == 0) return null;
     if (element.value instanceof Boolean) return (Boolean) element.value;
     throw new ScriptRuntimeException("expected Boolean; but found: " + (element.value == null ? "null" : element.value.getClass().getName()));
   }
 
+  /** 从第2个执行栈出栈2个节点,然后加到当前栈中 */
   public void copy2(ExecutionStack es) {
     element = new StackElement(new StackElement(element, es.element.value), es.element.next.value);
     es.element = es.element.next.next;
@@ -107,6 +114,7 @@ public class ExecutionStack {
     es.size -= 2;
   }
 
+  /** 从第2个执行栈中将2个节点copy到当前栈中,处理值保证原有的顺序,即第1个节点仍然在当前栈顶中 */
   public void copyx2(ExecutionStack es) {
     element = new StackElement(new StackElement(element, es.element.next.value), es.element.value);
     es.element = es.element.next.next;
@@ -114,6 +122,7 @@ public class ExecutionStack {
     es.size -= 2;
   }
 
+  /** 获取第2个节点的值 */
   public Object peek2() {
     return element.next.value;
   }
@@ -149,6 +158,11 @@ public class ExecutionStack {
     }
   }
 
+  /**
+   * 返回最上面节点的值,并弹出当前节点以及下一个节点
+   * 此方法与peek2相对象
+   * 先由peek2获取第2个节点值,再由当前方法 获取第1个节点值,因此进行处理之后,这2个节点都不再使用,因此这里即直接丢弃掉
+   */
   public Object pop2() {
     try {
       size -= 2;
@@ -160,6 +174,10 @@ public class ExecutionStack {
     }
   }
 
+  /**
+   * 丢弃最上面的节点,这种情况为由于某些优先情况,最上面的节点在之前的处理中已经被优先掉了,因此这里不再需要
+   * 比如 field.get ,在第一次调用时,相应的类型信息已经因此在指令里面,因此第二次处理时,这个类型就不再需要
+   */
   public void discard() {
     if (size != 0) {
       size--;
@@ -167,11 +185,12 @@ public class ExecutionStack {
     }
   }
 
+  /** 返回当前栈中的元素count */
   public int size() {
     return size;
   }
 
-  /** 判定当前操作数栈是否需要减少 */
+  /** 判定当前操作数栈是否需要减少,即可以继续处理 */
   public boolean isReduceable() {
     return size > 1;
   }
@@ -181,25 +200,39 @@ public class ExecutionStack {
     element = null;
   }
 
+  /**
+   * 对栈上的3个节点进行处理,处理结果重新入栈
+   * 这里认为第2个节点才是操作符
+   * 按照正常的右缀算法来看,最上面应该为操作符,除非相应的数据重新进行了整理
+   * 如之前为 a + b
+   * 但由于整个表达式为 a + b * c
+   * 由之前的入栈为 a b +,切换优先顺序为 a + value,因此这里进行的为这种处理方式
+   */
   public void xswap_op() {
     element = new StackElement(element.next.next.next, doOperations(element.next.next.value, (Integer) element.next.value, element.value));
     size -= 2;
     assert size == deepCount();
   }
 
-  /** 使用栈上的操作符对最近的2个操作数进行处理，处理的结果重新入栈 */
+  /** 使用栈上的操作符对最近的2个操作数进行处理，处理的结果重新入栈,最上面的为操作符 */
   public void op() {
     element = new StackElement(element.next.next.next, doOperations(element.next.next.value, (Integer) element.value, element.next.value));
     size -= 2;
     assert size == deepCount();
   }
 
+  /**
+   * 使用指定的操作符对最近的2个操作数进行处理
+   * 这里的情况可以认为操作符应该取出来了,因此栈中最上面为操作数
+   * 之前栈中为 a b +,但+被pop掉,因此进行的处理即为使用之前pop的+来进行处理
+   */
   public void op(int operator) {
     element = new StackElement(element.next.next, doOperations(element.next.value, operator, element.value));
     size--;
     assert size == deepCount();
   }
 
+  /** 交换栈中的最上面2个节点,并处理相应的关系,即交换第1个和第2个 */
   public void xswap() {
     StackElement e = element.next;
     StackElement relink = e.next;
@@ -207,6 +240,7 @@ public class ExecutionStack {
     (element = e).next.next = relink;
   }
 
+  /** 交换栈中第1个节点和第3个节点 */
   public void xswap2() {
     StackElement node2 = element.next;
     StackElement node3 = node2.next;
@@ -216,6 +250,7 @@ public class ExecutionStack {
     element.next = node2;
   }
 
+  /** 计算出当前栈中还有多少节点 */
   public int deepCount() {
     int count = 0;
 

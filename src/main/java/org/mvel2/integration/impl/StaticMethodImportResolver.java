@@ -24,9 +24,11 @@ import org.mvel2.util.MethodStub;
 /**
  * 使用变量名来引用相应的方法来达到方法引用的目的，这里就是通过变量名解析方法引用的变量解析器
  * 相应的变量名和方法句柄在构造时确定
+ * 此类仅为StaticMethodImportResolverFactory使用,但它实际上也没实际使用到,因此此类也无特别作用
  *
  * @author Christopher Brock
  */
+@Deprecated
 public class StaticMethodImportResolver implements VariableResolver {
   /** 相应的变量名 */
   private String name;

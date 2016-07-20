@@ -8,6 +8,7 @@ import java.util.Set;
 
 
 /** 无用类 */
+@Deprecated
 public class SimpleVariableResolverFactory extends BaseVariableResolverFactory {
   public SimpleVariableResolverFactory(Map<String, Object> variables) {
     for (Map.Entry<String, Object> entry : variables.entrySet()) {

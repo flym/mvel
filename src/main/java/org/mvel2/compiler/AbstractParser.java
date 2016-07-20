@@ -123,7 +123,9 @@ public class AbstractParser implements Parser, Serializable {
   /** 表示当前正在作的操作 */
   protected int fields;
 
+  /** 表示操作溢出了 */
   protected static final int OP_OVERFLOW = -2;
+  /** 表示操作需要提前终止,如and || 这种 */
   protected static final int OP_TERMINATE = -1;
   protected static final int OP_RESET_FRAME = 0;
   protected static final int OP_CONTINUE = 1;
@@ -169,6 +171,7 @@ public class AbstractParser implements Parser, Serializable {
 
   /** 当前解析上下文 */
   protected ParserContext pCtx;
+  /** 临时栈,用于辅助stack进行处理 */
   protected ExecutionStack dStack;
   /** 解释模式下所使用的当前上下文 */
   protected Object ctx;
@@ -2689,6 +2692,9 @@ public class AbstractParser implements Parser, Serializable {
   }
 
   /**
+   * 在当前栈上进行操作数递减操作
+   * 相应的操作也会继续判定后续的节点,以保证操作数优先级的正确性
+   * 在当前处理时,相应的栈中已经有相应的操作数以及当前操作符了,则接下来的操作就是进一步判定可能的优先顺序,以进行处理
    * Reduce the current operations on the stack.
    *
    * @param operator the operator
@@ -2699,6 +2705,7 @@ public class AbstractParser implements Parser, Serializable {
     int operator2;
 
     /**
+     * 下一个节点仍是运算符,还可能继续处理
      * If the next token is an operator, we check to see if it has a higher
      * precdence.
      */

@@ -18,6 +18,7 @@
 package org.mvel2;
 
 /**
+ * 描述各种操作符及相应的优先级
  * Contains a list of constants representing internal operators.
  */
 public interface Operator {

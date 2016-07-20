@@ -141,6 +141,8 @@ public class ExpressionCompiler extends AbstractParser {
           Map<String, Class> rtc = pCtx.getReturnTypeCache();
           CompiledExpression compiled = cec.get(key);
           Class rt = rtc.get(key);
+          //子程序单独进行编译,以保证相应的程序都已经成功的进行了解析
+          //但实际上没有什么特别的用处,因此subStatement的执行不是通过accessor来保证的,而是由statement处理
           if (compiled == null) {
             ExpressionCompiler subCompiler = new ExpressionCompiler(expr, tk.getStart(), tk.getOffset(), pCtx);
             compiled = subCompiler._compile();
@@ -154,6 +156,7 @@ public class ExpressionCompiler extends AbstractParser {
 
         /**
          * 这下面的动作在于进行编译期优化，以减少运行期的信息处理
+         * 即当前节点是一个常量节点(可能是数字),如果下一个常量类似于 1 + 2 这种,则可以优化
          * This kludge of code is to handle compileShared-time literal reduction.  We need to avoid
          * reducing for certain literals like, 'this', ternary and ternary else.
          */
@@ -172,14 +175,17 @@ public class ExpressionCompiler extends AbstractParser {
             if ((tkLA = nextTokenSkipSymbols()) != null && tkLA.isLiteral()
                 && tkOp.getOperator() < 34 && ((lastOp == -1
                 || (lastOp < PTABLE.length && PTABLE[lastOp] < PTABLE[tkOp.getOperator()])))) {
+              //先将其推入栈中,以方便计算处理,采用后缀表示法,以方便进行栈式判断和处理
               stk.push(tk.getLiteralValue(), tkLA.getLiteralValue(), op = tkOp.getOperator());
 
               /**
+               * 如果是算术运算,则表示是基于的数学处理,则需要根据当前栈以及节点的进一步信息进行处理
                * Reduce the token now.
                */
               if (isArithmeticOperator(op)) {
                 if (!compileReduce(op, astBuild)) continue;
               }
+              //这里表示不是基本运算,则进行其它处理,比如 1 < 2这种或者是 true || false这种操作
               else {
                 reduce();
               }
@@ -322,6 +328,7 @@ public class ExpressionCompiler extends AbstractParser {
     return (fields & OPT_SUBTR) == 0 ? stk.pop() : signNumber(stk.pop());
   }
 
+  /** 根据当前操作码以及节点信息进行进一步处理 */
   private boolean compileReduce(int opCode, ASTLinkedList astBuild) {
     switch (arithmeticFunctionReduction(opCode)) {
       case -1:

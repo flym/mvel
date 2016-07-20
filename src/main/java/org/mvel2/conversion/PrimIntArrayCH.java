@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /** 字符串转基本int数组,暂未使用到 */
+@Deprecated
 public class PrimIntArrayCH implements ConversionHandler {
 
   private static final Map<Class, Converter> CNV =

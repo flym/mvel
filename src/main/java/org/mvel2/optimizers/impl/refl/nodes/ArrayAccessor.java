@@ -23,7 +23,7 @@ import org.mvel2.integration.VariableResolverFactory;
 
 import java.lang.reflect.Array;
 
-/** 针对数据的访问器 */
+/** 针对数组的访问器 */
 public class ArrayAccessor implements AccessorNode {
   private AccessorNode nextNode;
   /** 数组下标 */

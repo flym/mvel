@@ -32,6 +32,7 @@ import java.util.Map;
  *
  * @author Christopher Brock
  */
+@Deprecated
 public class StaticMethodImportResolverFactory extends BaseVariableResolverFactory {
   public StaticMethodImportResolverFactory(ParserContext ctx) {
     this.variableResolvers = new HashMap<String, VariableResolver>();

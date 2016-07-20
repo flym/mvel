@@ -1,5 +1,6 @@
 package org.mvel2.ast;
 
+@Deprecated
 public class ReduceableCodeException extends RuntimeException {
   private Object literal;
 
