@@ -2,16 +2,16 @@
  * MVEL 2.0
  * Copyright (C) 2007 The Codehaus
  * Mike Brock, Dhanji Prasanna, John Graham, Mark Proctor
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -34,6 +34,7 @@ import static java.lang.reflect.Modifier.isPublic;
 import static org.mvel2.DataConversion.canConvert;
 import static org.mvel2.util.ParseTools.boxPrimitive;
 
+/** 一个基于对象,方法,字段,类型,值的工具类 */
 public class PropertyTools {
   /** 判断指定对象是否是空的 */
   public static boolean isEmpty(Object o) {
@@ -115,6 +116,7 @@ public class PropertyTools {
     return candidate;
   }
 
+  /** 获取一个类中指定属性的类型信息 */
   public static Class getReturnType(Class clazz, String property, ParserContext ctx) {
     return new PropertyVerifier(property, ctx, clazz).analyze();
   }
@@ -130,10 +132,12 @@ public class PropertyTools {
     return getGetter(clazz, property);
   }
 
+  /** 获取一个属性的公共字段形式或相应的setter方法(即下一步会使用此成员进行赋值调用) */
   public static Member getFieldOrWriteAccessor(Class clazz, String property) {
     Field field;
     try {
       if ((field = clazz.getField(property)) != null &&
+          //这一个判断不需要,因此本身class.getField就是获取公共字段
           isPublic(field.getModifiers())) {
         return field;
       }
@@ -148,6 +152,7 @@ public class PropertyTools {
     return getSetter(clazz, property);
   }
 
+  /** 获取指定类型指定属性的公共字段或相应的getter方法,并且期望能够与相应的类型相兼容 */
   public static Member getFieldOrWriteAccessor(Class clazz, String property, Class type) {
     for (Field f : clazz.getFields()) {
       if (property.equals(f.getName()) && (type == null || canConvert(f.getType(), type))) {
@@ -158,6 +163,10 @@ public class PropertyTools {
     return getSetter(clazz, property, type);
   }
 
+  /**
+   * 判断两个对象之间是否能进行contains计算,如果能进行处理
+   * 支持的类型包括字符串,集合,map,数组
+   *  */
   public static boolean contains(Object toCompare, Object testValue) {
     if (toCompare == null)
       return false;
@@ -177,6 +186,7 @@ public class PropertyTools {
     return false;
   }
 
+  /** 获取基本类型的初始值 */
   public static Object getPrimitiveInitialValue(Class type) {
     if (type == int.class) {
       return 0;
@@ -207,19 +217,21 @@ public class PropertyTools {
     }
   }
 
+  /** 指定源是否可声明为目标类型 */
   public static boolean isAssignable(Class to, Class from) {
     return (to.isPrimitive() ? boxPrimitive(to) : to).isAssignableFrom(from.isPrimitive() ? boxPrimitive(from) : from);
   }
 
   /**
+   * 获取相应的jvm版本信息
    * Get the JVM version
    * @return first <code>mvel.java.version</code>, then <code>java.version</code>
    * @see System.getProperty("mvel.java.version");
    * @see System.getProperty("java.version");
    */
   public static String getJavaVersion() {
-    return System.getProperty("mvel.java.version")!=null ?
-            System.getProperty("mvel.java.version") :
-            System.getProperty("java.version");
+    return System.getProperty("mvel.java.version") != null ?
+        System.getProperty("mvel.java.version") :
+        System.getProperty("java.version");
   }
 }

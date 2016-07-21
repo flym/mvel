@@ -23,6 +23,7 @@ import static java.lang.Character.toUpperCase;
 import static java.lang.System.arraycopy;
 
 /**
+ * 基于类型处理的一些工具类
  * Utilities for working with reflection.
  */
 public class ReflectionUtil {
@@ -159,10 +160,12 @@ public class ReflectionUtil {
     return boolean[].class;
   }
 
+  /** 判定2个类型是否可赋值兼容的 */
   public static boolean isAssignableFrom(Class<?> from, Class<?> to) {
     return from.isAssignableFrom(to) || areBoxingCompatible(from, to);
   }
 
+  /** 判断2个类型是否在包装类型上兼容,即1个为基本,另一个为包装类型 */
   private static boolean areBoxingCompatible(Class<?> c1, Class<?> c2) {
     return c1.isPrimitive() ? isPrimitiveOf(c2, c1) : (c2.isPrimitive() && isPrimitiveOf(c1, c2));
   }

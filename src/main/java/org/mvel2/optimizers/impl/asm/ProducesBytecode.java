@@ -22,6 +22,8 @@ import org.mvel2.asm.MethodVisitor;
 import org.mvel2.integration.VariableResolverFactory;
 
 /**
+ * 用于描述一个可以自定义如何产生自定义字节码的标记接口,当一个propertyHandler被使用时,并且此处理器实现了此接口,则就会在asm优化时
+ * 生成相应的自定义字节码来代替原来的反射访问
  * A {@link org.mvel2.integration.PropertyHandler} that implements this class advertises the to the
  * {@link ASMAccessorOptimizer} that it is able to generate bytecode for it's custom resolvers.<br/>
  * <br/>
@@ -46,7 +48,9 @@ import org.mvel2.integration.VariableResolverFactory;
  * The class is: org.mvel.tests.main.res.SampleBeanAccessor
  */
 public interface ProducesBytecode {
+  /** 在进行get调用时产生相应的字节码 */
   public void produceBytecodeGet(MethodVisitor mv, String propertyName, VariableResolverFactory factory);
 
+  /** 在进行set调用时产生相应的字节码 */
   public void produceBytecodePut(MethodVisitor mv, String propertyName, VariableResolverFactory factory);
 }

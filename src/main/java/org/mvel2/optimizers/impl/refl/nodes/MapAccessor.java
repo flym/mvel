@@ -37,6 +37,7 @@ public class MapAccessor implements AccessorNode {
   }
 
   public Object getValue(Object ctx, Object elCtx, VariableResolverFactory vrf) {
+    //直接通过调用map.get(key)来完成处理
     if (nextNode != null) {
       return nextNode.getValue(((Map) ctx).get(property), elCtx, vrf);
     }
@@ -46,6 +47,7 @@ public class MapAccessor implements AccessorNode {
   }
 
   public Object setValue(Object ctx, Object elCtx, VariableResolverFactory vars, Object value) {
+    //根据是否有next决定是否转发请求
     if (nextNode != null) {
       return nextNode.setValue(((Map) ctx).get(property), elCtx, vars, value);
     }
@@ -56,6 +58,7 @@ public class MapAccessor implements AccessorNode {
     }
   }
 
+  /** 获取相应的属性值 */
   public Object getProperty() {
     return property;
   }
@@ -76,6 +79,7 @@ public class MapAccessor implements AccessorNode {
     return "Map Accessor -> [" + property + "]";
   }
 
+  /** 类型未知,声明为Object类型 */
   public Class getKnownEgressType() {
     return Object.class;
   }

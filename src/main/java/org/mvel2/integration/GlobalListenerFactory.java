@@ -29,6 +29,7 @@ public class GlobalListenerFactory {
   }
 
 
+  /** 通知相应的get访问调用 */
   public static void notifyGetListeners(Object target, String name, VariableResolverFactory variableFactory) {
     if (propertyGetListeners != null) {
       for (Listener l : propertyGetListeners) {
@@ -37,6 +38,7 @@ public class GlobalListenerFactory {
     }
   }
 
+  /** 通知相应的set访问调用 */
   public static void notifySetListeners(Object target, String name, VariableResolverFactory variableFactory, Object value) {
     if (propertySetListeners != null) {
       for (Listener l : propertySetListeners) {

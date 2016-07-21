@@ -31,6 +31,7 @@ public class StaticVarAccessor implements AccessorNode {
   Field field;
 
   public Object getValue(Object ctx, Object elCtx, VariableResolverFactory vars) {
+    //直接通过field.get来获取静态字段的值,因为是静态字段,因此无需传参
     try {
       if (nextNode != null) {
         return nextNode.getValue(field.get(null), elCtx, vars);
@@ -57,6 +58,7 @@ public class StaticVarAccessor implements AccessorNode {
   }
 
   public Object setValue(Object ctx, Object elCtx, VariableResolverFactory variableFactory, Object value) {
+    //根据是否有next决定是否转发请求
     try {
       if (nextNode == null) {
         field.set(null, value);
@@ -71,11 +73,15 @@ public class StaticVarAccessor implements AccessorNode {
     return value;
   }
 
+  /** 返回相应的静态字段 */
   public Field getField() {
     return field;
   }
 
+  /** 声明类型即为相应字段所声明的类型 */
   public Class getKnownEgressType() {
+    //这里有问题,应该返回声明类型,而不是Field类型
+    //这个方法不会被调用,因此相应的类型确定在astNode阶段即已经确认
     return field.getClass();
   }
 }

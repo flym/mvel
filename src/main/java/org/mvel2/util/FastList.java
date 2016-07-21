@@ -26,6 +26,8 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.*;
 
+/** 一个移除mod判定的ArrayList结构,实际上未使用到(仅在测试中有使用) */
+@Deprecated
 public class FastList<E> extends AbstractList<E> implements Externalizable {
   private E[] elements;
   private int size = 0;

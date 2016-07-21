@@ -35,16 +35,19 @@ public class IndexedPreFixDecNode extends ASTNode {
   public IndexedPreFixDecNode(int register, ParserContext pCtx) {
     super(pCtx);
     this.register = register;
+    //因为之前已注册下标,则从之前的下标变量中获取即可
     this.egressType = pCtx.getVarOrInputType(pCtx.getIndexedVarNames()[register]);
   }
 
   public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
     VariableResolver vResolver = factory.getIndexedVariableResolver(register);
+    //前置计算,则先获取值,再计算,然后赋值给result,赋值给解析器,最后返回result
     vResolver.setValue(ctx = MathProcessor.doOperations(vResolver.getValue(), Operator.SUB, DataTypes.INTEGER, 1));
     return ctx;
   }
 
   public Object getReducedValue(Object ctx, Object thisValue, VariableResolverFactory factory) {
+    //与编译执行相同
     return getReducedValueAccelerated(ctx, thisValue, factory);
   }
 }

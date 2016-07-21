@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
+/** 未实际使用 */
+@Deprecated
 public class Make {
   public static class Map<K, V> {
     public static <K, V> Map<K, V> $() {

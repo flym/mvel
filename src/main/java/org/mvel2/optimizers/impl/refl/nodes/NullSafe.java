@@ -30,6 +30,7 @@ public class NullSafe implements AccessorNode {
   public Object getValue(Object ctx, Object elCtx, VariableResolverFactory variableFactory) {
     //当前对象为null，跳过
     if (ctx == null) return null;
+    //真实调用还未进行编译,则尝试编译,并将相应的调用委托给相应的编译好的访问器
     if (nextNode == null) {
       final Accessor a = OptimizerFactory.getAccessorCompiler(OptimizerFactory.SAFE_REFLECTIVE)
           .optimizeAccessor(pCtx, expr, start, offset, ctx, elCtx, variableFactory, true, ctx.getClass());
@@ -77,6 +78,7 @@ public class NullSafe implements AccessorNode {
     return this.nextNode = accessorNode;
   }
 
+  /** 类型未知,为Object类型 */
   public Class getKnownEgressType() {
     return Object.class;
   }

@@ -38,6 +38,7 @@ public class Negation extends ASTNode {
     this.start = start;
     this.offset = offset;
 
+    //编译模式下,进行编译,同时期望其类型为boolean
     if ((fields & COMPILE_IMMEDIATE) != 0) {
       if (((this.stmt = (ExecutableStatement) subCompileExpression(expr, start, offset, pCtx)).getKnownEgressType() != null)
           && (!ParseTools.boxPrimitive(stmt.getKnownEgressType()).isAssignableFrom(Boolean.class))) {
@@ -47,11 +48,13 @@ public class Negation extends ASTNode {
   }
 
   public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
+    //直接采用!boolean 的处理方式即可.编译执行下采用计算单元的方式
     return !((Boolean) stmt.getValue(ctx, thisValue, factory));
   }
 
   public Object getReducedValue(Object ctx, Object thisValue, VariableResolverFactory factory) {
     try {
+      //采用 !boolean, 数据采用解释模式运行
       return !((Boolean) MVEL.eval(expr, start, offset, ctx, factory));
     }
     catch (NullPointerException e) {
@@ -62,10 +65,12 @@ public class Negation extends ASTNode {
     }
   }
 
+  /** 原表达式为boolean,取反也为boolean类型 */
   public Class getEgressType() {
     return Boolean.class;
   }
 
+  /** 返回待操作的处理单元 */
   public ExecutableStatement getStatement() {
     return stmt;
   }

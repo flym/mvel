@@ -39,9 +39,9 @@ import static org.mvel2.util.ParseTools.boxPrimitive;
 public class BinaryOperation extends BooleanNode {
   /** 运算符 */
   private final int operation;
-  /** 左边类型 */
+  /** 左边类型(内部表示形式,见DataTypes) */
   private int lType = -1;
-  /** 右边类型 */
+  /** 右边类型(内部表示形式,见DataTypes) */
   private int rType = -1;
 
   public BinaryOperation(int operation, ParserContext ctx) {
@@ -52,6 +52,7 @@ public class BinaryOperation extends BooleanNode {
   public BinaryOperation(int operation, ASTNode left, ASTNode right, ParserContext ctx) {
     super(ctx);
     this.operation = operation;
+    //要求左右的节点都需要存在
     if ((this.left = left) == null) {
       throw new ScriptRuntimeException("not a statement");
     }
@@ -75,6 +76,7 @@ public class BinaryOperation extends BooleanNode {
         }
 
       default:
+        //通过操作符,类型推断出当前的返回类型
         egressType = getReturnTypeFromOp(operation, this.left.egressType, this.right.egressType);
         if (!ctx.isStrongTyping()) break;
 
@@ -82,7 +84,9 @@ public class BinaryOperation extends BooleanNode {
         //这里即左边类型和右边类型不能类型上兼容,即int和long
         if (!left.getEgressType().isAssignableFrom(right.getEgressType()) && !right.getEgressType().isAssignableFrom(left.getEgressType())) {
           //如果右边是常量,并且可以和左边进行转换,则根据算数符来决定常量转换为哪个类型
+          //同时因为是常量,因此可以直接运算出相应的结果,即可以马上计算
           if (right.isLiteral() && canConvert(left.getEgressType(), right.getEgressType())) {
+            //如果是四则运算,则以结果为准,否则则以左边结点为准.比如 a < b这种
             Class targetType = isAritmeticOperation(operation) ? egressType : left.getEgressType();
             this.right = new LiteralNode(convert(right.getReducedValueAccelerated(null, null, null), targetType), pCtx);
           } else if ( !(areCompatible(left.getEgressType(), right.getEgressType()) ||
@@ -117,7 +121,7 @@ public class BinaryOperation extends BooleanNode {
     return operation <= Operator.POWER;
   }
 
-  /** 判定2个类型在计算上是否是兼容的 */
+  /** 判定2个类型在计算上是否是兼容的,即都是数字类型 */
   private boolean areCompatible(Class<?> leftClass, Class<?> rightClass) {
     return leftClass.equals(NullType.class) || rightClass.equals(NullType.class) ||
            ( Number.class.isAssignableFrom(rightClass) && Number.class.isAssignableFrom(leftClass) ) ||
@@ -126,12 +130,14 @@ public class BinaryOperation extends BooleanNode {
   }
 
   public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
+    //由数学处理器来完成相应的计算
     return doOperations(lType, left.getReducedValueAccelerated(ctx, thisValue, factory), operation, rType,
         right.getReducedValueAccelerated(ctx, thisValue, factory));
   }
 
 
   public Object getReducedValue(Object ctx, Object thisValue, VariableResolverFactory factory) {
+    //解释模式下,运算由栈来完成
     throw new RuntimeException("unsupported AST operation");
   }
 
@@ -174,6 +180,7 @@ public class BinaryOperation extends BooleanNode {
     return o.getPrecedence() > PTABLE[operation];
   }
 
+  /** 当前节点不是常量 */
   @Override
   public boolean isLiteral() {
     return false;

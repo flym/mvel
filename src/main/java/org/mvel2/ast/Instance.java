@@ -21,11 +21,13 @@ public class Instance extends ASTNode {
   }
 
   public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
+    //采用class.isInstance来作判定.因此先计算class值,再计算相应的对象值,最后相调用即可
     return ((Class) clsStmt.getReducedValueAccelerated(ctx, thisValue, factory)).isInstance(stmt.getReducedValueAccelerated(ctx, thisValue, factory));
   }
 
   public Object getReducedValue(Object ctx, Object thisValue, VariableResolverFactory factory) {
     try {
+      //采用class.isInstance,这里采用的是解释运行,分别计算出class和object对象
       Class i = (Class) clsStmt.getReducedValue(ctx, thisValue, factory);
       if (i == null) throw new ClassCastException();
 
@@ -37,14 +39,17 @@ public class Instance extends ASTNode {
 
   }
 
+  /** instanceOf 返回类型为 boolean */
   public Class getEgressType() {
     return Boolean.class;
   }
 
+  /** 当前处理的节点 */
   public ASTNode getStatement() {
     return stmt;
   }
 
+  /** 当前要判断的class节点 */
   public ASTNode getClassStatement() {
     return clsStmt;
   }

@@ -706,16 +706,16 @@ public class ParseTools {
     //null处理
     if (compareTo == null)
       return false;
-    //字符串
+      //字符串
     else if (compareTo instanceof String)
       return ((String) compareTo).contains(valueOf(compareTest));
-    //集合
+      //集合
     else if (compareTo instanceof Collection)
       return ((Collection) compareTo).contains(compareTest);
-    //map
+      //map
     else if (compareTo instanceof Map)
       return ((Map) compareTo).containsKey(compareTest);
-    //数组,分为基本类型和非基本类型
+      //数组,分为基本类型和非基本类型
     else if (compareTo.getClass().isArray()) {
       if (compareTo.getClass().getComponentType().isPrimitive())
         return containsCheckOnPrimitveArray(compareTo, compareTest);
@@ -1955,7 +1955,10 @@ public class ParseTools {
     return new String(s, start, end - start);
   }
 
-  /** 匹配一个连接的字符串(即直到空格结束) */
+  /**
+   * 匹配一个连接的字符串(即直到空格结束)
+   * 准确的说,是在一个连续的字符串中从最前端和最后面进行双向处理,找到中间一段值,可以理解为 trim的简化版
+   */
   public static String createStringTrimmed(char[] s, int start, int length) {
     if ((length = start + length) > s.length) return new String(s);
     while (start != length && s[start] < '\u0020' + 1) {

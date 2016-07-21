@@ -22,7 +22,7 @@ import org.mvel2.ParserContext;
 import org.mvel2.compiler.ExecutableStatement;
 
 /**
- * 用于描述抽象的语法块节点
+ * 用于描述抽象的语法块节点,即内部会有一个单独的代码块内容,如if for等
  * @author Christopher Brock
  */
 public class BlockNode extends ASTNode {

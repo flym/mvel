@@ -37,23 +37,32 @@ import java.util.Set;
 @SuppressWarnings({"unchecked"})
 public class MapVariableResolverFactory extends BaseVariableResolverFactory {
   /**
+   * 用来存储当前解析器作用域的数据值信息
    * Holds the instance of the variables.
    */
   protected Map<String, Object> variables;
 
+  /** 使用内部map不对外公开 */
   public MapVariableResolverFactory() {
     this.variables = new HashMap();
   }
 
+  /** 使用外部的map来存储数据值,即与外部共用map */
   public MapVariableResolverFactory(Map variables) {
     this.variables = variables;
   }
 
+  /** 使用外部map以及委托解析器工厂进行创建 */
   public MapVariableResolverFactory(Map<String, Object> variables, VariableResolverFactory nextFactory) {
     this.variables = variables;
     this.nextFactory = nextFactory;
   }
 
+  /**
+   * 与下面方法相同
+   * @see MapVariableResolverFactory(Map)
+   * @param cachingSafe 无用参数
+   */
   public MapVariableResolverFactory(Map<String, Object> variables, boolean cachingSafe) {
     this.variables = variables;
   }

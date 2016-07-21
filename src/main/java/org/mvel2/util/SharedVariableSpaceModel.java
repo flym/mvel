@@ -7,8 +7,10 @@ import org.mvel2.integration.impl.IndexedVariableResolverFactory;
 import org.mvel2.integration.impl.SimpleValueResolver;
 
 /**
+ * 此类由VariableSpaceCompiler引用,但对方类也没实际使用
  * @author Mike Brock .
  */
+@Deprecated
 public class SharedVariableSpaceModel extends VariableSpaceModel {
   private VariableResolver[] cachedGlobalResolvers;
 

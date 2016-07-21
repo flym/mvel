@@ -126,6 +126,7 @@ public class DebugTools {
   }
 
 
+  /** 获取操作符的字符串表示形式 */
   public static String getOperatorSymbol(int operator) {
     switch (operator) {
       case ADD:

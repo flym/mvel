@@ -36,6 +36,7 @@ public class IndexedCharSeqAccessorNest implements AccessorNode {
   }
 
   public Object getValue(Object ctx, Object elCtx, VariableResolverFactory vars) {
+    //这里计算出下标值,再采用相应的charAt来获取相应的字符信息
     if (nextNode != null) {
       return nextNode.getValue(((String) ctx).charAt((Integer) index.getValue(ctx, elCtx, vars)), elCtx, vars);
     }
@@ -45,10 +46,12 @@ public class IndexedCharSeqAccessorNest implements AccessorNode {
   }
 
   public Object setValue(Object ctx, Object elCtx, VariableResolverFactory variableFactory, Object value) {
+    //因为字符串不可变,因此这里肯定会有相应的next节点值,以便完成整个set操作
     return nextNode.setValue(((String) ctx).charAt((Integer) index.getValue(ctx, elCtx, variableFactory)), elCtx,
         variableFactory, value);
   }
 
+  /** 返回相应的下标计算单元 */
   public ExecutableStatement getIndex() {
     return index;
   }
@@ -69,6 +72,7 @@ public class IndexedCharSeqAccessorNest implements AccessorNode {
     return "Array Accessor -> [" + index + "]";
   }
 
+  /** 字符串下标处理返回类型即为字符 */
   public Class getKnownEgressType() {
     return Character.class;
   }

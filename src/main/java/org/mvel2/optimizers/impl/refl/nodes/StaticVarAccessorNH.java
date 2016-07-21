@@ -34,8 +34,10 @@ public class StaticVarAccessorNH implements AccessorNode {
   private PropertyHandler nullHandler;
 
   public Object getValue(Object ctx, Object elCtx, VariableResolverFactory vars) {
+    //先获取值,再根据返回的结果决定是否采用空值处理器
     try {
       Object v = field.get(ctx);
+      //值为null,则跳转到nullHandler中
       if (v == null) v = nullHandler.getProperty(field.getName(), elCtx, vars);
 
       if (nextNode != null) {
@@ -50,6 +52,7 @@ public class StaticVarAccessorNH implements AccessorNode {
     }
   }
 
+  /** 根据相应的静态字段和空值处理器构建出处理器 */
   public StaticVarAccessorNH(Field field, PropertyHandler handler) {
     this.field = field;
     this.nullHandler = handler;
@@ -64,6 +67,7 @@ public class StaticVarAccessorNH implements AccessorNode {
   }
 
   public Object setValue(Object ctx, Object elCtx, VariableResolverFactory variableFactory, Object value) {
+    //设置值,不需要空值处理器参与,因此只需要通过next来决定是否转发请求
     try {
       if (nextNode == null) {
         field.set(null, value);
@@ -78,7 +82,9 @@ public class StaticVarAccessorNH implements AccessorNode {
     return value;
   }
 
+  /** 声明类型为字段的声明类型 */
   public Class getKnownEgressType() {
+    //这里应该为field.getType()
     return field.getClass();
   }
 }

@@ -43,6 +43,7 @@ public class AssertNode extends ASTNode {
     this.start = start;
     this.offset = offset;
 
+    //编译模式下编译相应的表达式
     if ((fields & COMPILE_IMMEDIATE) != 0) {
       assertion = (ExecutableStatement) subCompileExpression(expr, start, offset, pCtx);
     }
@@ -58,6 +59,8 @@ public class AssertNode extends ASTNode {
         return true;
       }
     }
+    //这里出现了cast异常,表示上面的类型转换出现了问题,因此这里进行判定
+    //当前也可以在上面提前进行类型判定,这里采用的是运行期强制判断
     catch (ClassCastException e) {
       throw new CompileException("assertion does not contain a boolean statement", expr, start);
     }
@@ -73,6 +76,7 @@ public class AssertNode extends ASTNode {
         return true;
       }
     }
+    //出现cast异常,表示类型转换失败,则丢异常
     catch (ClassCastException e) {
       throw new CompileException("assertion does not contain a boolean statement", expr, start);
     }

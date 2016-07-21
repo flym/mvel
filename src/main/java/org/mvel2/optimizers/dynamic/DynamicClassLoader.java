@@ -49,7 +49,7 @@ public class DynamicClassLoader extends ClassLoader implements MVELClassLoader {
     return totalClasses;
   }
 
-  /** 注册一个，如果已达上限，则尝试反优化一个话 */
+  /** 注册一个，如果已达上限，则尝试反优化一个访问器 */
   public DynamicAccessor registerDynamicAccessor(DynamicAccessor accessor) {
     synchronized (allAccessors) {
       allAccessors.add(accessor);
@@ -74,6 +74,7 @@ public class DynamicClassLoader extends ClassLoader implements MVELClassLoader {
     }
   }
 
+  /** 当前加载器是否过载,即优化生成类太多 */
   public boolean isOverloaded() {
     return tenureLimit < totalClasses;
   }

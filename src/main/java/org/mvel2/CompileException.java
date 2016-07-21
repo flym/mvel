@@ -216,6 +216,7 @@ public class CompileException extends RuntimeException {
     return showCodeNearError(expr, cursor);
   }
 
+  /** 生成相应的出错语句, 通过2行来指向具体的出错的位置 */
   private String generateErrorMessage() {
     StringAppender appender = new StringAppender().append("[Error: " + super.getMessage() + "]\n");
 

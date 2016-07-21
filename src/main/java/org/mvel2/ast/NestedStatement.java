@@ -20,6 +20,8 @@ package org.mvel2.ast;
 import org.mvel2.compiler.ExecutableStatement;
 
 /**
+ * 嵌套的执行节点,即会有多个相同的节点叠在一起在进行调用处理.即一个接一个地进行处理
+ * 为一个标记接口,没什么大作用
  * @author Christopher Brock
  */
 public interface NestedStatement {

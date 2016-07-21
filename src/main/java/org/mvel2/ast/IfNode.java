@@ -58,13 +58,15 @@ public class IfNode extends BlockNode implements NestedStatement {
     this.blockStart = blockStart;
     this.blockOffset = blockOffset;
 
+    //因为在代码块执行时可能有新的变量产生,因此需要根据当前解析上下文判断是否需要重建新的解析器工厂
     idxAlloc = pCtx != null && pCtx.isIndexAllocation();
 
     if ((fields & COMPILE_IMMEDIATE) != 0) {
-      //检测类型匹配
+      //检测类型匹配,期望条件返回值为boolean
       expectType(pCtx, this.condition = (ExecutableStatement) subCompileExpression(expr, start, offset, pCtx),
           Boolean.class, true);
 
+      //内部代码块,在编译时使用新的作用域空间,编译完再删除此空间,即内部新的变量信息单独在一个编译作用域当中
       if (pCtx != null) {
         pCtx.pushVariableScope();
       }
@@ -87,12 +89,14 @@ public class IfNode extends BlockNode implements NestedStatement {
     else if (elseBlock != null) {
       return elseBlock.getValue(ctx, thisValue, idxAlloc ? factory : new MapVariableResolverFactory(new HashMap(0), factory));
     }
+    //只有if,并且if不满足条件,返回null
     else {
       return null;
     }
   }
 
   public Object getReducedValue(Object ctx, Object thisValue, VariableResolverFactory factory) {
+    //相应的条件执行,语句执行都采用解释模式来完成
     if ((Boolean) eval(expr, start, offset, ctx, factory)) {
       return eval(expr, blockStart, blockOffset, ctx, new MapVariableResolverFactory(new HashMap(0), factory));
     }
@@ -107,10 +111,12 @@ public class IfNode extends BlockNode implements NestedStatement {
     }
   }
 
+  /** 相应的嵌套代码块,即if{}内部的执行语句 */
   public ExecutableStatement getNestedStatement() {
     return nestedStatement;
   }
 
+  /** 设置相应的elseIf块, elseIf可以认为又是一个新的if节点 */
   public IfNode setElseIf(IfNode elseIf) {
     return this.elseIf = elseIf;
   }
@@ -119,6 +125,7 @@ public class IfNode extends BlockNode implements NestedStatement {
     return elseBlock;
   }
 
+  /** 设置相应的else 代码块. else代码块即没有条件的普通执行单元 */
   public IfNode setElseBlock(char[] block, int cursor, int offset, ParserContext ctx) {
     elseBlock = (ExecutableStatement) subCompileExpression(block, cursor, offset, ctx);
     return this;

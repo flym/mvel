@@ -36,16 +36,19 @@ public class IndexedPostFixIncNode extends ASTNode {
   public IndexedPostFixIncNode(int register, ParserContext pCtx) {
     super(pCtx);
     this.register = register;
+    //已注册下标,则直接从相应的上下文中获取到变量名,再获取类型即可
     this.egressType = pCtx.getVarOrInputType(pCtx.getIndexedVarNames()[register]);
   }
 
   public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
     VariableResolver vResolver = factory.getIndexedVariableResolver(register);
+    //后置计算,先赋值给result,再计算,返回至解析器,最后返回result
     vResolver.setValue(MathProcessor.doOperations(ctx = vResolver.getValue(), Operator.ADD, DataTypes.INTEGER, 1));
     return ctx;
   }
 
   public Object getReducedValue(Object ctx, Object thisValue, VariableResolverFactory factory) {
+    //与编译执行相同
     return getReducedValueAccelerated(ctx, thisValue, factory);
   }
 }

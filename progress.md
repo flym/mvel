@@ -25,59 +25,59 @@
 |   ConversionHandler   |   转换处理器接口 |   已完成 |
 |   ConversionException | 数据转换异常    |   已完成 |
 |   CompileException    |   |   未完成 |
-|   ArrayTools  |   |   未完成 |
+|   ArrayTools  | 数组工具类  |   已完成 |
 |   ASTBinaryTree   |   |   未完成 |
 |   ASTIterator |   |   未完成 |
 |   ASTLinkedList   |   |   未完成 |
 |   CallableProxy   |   调用代理对象  |   已完成 |
 |   CollectionParser    | 集合解析器  |  未完成 |
-|   CompatibilityStrategy   |   |   未完成 |
+|   CompatibilityStrategy   | 类型兼容性策略判定  |   已完成 |
 |   CompilerTools   | 编译工具类  |  未完成 |
 |   ErrorUtil   |   |   未完成 |
 |   ExecutionStack    |  一个简单的执行栈       |    已完成 |
-|   FastList    |   |   未完成 |
+|   FastList    | 快速(简化)的ArrayList  |   已完成 |
 |   FunctionParser  |   函数解析器 | 未完成 |
-|   InternalNumber  |   |   未完成 |
-|   JITClassLoader  |   |   未完成 |
+|   InternalNumber  | 内部统一数字表现形式  |   已完成 |
+|   JITClassLoader  | 内部统一使用的类加载器  |   已完成 |
 |   LineMapper  |   行映射处理   |   未完成 |
-|   Make    |   |   未完成 |
-|   MethodStub  |   方法句柄    |   未完成 |
+|   Make    | (未使用)  |   不作处理 |
+|   MethodStub  |   方法句柄    |   已完成 |
 |   MVELClassLoader |   自定义类加载器 |   已完成 |
 |   NullType    |   空值类型    |   已完成 |
 |   ParseTools  |   解析工具类   |   已完成 |
-|   PropertyTools   |   属性工具类   |   未完成 |
+|   PropertyTools   |   类型,方法,属性工具类   |   已完成 |
 |   ProtoParser |   |   未完成 |
-|   ReflectionUtil  |   |   未完成 |
-|   SharedVariableSpaceModel    |   |   未完成 |
+|   ReflectionUtil  | 类型处理工具类  |   已完成 |
+|   SharedVariableSpaceModel    | (未使用)  |   不作处理 |
 |   SimpleIndexHashMapWrapper   |   |   未完成 |
-|   SimpleVariableSpaceModel    |   |   未完成 |
+|   SimpleVariableSpaceModel    | (未使用)  |   不作处理 |
 |   Soundex |   |   未完成 |
 |   Stack   | 栈接口(此接口无用)    |   不作处理 |
 |   StackElement    |   栈节点 |   已完成 |
 |   StaticFieldStub |   静态字段句柄(未使用) |   不作处理    |
-|   StaticStub  |   |   未完成 |
+|   StaticStub  | 静态引用句柄  |   已完成 |
 |   StringAppender  |   |   未完成 |
 |   ThisLiteral |   (未使用)   |   不作处理    |
 |   Varargs |   可变参数解析器 |   未完成 |
-|   VariableSpaceCompiler   |   |   未完成 |
-|   VariableSpaceModel  |   |   未完成 |
+|   VariableSpaceCompiler   | (未使用)  |   不作处理 |
+|   VariableSpaceModel  | (未使用)  |   不作处理 |
 |   DynamicAccessor |   动态访问器   |   已完成 |
-|   DynamicClassLoader  |   动态类访问加载器    |   未完成 |
+|   DynamicClassLoader  |   动态类优化加载器    |   已完成 |
 |   DynamicCollectionAccessor   |   |   未完成 |
 |   DynamicGetAccessor  |   get动态访问器    |   未完成 |
 |   DynamicOptimizer    |   动态访问优化器 |   未完成 |
 |   DynamicSetAccessor  |   set动态访问器    |   未完成 |
 |   ASMAccessorOptimizer    |   |   未完成 |
-|   ProducesBytecode    |   |   未完成 |
+|   ProducesBytecode    | 属性访问自定义字节码处理器标记接口  |   已完成 |
 |   ArrayCreator    |   |   未完成 |
 |   ExprValueAccessor   |   |   未完成 |
 |   ListCreator |   |   未完成 |
 |   MapCreator  |   |   未完成 |
 |   MDArrayCreator  |   (未使用)   |   不作处理    |
-|   ArrayAccessor   |   数组访问器   |   未完成 |
-|   ArrayAccessorNest   |   数组访问器(下标需要计算)   |   未完成 |
-|   ArrayLength |   数组长度访问器 |   未完成 |
-|   BaseAccessor    |   |   未完成 |
+|   ArrayAccessor   |   数组访问器   |   已完成 |
+|   ArrayAccessorNest   |   数组访问器(下标需要计算)   |   已完成 |
+|   ArrayLength |   数组长度访问器 |   已完成 |
+|   BaseAccessor    | 级联访问器抽象实现  |   已完成 |
 |   ConstructorAccessor |   构建函数访问器 |   未完成 |
 |   DynamicFieldAccessor    |   字段访问器   |   未完成 |
 |   DynamicFunctionAccessor |   函数访问器   |   未完成 |
@@ -87,26 +87,26 @@
 |   FunctionAccessor    |   函数访问器   |   未完成    |
 |   GetterAccessor  |   getter方法访问器 |   未完成 |
 |   GetterAccessorNH    |   getter方法访问器(带null处理)    |   未完成 |
-|   IndexedCharSeqAccessor  |   字符串下标访问器    |   未完成 |
-|   IndexedCharSeqAccessorNest  |   字符串下标访问器(计算下标)  |   未完成 |
-|   IndexedVariableAccessor |   下标变量访问器 |   未完成 |
-|   InvokableAccessor   |   抽象调用访问器 |   未完成 |
-|   ListAccessor    |   List集合访问器   |   未完成 |
-|   ListAccessorNest    |   List集合访问器(计算下标) |   未完成 |
-|   MapAccessor |   Map访问器  |   未完成 |
-|   MapAccessorNest |   Map访问器(计算属性)    |   未完成 |
+|   IndexedCharSeqAccessor  |   字符串下标访问器    |   已完成 |
+|   IndexedCharSeqAccessorNest  |   字符串下标访问器(计算下标)  |   已完成 |
+|   IndexedVariableAccessor |   下标变量访问器 |   已完成 |
+|   InvokableAccessor   |   抽象调用访问器 |   已完成 |
+|   ListAccessor    |   List集合访问器   |   已完成 |
+|   ListAccessorNest    |   List集合访问器(计算下标) |   已完成 |
+|   MapAccessor |   Map访问器  |   已完成 |
+|   MapAccessorNest |   Map访问器(计算属性)    |   已完成 |
 |   MethodAccessor  |   方法调用访问器 |   未完成 |
 |   MethodAccessorNH    |   方法调用访问器(带null处理)    |   未完成 |
-|   Notify  |   通知监听器   |   未完成 |
-|   NullSafe    |   null安全访问器   |   未完成 |
-|   PropertyHandlerAccessor |   属性访问器   |   未完成 |
+|   Notify  |   通知监听器   |   已完成 |
+|   NullSafe    |   null安全访问器   |   已完成 |
+|   PropertyHandlerAccessor |   属性访问器   |   已完成 |
 |   SetterAccessor  |   set方法访问器    |   未完成 |
-|   StaticReferenceAccessor |   静态对象引用访问器   |   未完成 |
-|   StaticVarAccessor   |   静态字段访问器 |   未完成 |
-|   StaticVarAccessorNH |   静态字段访问器(带null处理)    |   未完成 |
+|   StaticReferenceAccessor |   静态对象引用访问器   |   已完成 |
+|   StaticVarAccessor   |   静态字段访问器 |   已完成 |
+|   StaticVarAccessorNH |   静态字段访问器(带null处理)    |   已完成 |
 |   ThisValueAccessor   |   this引用访问器   |   未完成 |
-|   Union   |   |   未完成 |
-|   VariableAccessor    |   变量信息访问器 |   未完成 |
+|   Union   | 联合节点  |   已完成 |
+|   VariableAccessor    |   变量信息访问器 |   已完成 |
 |   WithAccessor    |   |   未完成 |
 |   ReflectiveAccessorOptimizer |   反射访问优化器 |   未完成 |
 |   AbstractOptimizer   |  抽象优化器    |   未完成 |
@@ -190,56 +190,56 @@
 |   PropertyVerifier    |   属性验证器   |   未完成 |
 |   And |   &&节点    |   已完成 |
 |   ArraySize   |   数组长度表示  |   已完成 |
-|   AssertNode  |   断言节点    |   未完成 |
-|   Assignment  |   赋值节点接口  |   未完成 |
+|   AssertNode  |   断言节点    |   已完成 |
+|   Assignment  |   赋值节点接口  |   已完成 |
 |   AssignmentNode  |   赋值节点    |   未完成 |
 |   ASTNode |   抽象语法树节点统一类  |   未完成 |
-|   BinaryOperation |   一元操作定义  |   未完成 |
-|   BlockNode   |   语法块节点   |   未完成 |
-|   BooleanNode |   二元操作定义  |   未完成 |
+|   BinaryOperation |   2元数字操作节点  |   已完成 |
+|   BlockNode   |   语法块节点标记接口   |   已完成 |
+|   BooleanNode |   二元操作定义  |   已完成 |
 |   Contains    |   contains包含节点    |   未完成 |
 |   Convertable |    convert转换节点    |   未完成 |
 |   DeclProtoVarNode    |   原型变量声明节点    |   未完成 |
 |   DeclTypedVarNode    |   变量声明节点  |   未完成 |
 |   DeepAssignmentNode  |   深度赋值节点  |   未完成 |
-|   DoNode  |   do循环节点  |   未完成 |
+|   DoNode  |   do循环节点  |   已完成 |
 |   DoUntilNode |   do until语法块节点   |   未完成 |
 |   EndOfStatement  |   语句结束标记节点    |   未完成 |
 |   Fold    |   fold表达式节点   |   未完成 |
-|   ForEachNode |   增强for循环节点   |   未完成 |
-|   ForNode |   for循环节点 |   未完成 |
+|   ForEachNode |   增强for循环节点   |   已完成 |
+|   ForNode |   for循环节点 |   已完成 |
 |   Function    |   函数定义节点  |   未完成 |
 |   FunctionInstance    |   函数实例节点  |   未完成 |
-|   IfNode  |   if节点    |   未完成 |
+|   IfNode  |   if节点    |   已完成 |
 |   ImportNode  |   import引入节点  |   未完成 |
 |   IndexedAssignmentNode   |   已解析变量赋值节点   |   未完成 |
 |   IndexedDeclTypedVarNode |   指定变量位置声明节点  |   未完成 |
 |   IndexedOperativeAssign  |   已解析变量操作赋值节点 |   未完成 |
-|   IndexedPostFixDecNode   |   已解析变量后置--节点 |   未完成 |
-|   IndexedPostFixIncNode   |   已解析变量后置++节点 |   未完成 |
-|   IndexedPreFixDecNode    |   已解析变量前置--节点 |   未完成 |
-|   IndexedPreFixIncNode    |   已解析变量前置++节点 |   未完成 |
+|   IndexedPostFixDecNode   |   已解析变量后置--节点 |   已完成 |
+|   IndexedPostFixIncNode   |   已解析变量后置++节点 |   已完成 |
+|   IndexedPreFixDecNode    |   已解析变量前置--节点 |   已完成 |
+|   IndexedPreFixIncNode    |   已解析变量前置++节点 |   已完成 |
 |   InlineCollectionNode    |   内部集合表达式节点   |   未完成 |
-|   Instance    |   instanceOf节点    |   未完成 |
-|   IntAdd  |   整数相加节点  |   未完成 |
-|   IntDiv  |   整数相除节点  |   未完成 |
+|   Instance    |   instanceOf节点    |   已完成 |
+|   IntAdd  |   整数相加节点  |   已完成 |
+|   IntDiv  |   整数相除节点  |   已完成 |
 |   InterceptorWrapper  |   拦截器包装节点 |   未完成 |
-|   IntMult |   整数相乘节点  |   未完成 |
+|   IntMult |   整数相乘节点  |   已完成 |
 |   IntOptimized    |   整数处理优化节点接口  |   已完成 |
-|   IntSub  |   整数相减节点  |   未完成 |
-|   Invert  |   数字取反节点  |   未完成 |
+|   IntSub  |   整数相减节点  |   已完成 |
+|   Invert  |   数字取反节点  |   已完成 |
 |   InvokationContextFactory    |   内部执行上下文解析器工厂    |   未完成 |
-|   IsDef   |   isDef探测节点   |   未完成 |
+|   IsDef   |   isDef探测节点   |   已完成 |
 |   LineLabel   |   调度代码标记行节点   |   未完成 |
 |   LiteralDeepPropertyNode |   多级常量节点  |   未完成 |
 |   LiteralNode |   常量标识节点  |   未完成 |
-|   Negation    |   boolean取反节点 |   未完成 |
-|   NestedStatement |   |   未完成 |
+|   Negation    |   boolean取反节点 |   已完成 |
+|   NestedStatement | 嵌套执行节点标记接口  |   已完成 |
 |   NewObjectNode   |   new对象节点 |   未完成 |
 |   NewObjectPrototype  |   new函数对象节点   |   未完成 |
 |   NewPrototypeNode    |   new原型节点 |   未完成 |
 |   OperativeAssign |   变量操作赋值节点    |   未完成 |
-|   OperatorNode    |   操作符节点   |   未完成 |
+|   OperatorNode    |   操作符节点   |   已完成 |
 |   Or  |   or操作节点  |   已完成 |
 |   PostFixDecNode  |   后置--节点  |   已完成 |
 |   PostFixIncNode  |   后置++节点  |   已完成 |
@@ -252,9 +252,9 @@
 |   RedundantCodeException  |   无限循环异常  |   已完成 |
 |   RegExMatch  |   正则匹配表达式节点   |   未完成 |
 |   RegExMatchNode  |   字符串正则匹配节点   |   未完成 |
-|   ReturnNode  |   return节点    |   未完成 |
+|   ReturnNode  |   return节点    |   已完成 |
 |   Safe    |   |   未完成 |
-|   Sign    |   表达式取负节点 |   未完成 |
+|   Sign    |   表达式取负节点 |   已完成 |
 |   Soundslike  |   |   未完成 |
 |   Stacklang   |   堆栈指令集节点 |   未完成 |
 |   StaticImportNode    |   静态引用方法节点    |   未完成 |

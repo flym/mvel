@@ -27,6 +27,7 @@ import static org.mvel2.debug.DebugTools.getOperatorSymbol;
 /**
  * 定义一个操作节点,表明这里是一个操作节点(并没有其它含义，仅用于节点属性标明)
  * 因为后续会对此类节点进行优化
+ * 为一个标记节点
  */
 public class OperatorNode extends ASTNode {
   /** 操作节点名，对应 Operator中的位置 */
@@ -36,10 +37,12 @@ public class OperatorNode extends ASTNode {
     super(pCtx);
     assert operator != null;
     this.expr = expr;
+    //相应的常量即为操作符本身
     this.literal = this.operator = operator;
     this.start = start;
   }
 
+  /** 此节点为一个操作符节点 */
   public boolean isOperator() {
     return true;
   }
@@ -52,10 +55,12 @@ public class OperatorNode extends ASTNode {
     return operator;
   }
 
+  /** 标记节点不可执行 */
   public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
     throw new CompileException("illegal use of operator: " + getOperatorSymbol(operator), expr, start);
   }
 
+  /** 标记节点不可执行 */
   public Object getReducedValue(Object ctx, Object thisValue, VariableResolverFactory factory) {
     throw new CompileException("illegal use of operator: " + getOperatorSymbol(operator), expr, start);
   }

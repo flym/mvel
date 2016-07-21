@@ -34,11 +34,13 @@ public class MethodStub implements StaticStub {
   /** 当前方法 */
   private transient Method method;
 
+  /** 通过方法对象来创建出句柄引用 */
   public MethodStub(Method method) {
     this.classReference = method.getDeclaringClass();
     this.name = method.getName();
   }
 
+  /** 通过类名以及方法的名字创建出句柄引用 */
   public MethodStub(Class classReference, String methodName) {
     this.classReference = classReference;
     this.name = methodName;
@@ -60,6 +62,7 @@ public class MethodStub implements StaticStub {
     this.name = methodName;
   }
 
+  /** 获取实际的方法引用 */
   public Method getMethod() {
     if (method == null) {
       for (Method method : classReference.getMethods()) {

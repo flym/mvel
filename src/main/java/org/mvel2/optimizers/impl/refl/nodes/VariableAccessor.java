@@ -21,7 +21,7 @@ package org.mvel2.optimizers.impl.refl.nodes;
 import org.mvel2.compiler.AccessorNode;
 import org.mvel2.integration.VariableResolverFactory;
 
-/** 表示对变量信息的访问 */
+/** 表示对变量信息的访问,即变量之前以变量名的方式存储在上下文中,这里从相应的上下文中进行获取 */
 public class VariableAccessor implements AccessorNode {
   private AccessorNode nextNode;
   /** 变量名 */
@@ -32,9 +32,11 @@ public class VariableAccessor implements AccessorNode {
   }
 
   public Object getValue(Object ctx, Object elCtx, VariableResolverFactory vrf) {
+    //要求必须有相应的解析器上下文
     if (vrf == null)
       throw new RuntimeException("cannot access property in optimized accessor: " + property);
 
+    //直接从相应的解析器上下文通过变量名的方式获取到解析器,再通过解析器获取到相应的值
     if (nextNode != null) {
       return nextNode.getValue(vrf.getVariableResolver(property).getValue(), elCtx, vrf);
     }
@@ -44,6 +46,7 @@ public class VariableAccessor implements AccessorNode {
   }
 
   public Object setValue(Object ctx, Object elCtx, VariableResolverFactory variableFactory, Object value) {
+    //通过next来判定是否由自己进行值设置,还是转交由next节点处理
     if (nextNode != null) {
       return nextNode.setValue(variableFactory.getVariableResolver(property).getValue(), elCtx, variableFactory, value);
     }
@@ -54,6 +57,7 @@ public class VariableAccessor implements AccessorNode {
     return value;
   }
 
+  /** 返回相应的变量名 */
   public Object getProperty() {
     return property;
   }
@@ -70,6 +74,7 @@ public class VariableAccessor implements AccessorNode {
     return this.nextNode = nextNode;
   }
 
+  /** 无法探测类型,因此声明类型未知 */
   public Class getKnownEgressType() {
     return Object.class;
   }

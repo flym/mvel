@@ -119,7 +119,7 @@ public class ParserContext implements Serializable {
    * 或者是认为在处理过程中,是否允许添加新的变量信息
    */
   private boolean indexAllocation = false;
-  /** 判断在处理中，是否使用了新的变量 */
+  /** 判断在处理中，是否使用了新的变量,或者是相应的变量有作更新操作处理,即从当前上下文中有获取变量的动作 */
   protected boolean variablesEscape = false;
 
   public ParserContext() {

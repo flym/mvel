@@ -41,15 +41,18 @@ public class ArrayAccessorNest implements AccessorNode {
   public ArrayAccessorNest() {
   }
 
+  /** 使用下标表达式来构建出相应的数组访问器 */
   public ArrayAccessorNest(String index) {
     this.index = (ExecutableStatement) ParseTools.subCompileExpression(index.toCharArray());
   }
 
+  /** 使用已编译好的下标表达式进行构建 */
   public ArrayAccessorNest(ExecutableStatement stmt) {
     this.index = stmt;
   }
 
   public Object getValue(Object ctx, Object elCtx, VariableResolverFactory vars) {
+    //这里采用强转处理,实际上这里有bug,如果ctx为基本类型,则会报classCast,进而转为反优化处理.
     if (nextNode != null) {
       return nextNode.getValue(((Object[]) ctx)[(Integer) index.getValue(ctx, elCtx, vars)], elCtx, vars);
     }
@@ -60,14 +63,17 @@ public class ArrayAccessorNest implements AccessorNode {
 
   public Object setValue(Object ctx, Object elCtx, VariableResolverFactory vars, Object value) {
     if (nextNode != null) {
+      //这里的类型强转有问题
       return nextNode.setValue(((Object[]) ctx)[(Integer) index.getValue(ctx, elCtx, vars)], elCtx, vars, value);
     }
     else {
+      //还没有找到数组中的元素类型,因此先检测类型,再判断是否需要进行类型转换,以便能够set到数组中
       if (baseComponentType == null) {
         baseComponentType = ParseTools.getBaseComponentType(ctx.getClass());
         requireConversion = baseComponentType != value.getClass() && !baseComponentType.isAssignableFrom(value.getClass());
       }
 
+      //根据是否需要转换为进行相应的不同逻辑分支处理
       if (requireConversion) {
         Object o = convert(value, baseComponentType);
         Array.set(ctx, (Integer) index.getValue(ctx, elCtx, vars), o);
@@ -80,6 +86,7 @@ public class ArrayAccessorNest implements AccessorNode {
     }
   }
 
+  /** 获取相应的下标执行单元 */
   public ExecutableStatement getIndex() {
     return index;
   }

@@ -20,7 +20,7 @@ package org.mvel2.optimizers.impl.refl.nodes;
 
 import org.mvel2.compiler.AccessorNode;
 
-/** 用于实现基本的下一个节点的接口访问 */
+/** 用于实现基本的下一个节点的接口访问,即包装一个能够承上启下的级联调用的访问器概念 */
 public abstract class BaseAccessor implements AccessorNode {
   /** 引用的下一个节点 */
   protected AccessorNode nextNode;

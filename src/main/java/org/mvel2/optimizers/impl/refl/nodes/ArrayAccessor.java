@@ -37,6 +37,7 @@ public class ArrayAccessor implements AccessorNode {
   }
 
   public Object getValue(Object ctx, Object elCtx, VariableResolverFactory vars) {
+    //直接使用数组的反射调用方式来进行处理
     if (nextNode != null) {
       return nextNode.getValue(Array.get(ctx, index), elCtx, vars);
     }
@@ -55,6 +56,7 @@ public class ArrayAccessor implements AccessorNode {
   }
 
   public Object setValue(Object ctx, Object elCtx, VariableResolverFactory variableFactory, Object value) {
+    //采用数据反射的调用方式,如果级联调用,则将相应的处理转交给下级节点,即下级节点才是set调用
     if (nextNode != null) {
       return nextNode.setValue(Array.get(ctx, index), elCtx, variableFactory, value);
     }
@@ -64,6 +66,7 @@ public class ArrayAccessor implements AccessorNode {
     }
   }
 
+  /** 返回相应的下标 */
   public int getIndex() {
     return index;
   }
@@ -80,6 +83,7 @@ public class ArrayAccessor implements AccessorNode {
     return this.nextNode = nextNode;
   }
 
+  /** 因为是数组访问器,当前认为声明类型为数组 */
   public Class getKnownEgressType() {
     return Object[].class;
   }

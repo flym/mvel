@@ -38,6 +38,7 @@ public class ReturnNode extends ASTNode {
     this.start = start;
     this.offset = offset;
 
+    //在翻译期对相应的返回数据进行编译,以确保其执行
     if ((fields & COMPILE_IMMEDIATE) != 0) {
       setAccessor((Accessor) subCompileExpression(expr, start, offset, pCtx));
     }
@@ -48,12 +49,16 @@ public class ReturnNode extends ASTNode {
       setAccessor((Accessor) subCompileExpression(expr, start, offset, pCtx));
     }
 
+    //因为已经最终需要返回,因此相应的解析器工厂设置终止标记
     factory.setTiltFlag(true);
 
+    //直接使用访问器来处理相应的数据
+    //使用StackDemarcResolverFactory来隔离相应的终止标记
     return accessor.getValue(ctx, thisValue, new StackDemarcResolverFactory(factory));
   }
 
   public Object getReducedValue(Object ctx, Object thisValue, VariableResolverFactory factory) {
+    //使用解释运行方式来处理
     factory.setTiltFlag(true);
     return eval(expr, start, offset, ctx, new StackDemarcResolverFactory(factory));
   }
@@ -63,6 +68,7 @@ public class ReturnNode extends ASTNode {
     return true;
   }
 
+  /** 其操作符为return 在某些执行中,也会使用此操作符进行相应的流程处理 */
   @Override
   public Integer getOperator() {
     return Operator.RETURN;

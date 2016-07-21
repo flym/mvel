@@ -7,8 +7,10 @@ import java.util.Arrays;
 import java.util.Set;
 
 /**
+ * 没有实际使用
  * @author Mike Brock .
  */
+@Deprecated
 public class VariableSpaceCompiler {
   private static final Object[] EMPTY_OBJ = new Object[0];
   

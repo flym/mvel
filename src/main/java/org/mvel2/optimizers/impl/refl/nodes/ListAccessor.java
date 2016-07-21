@@ -38,6 +38,7 @@ public class ListAccessor implements AccessorNode {
   }
 
   public Object getValue(Object ctx, Object elCtx, VariableResolverFactory vars) {
+    //直接采用相应的list.get访问相应的值信息
     if (nextNode != null) {
       return nextNode.getValue(((List) ctx).get(index), elCtx, vars);
     }
@@ -47,6 +48,7 @@ public class ListAccessor implements AccessorNode {
   }
 
   public Object setValue(Object ctx, Object elCtx, VariableResolverFactory vars, Object value) {
+    //根据是否有next来决定是否转发set请求
     if (nextNode != null) {
       return nextNode.setValue(((List) ctx).get(index), elCtx, vars, value);
     }
@@ -57,6 +59,7 @@ public class ListAccessor implements AccessorNode {
     }
   }
 
+  /** 获取相应的下标值 */
   public int getIndex() {
     return index;
   }
@@ -77,6 +80,7 @@ public class ListAccessor implements AccessorNode {
     return "Array Accessor -> [" + index + "]";
   }
 
+  /** list取值,相应的类型未知,因此声明类型为Object */
   public Class getKnownEgressType() {
     return Object.class;
   }

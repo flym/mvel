@@ -29,6 +29,7 @@ import static java.lang.reflect.Array.getLength;
 public class ArrayLength extends BaseAccessor {
 
   public Object getValue(Object ctx, Object elCtx, VariableResolverFactory variableFactory) {
+    //采用原生Array反射调用的方式获取到相应的长度信息
     if (nextNode != null) {
       return nextNode.getValue(getLength(ctx), elCtx, variableFactory);
     }
@@ -37,10 +38,12 @@ public class ArrayLength extends BaseAccessor {
     }
   }
 
+  /** 数组长度不支持相应的修改 */
   public Object setValue(Object ctx, Object elCtx, VariableResolverFactory variableFactory, Object value) {
     return null;
   }
 
+  /** 数组长度返回类型为整数 */
   public Class getKnownEgressType() {
     return Integer.class;
   }

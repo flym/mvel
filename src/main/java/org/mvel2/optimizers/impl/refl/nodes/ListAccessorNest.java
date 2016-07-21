@@ -32,24 +32,27 @@ public class ListAccessorNest implements AccessorNode {
   private AccessorNode nextNode;
   /** 下标执行单元 */
   private ExecutableStatement index;
-  /** 当前集合中存储的值的类型(用于设置值时进行参数转换 */
+  /** 当前集合中存储的值的类型(用于设置值时进行参数转换),即在set需要转换为哪个类型 */
   private Class conversionType;
 
 
   public ListAccessorNest() {
   }
 
+  /** 通过下标表达式+相应的值类型构建出相应的访问器 */
   public ListAccessorNest(String index, Class conversionType) {
     this.index = (ExecutableStatement) subCompileExpression(index.toCharArray());
     this.conversionType = conversionType;
   }
 
+  /** 通过下标计算单元+相应的值类型构建出相应的访问器 */
   public ListAccessorNest(ExecutableStatement index, Class conversionType) {
     this.index = index;
     this.conversionType = conversionType;
   }
 
   public Object getValue(Object ctx, Object elCtx, VariableResolverFactory vars) {
+    //直接计算出相应的下标值,再使用list.get(int)来获取相应的值
     if (nextNode != null) {
       return nextNode.getValue(((List) ctx).get((Integer) index.getValue(ctx, elCtx, vars)), elCtx, vars);
     }
@@ -60,11 +63,13 @@ public class ListAccessorNest implements AccessorNode {
 
   public Object setValue(Object ctx, Object elCtx, VariableResolverFactory vars, Object value) {
     //noinspection unchecked
-
+    //根据是否有next来决定是否转发请求
+    //有next,因此由next来处理相应值的类型,当前list只负责取值即可
     if (nextNode != null) {
       return nextNode.setValue(((List) ctx).get((Integer) index.getValue(ctx, elCtx, vars)), elCtx, vars, value);
     }
     else {
+      //没有next,因此为自己设置值,需要根据类型决定是否需要进行类型转换
       if (conversionType != null) {
         ((List) ctx).set((Integer) index.getValue(ctx, elCtx, vars), value = DataConversion.convert(value, conversionType));
       }
@@ -76,6 +81,7 @@ public class ListAccessorNest implements AccessorNode {
 
   }
 
+  /** 获取相应的下标计算单元 */
   public ExecutableStatement getIndex() {
     return index;
   }
@@ -97,6 +103,7 @@ public class ListAccessorNest implements AccessorNode {
     return "Array Accessor -> [" + index + "]";
   }
 
+  /** 类型未知,为Object类型 */
   public Class getKnownEgressType() {
     return Object.class;
   }

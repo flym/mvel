@@ -36,16 +36,19 @@ public class IndexedPreFixIncNode extends ASTNode {
   public IndexedPreFixIncNode(int register, ParserContext pCtx) {
     super(pCtx);
     this.register = register;
+    //之前已注册,则直接通过下标获取变量名,再获取类型
     this.egressType = pCtx.getVarOrInputType(pCtx.getIndexedVarNames()[register]);
   }
 
   public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
     VariableResolver vResolver = factory.getIndexedVariableResolver(register);
+    //前置计算,则先获取值,再计算,然后赋值给result,赋值给解析器,最后返回result
     vResolver.setValue(ctx = MathProcessor.doOperations(vResolver.getValue(), Operator.ADD, DataTypes.INTEGER, 1));
     return ctx;
   }
 
   public Object getReducedValue(Object ctx, Object thisValue, VariableResolverFactory factory) {
+    //与编译执行相同
     return getReducedValueAccelerated(ctx, thisValue, factory);
   }
 }
