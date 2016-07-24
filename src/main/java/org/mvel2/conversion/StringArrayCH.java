@@ -54,6 +54,7 @@ public class StringArrayCH implements ConversionHandler {
   }
 
   static {
+    //支持非基本类型数组转换为字符串
     CNV.put(Object[].class,
         new Converter() {
           public Object convert(Object o) {

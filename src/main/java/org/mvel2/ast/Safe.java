@@ -18,6 +18,8 @@
 package org.mvel2.ast;
 
 /**
+ * 标记节点,表示在内部的执行过程中,一些对象信息可以直接硬编译引用,而不是随着参数的不同而发生改变.
+ * 比如,对常量的引用等
  * Marker interface to tell MVEL it can safely hard-reference.
  */
 public interface Safe {

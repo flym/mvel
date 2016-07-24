@@ -23,7 +23,8 @@ import org.mvel2.ParserContext;
 import org.mvel2.integration.VariableResolverFactory;
 
 /**
- * 一个表示当前语句块结束的抽象节点,无任何意义
+ * 一个表示当前语句块结束的抽象节点,无任何意义.在相应的逻辑运算中,其作为特殊的逻辑标记来处理.
+ * 如果碰到此节点,则表示当前执行栈需要提前返回
  * @author Christopher Brock
  */
 public class EndOfStatement extends ASTNode {

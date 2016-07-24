@@ -48,6 +48,7 @@ public class ListCH implements ConversionHandler {
     return newList;
   }
 
+  /** 支持数组,集合以及可迭代对象转集合 */
   public boolean canConvertFrom(Class cls) {
     return cls.isArray() || Collection.class.isAssignableFrom(cls) || Iterable.class.isAssignableFrom(cls);
   }

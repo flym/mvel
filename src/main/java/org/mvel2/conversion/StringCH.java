@@ -30,6 +30,7 @@ public class StringCH implements ConversionHandler {
   }
 
 
+  /** 只要不是内部空常量,都可以进行转换 */
   public boolean canConvertFrom(Class cls) {
     return cls != BlankLiteral.class;
   }

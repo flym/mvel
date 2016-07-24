@@ -45,6 +45,7 @@ public class SetCH implements ConversionHandler {
     return newSet;
   }
 
+  /** 支持从数组,集合,和迭代对象转set */
   public boolean canConvertFrom(Class cls) {
     return cls.isArray() || Collection.class.isAssignableFrom(cls) || Iterable.class.isAssignableFrom(cls);
   }

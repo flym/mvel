@@ -24,6 +24,7 @@ import org.mvel2.ast.TypeCast;
 import org.mvel2.integration.VariableResolverFactory;
 
 
+/** 一个用于标记其运行过程是安全的访问器 ,除标记外,其它与 ExecutableAccessor 均相同 */
 public class ExecutableAccessorSafe implements ExecutableStatement, Safe {
   private ASTNode node;
 

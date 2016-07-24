@@ -701,7 +701,7 @@ public class ParseTools {
     return cls;
   }
 
-  /** 对2个值进行contains判定,以返回相应的处理值 */
+  /** 对2个值进行contains判定,以返回相应的处理值,即first对象是否包含second对象 */
   public static boolean containsCheck(Object compareTo, Object compareTest) {
     //null处理
     if (compareTo == null)

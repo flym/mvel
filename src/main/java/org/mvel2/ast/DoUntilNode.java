@@ -44,6 +44,7 @@ public class DoUntilNode extends BlockNode {
     this.start = start;
     this.offset = offset;
 
+    //相应的条件期望为boolean
     expectType(pCtx, this.condition = (ExecutableStatement) subCompileExpression(expr, start, offset, pCtx),
         Boolean.class, ((fields & COMPILE_IMMEDIATE) != 0));
 
@@ -71,6 +72,7 @@ public class DoUntilNode extends BlockNode {
   }
 
   public Object getReducedValue(Object ctx, Object thisValue, VariableResolverFactory factory) {
+    //与编译执行相同
     VariableResolverFactory lc = new MapVariableResolverFactory(new HashMap(0), factory);
 
     do {

@@ -43,6 +43,7 @@ public class IntArrayCH implements ConversionHandler {
   }
 
   static {
+    //支持字符串数组转int[],每一项进行处理
     CNV.put(String[].class,
         new Converter() {
           public Object convert(Object o) {
@@ -57,6 +58,7 @@ public class IntArrayCH implements ConversionHandler {
         }
     );
 
+    //支持对象数组转int[],即将每一项进行toString之后再处理
     CNV.put(Object[].class,
         new Converter() {
           public Object convert(Object o) {

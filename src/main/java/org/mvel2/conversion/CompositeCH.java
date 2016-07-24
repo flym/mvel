@@ -16,6 +16,7 @@ public class CompositeCH implements ConversionHandler {
   }
 
   public Object convertFrom(Object in) {
+    //只要任意一个成功了,即返回其结果
     for (ConversionHandler converter : converters) {
       if (converter.canConvertFrom(in.getClass())) return converter.convertFrom(in);
     }

@@ -33,6 +33,7 @@ public class FloatCH implements ConversionHandler {
   private static final Map<Class, Converter> CNV =
       new HashMap<Class, Converter>();
 
+  /** 已实现的字符串转float */
   private static Converter stringConverter = new Converter() {
     public Object convert(Object o) {
       if (((String) o).length() == 0) return (float) 0;
@@ -53,11 +54,13 @@ public class FloatCH implements ConversionHandler {
   }
 
   static {
+    // 使用已实现的转换器处理
     CNV.put(String.class,
         stringConverter
     );
 
 
+    //对象转, 采用其toString形式再转换
     CNV.put(Object.class,
         new Converter() {
           public Object convert(Object o) {
@@ -66,6 +69,7 @@ public class FloatCH implements ConversionHandler {
         }
     );
 
+    //bigDecimal,窄化处理
     CNV.put(BigDecimal.class,
         new Converter() {
           public Float convert(Object o) {
@@ -75,6 +79,7 @@ public class FloatCH implements ConversionHandler {
     );
 
 
+    //bigInteger,窄化处理
     CNV.put(BigInteger.class,
         new Converter() {
           public Float convert(Object o) {
@@ -84,6 +89,7 @@ public class FloatCH implements ConversionHandler {
     );
 
 
+    //float类型,原样返回
     CNV.put(Float.class,
         new Converter() {
           public Object convert(Object o) {
@@ -92,6 +98,7 @@ public class FloatCH implements ConversionHandler {
         }
     );
 
+    //integer,宽化处理
     CNV.put(Integer.class,
         new Converter() {
           public Float convert(Object o) {
@@ -102,6 +109,7 @@ public class FloatCH implements ConversionHandler {
     );
 
 
+    //double,窄化处理
     CNV.put(Double.class,
         new Converter() {
           public Float convert(Object o) {
@@ -110,6 +118,7 @@ public class FloatCH implements ConversionHandler {
         }
     );
 
+    //long, 使用number相应方法返回
     CNV.put(Long.class,
         new Converter() {
           public Float convert(Object o) {
@@ -118,6 +127,7 @@ public class FloatCH implements ConversionHandler {
         }
     );
 
+    //short,宽化处理
     CNV.put(Short.class,
         new Converter() {
           public Float convert(Object o) {
@@ -126,6 +136,7 @@ public class FloatCH implements ConversionHandler {
         }
     );
 
+    //boolean,true为1,false为0
     CNV.put(Boolean.class,
         new Converter() {
           public Float convert(Object o) {

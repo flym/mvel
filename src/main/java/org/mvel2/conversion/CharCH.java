@@ -35,9 +35,11 @@ public class CharCH implements ConversionHandler {
   private static final Map<Class, Converter> CNV =
       new HashMap<Class, Converter>();
 
+  /** 提供的字符串转字符的实现 */
   private static final Converter stringConverter =
       new Converter() {
         public Object convert(Object o) {
+          //仅限制字符串长度为1
           if ((((String) o).length()) > 1)
             throw new ConversionException("cannot convert a string with a length greater than 1 to java.lang.Character");
 
@@ -57,8 +59,10 @@ public class CharCH implements ConversionHandler {
   }
 
   static {
+    //已实现的字符串转字符
     CNV.put(String.class, stringConverter);
 
+    //对象,使用其toString形式再转
     CNV.put(Object.class,
         new Converter() {
           public Object convert(Object o) {
@@ -67,6 +71,7 @@ public class CharCH implements ConversionHandler {
         }
     );
 
+    //字符,自身转换
     CNV.put(Character.class,
         new Converter() {
           public Object convert(Object o) {
@@ -76,6 +81,7 @@ public class CharCH implements ConversionHandler {
         }
     );
 
+    //bigDecimal,窄化为int再转
     CNV.put(BigDecimal.class,
         new Converter() {
           public Object convert(Object o) {
@@ -84,6 +90,7 @@ public class CharCH implements ConversionHandler {
         }
     );
 
+    //integer,窄化转换
     CNV.put(Integer.class,
         new Converter() {
 

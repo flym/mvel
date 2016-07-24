@@ -25,7 +25,7 @@ import static java.lang.String.valueOf;
 import static java.lang.reflect.Array.getLength;
 import static org.mvel2.util.ParseTools.isNumeric;
 
-/** 表示一个特别的空常量 */
+/** 表示一个特别的空常量,主要用于与internalNumber进行协作,以表示内部的一个特殊的空值 */
 public class BlankLiteral implements Serializable {
   public static final BlankLiteral INSTANCE = new BlankLiteral();
 

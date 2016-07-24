@@ -22,12 +22,15 @@ import org.mvel2.ast.Safe;
 import org.mvel2.integration.VariableResolverFactory;
 
 /**
- * 表示一个常量的计算单元
+ * 表示一个常量的计算单元,表示其本身引用一个常量,并不需要额外进行计算和处理
  * @author Christopher Brock
  */
 public class ExecutableLiteral implements ExecutableStatement, Safe {
+  /** 所引用的对象 */
   private Object literal;
+  /** 内部所引用的整数 */
   private int integer32;
+  /** 当前节点是否是整数的标记 */
   private boolean intOptimized;
 
   public ExecutableLiteral(Object literal) {

@@ -84,10 +84,12 @@ public class PropertyHandlerFactory {
     nullPropertyHandler = handler;
   }
 
+  /** 是否存在null值处理器 */
   public static boolean hasNullPropertyHandler() {
     return nullPropertyHandler != null;
   }
 
+  /** 返回相应的null值处理器 */
   public static PropertyHandler getNullPropertyHandler() {
     return nullPropertyHandler;
   }
@@ -104,10 +106,12 @@ public class PropertyHandlerFactory {
     return nullMethodHandler;
   }
 
+  /** 取消之前对某个类型的注册 */
   public static void unregisterPropertyHandler(Class clazz) {
     propertyHandlerClass.remove(clazz);
   }
 
+  /** 取消所有之前的注册 */
   public static void disposeAll() {
     nullMethodHandler = null;
     nullPropertyHandler = null;

@@ -49,6 +49,7 @@ public class ArrayHandler implements ConversionHandler {
 
 
   /**
+   * 支持基本类型数组的信息转换
    * Messy method to handle primitive boxing for conversion. If someone can re-write this more
    * elegantly, be my guest.
    *
@@ -81,6 +82,7 @@ public class ArrayHandler implements ConversionHandler {
       return target;
     }
 
+    //原为数组,则直接按照数组相互转换的逻辑进行
     int len = getLength(input);
     Object target = newInstance(targType, len);
 

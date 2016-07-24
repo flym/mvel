@@ -41,7 +41,9 @@ public class CharArrayCH implements ConversionHandler {
     return CNV.containsKey(cls);
   }
 
+  /* 仅提供了字符串和字符数组之间的转换 */
   static {
+    //字符串转字符数组
     CNV.put(String.class,
         new Converter() {
           public Object convert(Object o) {

@@ -37,21 +37,26 @@ public class Contains extends ASTNode {
   }
 
   public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
+    //分别计算两边的值,再进行contains检查
     return containsCheck(stmt.getReducedValueAccelerated(ctx, thisValue, factory), stmt2.getReducedValueAccelerated(ctx, thisValue, factory));
   }
 
+  /** 不支持解释运行 */
   public Object getReducedValue(Object ctx, Object thisValue, VariableResolverFactory factory) {
     throw new RuntimeException("operation not supported");
   }
 
+  /** 返回值即为boolean */
   public Class getEgressType() {
     return Boolean.class;
   }
 
+  /** 返回first节点,主操作节点 */
   public ASTNode getFirstStatement() {
     return stmt;
   }
 
+  /** 返回second节点,子操作节点 */
   public ASTNode getSecondStatement() {
     return stmt2;
   }

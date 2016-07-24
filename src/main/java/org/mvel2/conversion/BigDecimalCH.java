@@ -60,6 +60,7 @@ public class BigDecimalCH implements ConversionHandler {
         }
     );
 
+    //自身转换
     CNV.put(BigDecimal.class,
         new Converter() {
           public BigDecimal convert(Object o) {
@@ -69,6 +70,7 @@ public class BigDecimalCH implements ConversionHandler {
     );
 
 
+    //bigInteger转bigDecimal
     CNV.put(BigInteger.class,
         new Converter() {
           public BigDecimal convert(Object o) {
@@ -77,6 +79,7 @@ public class BigDecimalCH implements ConversionHandler {
         }
     );
 
+    //字符串转bigDecimal
     CNV.put(String.class,
         new Converter() {
           public BigDecimal convert(Object o) {
@@ -85,6 +88,7 @@ public class BigDecimalCH implements ConversionHandler {
         }
     );
 
+    //double类型转BigDecimal
     CNV.put(Double.class,
         new Converter() {
           public BigDecimal convert(Object o) {
@@ -93,6 +97,7 @@ public class BigDecimalCH implements ConversionHandler {
         }
     );
 
+    //float类型转bigDecimal
     CNV.put(Float.class,
         new Converter() {
           public BigDecimal convert(Object o) {
@@ -102,6 +107,7 @@ public class BigDecimalCH implements ConversionHandler {
     );
 
 
+    //short类型转bigDecimal
     CNV.put(Short.class,
         new Converter() {
           public BigDecimal convert(Object o) {
@@ -110,6 +116,7 @@ public class BigDecimalCH implements ConversionHandler {
         }
     );
 
+    //long类型转bigDecimal
     CNV.put(Long.class,
         new Converter() {
           public BigDecimal convert(Object o) {
@@ -118,6 +125,7 @@ public class BigDecimalCH implements ConversionHandler {
         }
     );
 
+    //integer转bigDecimal
     CNV.put(Integer.class,
         new Converter() {
           public BigDecimal convert(Object o) {
@@ -126,6 +134,7 @@ public class BigDecimalCH implements ConversionHandler {
         }
     );
 
+    //前面已经作了一次,此处重复
     CNV.put(String.class,
         new Converter() {
           public BigDecimal convert(Object o) {

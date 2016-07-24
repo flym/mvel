@@ -54,5 +54,6 @@ public interface ExecutableStatement extends Accessor, Serializable, Cloneable {
   /** 当前执行节点是否是纯字面量 */
   public boolean isLiteralOnly();
 
+  /** 当前执行节点是否是空节点 */
   public boolean isEmptyStatement();
 }

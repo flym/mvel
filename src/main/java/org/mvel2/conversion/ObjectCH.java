@@ -20,7 +20,7 @@ package org.mvel2.conversion;
 
 import org.mvel2.ConversionHandler;
 
-/** 转obj，没什么说的 */
+/** 转obj，没什么说的,原样输出 */
 public class ObjectCH implements ConversionHandler {
   public Object convertFrom(Object in) {
     return in;

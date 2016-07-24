@@ -26,7 +26,7 @@ public interface Accessor {
    * 获取相应的值信息
    *
    * @param ctx   当前对象上下文(可理解为当前处理对象)
-   * @param elCtx 特定的参数上下文
+   * @param elCtx 特定的参数上下文(this值)
    */
   public Object getValue(Object ctx, Object elCtx, VariableResolverFactory variableFactory);
 
@@ -34,7 +34,7 @@ public interface Accessor {
    * 设置值信息
    *
    * @param ctx   当前对象上下文(可理解为当前处理对象)
-   * @param elCtx 特定的参数上下文对象
+   * @param elCtx 特定的参数上下文对象(this值)
    */
   public Object setValue(Object ctx, Object elCtx, VariableResolverFactory variableFactory, Object value);
 

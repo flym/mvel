@@ -50,6 +50,7 @@ public class BigIntegerCH implements ConversionHandler {
   }
 
   static {
+    //对象转,即转换为string再转
     CNV.put(Object.class,
         new Converter() {
           public BigInteger convert(Object o) {
@@ -58,6 +59,7 @@ public class BigIntegerCH implements ConversionHandler {
         }
     );
 
+    //自身转换
     CNV.put(BigInteger.class,
         new Converter() {
           public BigInteger convert(Object o) {
@@ -67,6 +69,7 @@ public class BigIntegerCH implements ConversionHandler {
     );
 
 
+    //bigDecimal,去除小数部分转回来
     CNV.put(BigDecimal.class,
         new Converter() {
           public BigInteger convert(Object o) {
@@ -75,6 +78,7 @@ public class BigIntegerCH implements ConversionHandler {
         }
     );
 
+    //字符串车bigInteger
     CNV.put(String.class,
         new Converter() {
           public BigInteger convert(Object o) {
@@ -84,6 +88,7 @@ public class BigIntegerCH implements ConversionHandler {
     );
 
 
+    //short转bigInteger
     CNV.put(Short.class,
         new Converter() {
           public BigInteger convert(Object o) {
@@ -92,6 +97,7 @@ public class BigIntegerCH implements ConversionHandler {
         }
     );
 
+    //long转bigInteger
     CNV.put(Long.class,
         new Converter() {
           public BigInteger convert(Object o) {
@@ -100,6 +106,7 @@ public class BigIntegerCH implements ConversionHandler {
         }
     );
 
+    //integer转bigInteger
     CNV.put(Integer.class,
         new Converter() {
           public BigInteger convert(Object o) {
@@ -108,6 +115,7 @@ public class BigIntegerCH implements ConversionHandler {
         }
     );
 
+    //字符串转,采用字符串相对应的构建函数
     CNV.put(String.class,
         new Converter() {
           public BigInteger convert(Object o) {
@@ -116,6 +124,7 @@ public class BigIntegerCH implements ConversionHandler {
         }
     );
 
+    //字符数组,即认为与字符串一样
     CNV.put(char[].class,
         new Converter() {
           public BigInteger convert(Object o) {

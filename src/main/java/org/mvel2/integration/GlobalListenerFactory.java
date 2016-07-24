@@ -18,6 +18,7 @@ public class GlobalListenerFactory {
     return propertySetListeners != null && !propertySetListeners.isEmpty();
   }
 
+  /** 注册相应的get调用时监听器 */
   public static boolean registerGetListener(Listener getListener) {
     if (propertyGetListeners == null) propertyGetListeners = new LinkedList<Listener>();
     return propertyGetListeners.add(getListener);

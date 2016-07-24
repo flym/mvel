@@ -21,6 +21,7 @@ public class Convertable extends ASTNode {
   }
 
   public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
+    //先获取相应的值,再进行相应的转换判断
     Object o = stmt.getReducedValueAccelerated(ctx, thisValue, factory);
     return o != null && DataConversion.canConvert(
         (Class) clsStmt.getReducedValueAccelerated(ctx, thisValue, factory), o.getClass());
@@ -30,6 +31,7 @@ public class Convertable extends ASTNode {
   public Object getReducedValue(Object ctx, Object thisValue, VariableResolverFactory factory) {
     try {
 
+      //与编译运行相一致,不过相应的过程转为解释运行
       Object o = stmt.getReducedValue(ctx, thisValue, factory);
       if (o == null) return false;
 

@@ -90,6 +90,7 @@ public class BooleanCH implements ConversionHandler {
         }
     );
 
+    //float,>0即为true
     CNV.put(Float.class,
         new Converter() {
           public Boolean convert(Object o) {
@@ -98,6 +99,7 @@ public class BooleanCH implements ConversionHandler {
         }
     );
 
+    //double,>0即为true
     CNV.put(Double.class,
         new Converter() {
           public Boolean convert(Object o) {
@@ -106,6 +108,7 @@ public class BooleanCH implements ConversionHandler {
         }
     );
 
+    //short,>0即为true
     CNV.put(Short.class,
         new Converter() {
           public Boolean convert(Object o) {
@@ -114,6 +117,7 @@ public class BooleanCH implements ConversionHandler {
         }
     );
 
+    //long,>0即为true
     CNV.put(Long.class,
         new Converter() {
           public Boolean convert(Object o) {
@@ -122,6 +126,7 @@ public class BooleanCH implements ConversionHandler {
         }
     );
 
+    //boolean,自身转换
     CNV.put(boolean.class,
         new Converter() {
 
@@ -131,6 +136,7 @@ public class BooleanCH implements ConversionHandler {
         }
     );
 
+    //bigDecimal,>0即为true
     CNV.put(BigDecimal.class,
         new Converter() {
 

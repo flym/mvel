@@ -145,7 +145,7 @@ public class ASTNode implements Cloneable, Serializable {
   protected transient volatile Accessor accessor;
   /**
    * 当前节点的安全访问器(未优化的)
-   * 这里的是否优化版，均是指通过二次编译之后的访问，而不是指解释运行
+   * 这里的是非优化版，均是指通过二次编译之后的访问，而不是指解释运行
    */
   protected volatile Accessor safeAccessor;
 

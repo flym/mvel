@@ -31,6 +31,7 @@ public class ByteCH implements ConversionHandler {
   private static final Map<Class, Converter> CNV =
       new HashMap<Class, Converter>();
 
+  /** 字符串转byte的实现,即采用parse来实现 */
   private static Converter stringConverter = new Converter() {
     public Object convert(Object o) {
       return Byte.parseByte(((String) o));
@@ -49,10 +50,12 @@ public class ByteCH implements ConversionHandler {
   }
 
   static {
+    //已实现的字符串转
     CNV.put(String.class,
         stringConverter
     );
 
+    //任意对象,通过其toString形式处理
     CNV.put(Object.class,
         new Converter() {
           public Object convert(Object o) {
@@ -61,6 +64,7 @@ public class ByteCH implements ConversionHandler {
         }
     );
 
+    //byte类型,宽化处理
     CNV.put(Byte.class,
         new Converter() {
           public Object convert(Object o) {
@@ -70,6 +74,7 @@ public class ByteCH implements ConversionHandler {
         }
     );
 
+    //integer, 窄化处理
     CNV.put(Integer.class,
         new Converter() {
           public Object convert(Object o) {
@@ -78,6 +83,7 @@ public class ByteCH implements ConversionHandler {
         }
     );
 
+    //long, 窄化处理
     CNV.put(Long.class,
         new Converter() {
           public Object convert(Object o) {
@@ -85,6 +91,7 @@ public class ByteCH implements ConversionHandler {
           }
         });
 
+    //double, 窄化处理
     CNV.put(Double.class,
         new Converter() {
           public Object convert(Object o) {
@@ -92,6 +99,7 @@ public class ByteCH implements ConversionHandler {
           }
         });
 
+    //float, 窄化处理
     CNV.put(Float.class,
         new Converter() {
           public Object convert(Object o) {
@@ -99,6 +107,7 @@ public class ByteCH implements ConversionHandler {
           }
         });
 
+    //short, 窄化处理
     CNV.put(Short.class,
         new Converter() {
           public Object convert(Object o) {

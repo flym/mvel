@@ -24,7 +24,7 @@ import java.nio.charset.Charset;
 import static java.lang.System.arraycopy;
 
 /**
- *
+ * 实现一个类似StringBuilder的字符序列
  * @author Mike Brock
  */
 public class StringAppender implements CharSequence {

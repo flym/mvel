@@ -38,6 +38,7 @@ public class ShortCH implements ConversionHandler {
   private static final Short TRUE = (short) 1;
   private static final Short FALSE = (short) 0;
 
+  /** 自实现的字符串转short,采用parseShort处理 */
   private static Converter stringConverter = new Converter() {
     public Short convert(Object o) {
       return parseShort(((String) o));
@@ -61,10 +62,12 @@ public class ShortCH implements ConversionHandler {
 
 
   static {
+    //字符串转,已实现
     CNV.put(String.class,
         stringConverter
     );
 
+    //对象转,先toString,再处理
     CNV.put(Object.class,
         new Converter() {
           public Object convert(Object o) {
@@ -73,6 +76,7 @@ public class ShortCH implements ConversionHandler {
         }
     );
 
+    //bigDecimal,窄化处理
     CNV.put(BigDecimal.class,
         new Converter() {
           public Short convert(Object o) {
@@ -82,6 +86,7 @@ public class ShortCH implements ConversionHandler {
     );
 
 
+    //bigInteger,窄化处理
     CNV.put(BigInteger.class,
         new Converter() {
           public Short convert(Object o) {
@@ -91,6 +96,7 @@ public class ShortCH implements ConversionHandler {
     );
 
 
+    //short,原样输出
     CNV.put(Short.class,
         new Converter() {
           public Object convert(Object o) {
@@ -99,9 +105,11 @@ public class ShortCH implements ConversionHandler {
         }
     );
 
+    //integer,窄化处理
     CNV.put(Integer.class,
         new Converter() {
           public Short convert(Object o) {
+            //限制表示值的范围,必须在short范围之内
             if (((Integer) o) > Short.MAX_VALUE) {
               throw new ConversionException("cannot coerce Integer to Short since the value ("
                   + valueOf(o) + ") exceeds that maximum precision of Integer.");
@@ -113,9 +121,11 @@ public class ShortCH implements ConversionHandler {
         }
     );
 
+    //float,窄化处理
     CNV.put(Float.class,
         new Converter() {
           public Short convert(Object o) {
+            //限制表示值的范围,必须在short范围之内
             if (((Float) o) > Short.MAX_VALUE) {
               throw new ConversionException("cannot coerce Float to Short since the value ("
                   + valueOf(o) + ") exceeds that maximum precision of Integer.");
@@ -127,9 +137,11 @@ public class ShortCH implements ConversionHandler {
         }
     );
 
+    //double转,窄化处理
     CNV.put(Double.class,
         new Converter() {
           public Short convert(Object o) {
+            //限制表示值的范围,必须在short范围之内
             if (((Double) o) > Short.MAX_VALUE) {
               throw new ConversionException("cannot coerce Double to Short since the value ("
                   + valueOf(o) + ") exceeds that maximum precision of Integer.");
@@ -141,9 +153,11 @@ public class ShortCH implements ConversionHandler {
         }
     );
 
+    //long转换,窄化处理
     CNV.put(Long.class,
         new Converter() {
           public Short convert(Object o) {
+            //限制表示值的范围,必须在short范围之内
             if (((Long) o) > Short.MAX_VALUE) {
               throw new ConversionException("cannot coerce Integer to Short since the value ("
                   + valueOf(o) + ") exceeds that maximum precision of Integer.");
@@ -155,6 +169,7 @@ public class ShortCH implements ConversionHandler {
         }
     );
 
+    //boolean处理,true为1,false为0
     CNV.put(Boolean.class,
         new Converter() {
           public Short convert(Object o) {

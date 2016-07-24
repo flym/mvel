@@ -56,9 +56,9 @@
 |   StackElement    |   栈节点 |   已完成 |
 |   StaticFieldStub |   静态字段句柄(未使用) |   不作处理    |
 |   StaticStub  | 静态引用句柄  |   已完成 |
-|   StringAppender  |   |   未完成 |
+|   StringAppender  | 自实现字符序列(StringBuilder)  |   已完成 |
 |   ThisLiteral |   (未使用)   |   不作处理    |
-|   Varargs |   可变参数解析器 |   未完成 |
+|   Varargs |   可变参数解析工具类 |   已完成 |
 |   VariableSpaceCompiler   | (未使用)  |   不作处理 |
 |   VariableSpaceModel  | (未使用)  |   不作处理 |
 |   DynamicAccessor |   动态访问器   |   已完成 |
@@ -139,52 +139,52 @@
 |   StaticMethodImportResolverFactory   |   (未使用)   |   不作处理    |
 |   TypeInjectionResolverFactory    |   (未使用)   |   不作处理    |
 |   TypeInjectionResolverFactoryImpl    |   (未使用)   |   不作处理    |
-|   GlobalListenerFactory   |   全局监听器工厂   |   未完成 |
-|   Interceptor |   拦截器接口 |   未完成 |
-|   Listener    |   调用监听器接口   |   未完成 |
-|   PropertyHandler |   属性处理器接口 |   未完成 |
-|   PropertyHandlerFactory  |   属性处理器工厂 |   未完成 |
-|   ResolverTools   |   解析器工厂工具类    |   未完成 |
-|   VariableResolver    |   变量解析器接口 |   未完成 |
-|   VariableResolverFactory |   解析器工厂接口 |   未完成 |
+|   GlobalListenerFactory   |   全局监听器工厂   |   已完成 |
+|   Interceptor |   拦截器接口 |   已完成 |
+|   Listener    |   调用监听器接口   |   已完成 |
+|   PropertyHandler |   属性处理器接口 |   已完成 |
+|   PropertyHandlerFactory  |   属性处理器工厂 |   已完成 |
+|   ResolverTools   |   解析器工厂工具类    |   已完成 |
+|   VariableResolver    |   变量解析器接口 |   已完成 |
+|   VariableResolverFactory |   解析器工厂接口 |   已完成 |
 |   Debugger    |   |   未完成 |
 |   DebuggerContext |   |   未完成 |
 |   DebugTools  |   |   未完成 |
 |   Frame   |   |   未完成 |
 |   ArrayCH |   (未使用)   |   不作处理    |
-|   ArrayHandler    |   数组转换器   |   未完成 |
-|   BigDecimalCH    |   数据转bigDecimal转换器    |   未完成 |
-|   BigIntegerCH    |   数据转bigInteger转换器    |   未完成 |
-|   BooleanCH   |   数据转boolean转换器   |   未完成 |
-|   ByteCH  |   数据转byte转换器  |   未完成 |
-|   CharArrayCH |   字符串转字符数组转换器 |   未完成 |
-|   CharCH  |   数据转char转换器  |   未完成 |
-|   CompositeCH |   组合转换器   |   未完成 |
+|   ArrayHandler    |   数组转换器   |   已完成 |
+|   BigDecimalCH    |   数据转bigDecimal转换器    |   已完成 |
+|   BigIntegerCH    |   数据转bigInteger转换器    |   已完成 |
+|   BooleanCH   |   数据转boolean转换器   |   已完成 |
+|   ByteCH  |   数据转byte转换器  |   已完成 |
+|   CharArrayCH |   字符串转字符数组转换器 |   已完成 |
+|   CharCH  |   数据转char转换器  |   已完成 |
+|   CompositeCH |   组合转换器   |   已完成 |
 |   Converter   |   转换函数接口  |   已完成 |
-|   DoubleCH    |   数据转double转换器    |   未完成 |
-|   FloatCH |   数据转float转换器 |   未完成 |
-|   IntArrayCH  |   数据转int[]转换器 |   未完成 |
-|   IntegerCH   |   数据转int转换器   |   未完成 |
-|   ListCH  |   数据转list转换器  |   未完成 |
-|   LongCH  |   数据转long转换器  |   未完成 |
-|   ObjectCH    |   数据转object转换器    |   未完成 |
+|   DoubleCH    |   数据转double转换器    |   已完成 |
+|   FloatCH |   数据转float转换器 |   已完成 |
+|   IntArrayCH  |   数据转int[]转换器 |   已完成 |
+|   IntegerCH   |   数据转int转换器   |   已完成 |
+|   ListCH  |   数据转list转换器  |   已完成 |
+|   LongCH  |   数据转long转换器  |   已完成 |
+|   ObjectCH    |   数据转object转换器    |   已完成 |
 |   PrimIntArrayCH  |   转基本类型int[]转换器(未使用)  |   不作处理    |
-|   SetCH   |   数据转set转换器   |   未完成 |
-|   ShortCH |   数据转short转换器 |   未完成 |
-|   StringArrayCH   |   对象转string[]转换器  |   未完成 |
-|   StringCH    |   对象转string转换器    |   未完成 |
+|   SetCH   |   数据转set转换器   |   已完成 |
+|   ShortCH |   数据转short转换器 |   已完成 |
+|   StringArrayCH   |   对象转string[]转换器  |   已完成 |
+|   StringCH    |   对象转string转换器    |   已完成 |
 |   UnitConversion  |   (未使用)   |   不作处理    |
 |   AbstractParser  |   抽象解析器   |   未完成 |
-|   Accessor    |   属性访问器接口 |   未完成 |
-|   AccessorNode    |   节点访问器接口 |   未完成 |
-|   BlankLiteral    |   空值常量定义  |   未完成 |
+|   Accessor    |   属性访问器接口 |   已完成 |
+|   AccessorNode    |   节点访问器接口 |   已完成 |
+|   BlankLiteral    |   空值常量定义  |   已完成 |
 |   CompiledAccExpression   |   已编译访问器表达式   |   未完成 |
 |   CompiledExpression  |   编译表达式   |   未完成 |
 |   EndWithValue    |   (未使用)   |   不作处理    |
 |   ExecutableAccessor  |   可执行的节点访问器   |   未完成 |
-|   ExecutableAccessorSafe  |   |   未完成 |
-|   ExecutableLiteral   |   常量计算单元  |   未完成 |
-|   ExecutableStatement |   可执行节点接口 |   未完成 |
+|   ExecutableAccessorSafe  | 安全标记执行节点访问器  |   已完成 |
+|   ExecutableLiteral   |   常量计算单元  |   已完成 |
+|   ExecutableStatement |   可执行节点接口 |   已完成 |
 |   ExpressionCompiler  |   表达式编译器    |   未完成 |
 |   Parser  |   编译器接口定义 |   未完成 |
 |   PropertyVerifier    |   属性验证器   |   未完成 |
@@ -197,14 +197,14 @@
 |   BinaryOperation |   2元数字操作节点  |   已完成 |
 |   BlockNode   |   语法块节点标记接口   |   已完成 |
 |   BooleanNode |   二元操作定义  |   已完成 |
-|   Contains    |   contains包含节点    |   未完成 |
-|   Convertable |    convert转换节点    |   未完成 |
+|   Contains    |   contains包含节点    |   已完成 |
+|   Convertable |    convert转换节点    |   已完成 |
 |   DeclProtoVarNode    |   原型变量声明节点    |   未完成 |
 |   DeclTypedVarNode    |   变量声明节点  |   未完成 |
 |   DeepAssignmentNode  |   深度赋值节点  |   未完成 |
 |   DoNode  |   do循环节点  |   已完成 |
-|   DoUntilNode |   do until语法块节点   |   未完成 |
-|   EndOfStatement  |   语句结束标记节点    |   未完成 |
+|   DoUntilNode |   do until语法块节点   |   已完成 |
+|   EndOfStatement  |   语句结束标记节点    |   已完成 |
 |   Fold    |   fold表达式节点   |   未完成 |
 |   ForEachNode |   增强for循环节点   |   已完成 |
 |   ForNode |   for循环节点 |   已完成 |
@@ -250,10 +250,10 @@
 |   ProtoVarNode    |   原型属性声明节点    |   未完成 |
 |   ReduceableCodeException |   (未使用)   |   不作处理    |
 |   RedundantCodeException  |   无限循环异常  |   已完成 |
-|   RegExMatch  |   正则匹配表达式节点   |   未完成 |
-|   RegExMatchNode  |   字符串正则匹配节点   |   未完成 |
+|   RegExMatch  |   正则匹配表达式节点   |   已完成 |
+|   RegExMatchNode  |   字符串正则匹配节点   |   已完成 |
 |   ReturnNode  |   return节点    |   已完成 |
-|   Safe    |   |   未完成 |
+|   Safe    | 安全调用标记接口  |   已完成 |
 |   Sign    |   表达式取负节点 |   已完成 |
 |   Soundslike  |   |   未完成 |
 |   Stacklang   |   堆栈指令集节点 |   未完成 |

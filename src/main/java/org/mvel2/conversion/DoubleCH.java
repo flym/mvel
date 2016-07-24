@@ -33,6 +33,7 @@ public class DoubleCH implements ConversionHandler {
   private static final Map<Class, Converter> CNV =
       new HashMap<Class, Converter>();
 
+  /** 已实现的字符串转double */
   private static Converter stringConverter = new Converter() {
     public Object convert(Object o) {
       if (((String) o).length() == 0) return (double) 0;
@@ -54,10 +55,12 @@ public class DoubleCH implements ConversionHandler {
   }
 
   static {
+    //字符串转,已自实现
     CNV.put(String.class,
         stringConverter
     );
 
+    //对象转,将其转换为toString形式再处理
     CNV.put(Object.class,
         new Converter() {
           public Object convert(Object o) {
@@ -66,6 +69,7 @@ public class DoubleCH implements ConversionHandler {
         }
     );
 
+    //bigDecimal,窄化处理
     CNV.put(BigDecimal.class,
         new Converter() {
           public Double convert(Object o) {
@@ -74,6 +78,7 @@ public class DoubleCH implements ConversionHandler {
         }
     );
 
+    //bigInteger,窄化处理
     CNV.put(BigInteger.class,
         new Converter() {
           public Double convert(Object o) {
@@ -82,6 +87,7 @@ public class DoubleCH implements ConversionHandler {
         }
     );
 
+    //double,自身原样返回
     CNV.put(Double.class,
         new Converter() {
           public Object convert(Object o) {
@@ -90,9 +96,11 @@ public class DoubleCH implements ConversionHandler {
         }
     );
 
+    //float转,宽化转换
     CNV.put(Float.class,
         new Converter() {
           public Double convert(Object o) {
+            //不支持infinite处理
             if (((Float) o) > Double.MAX_VALUE) {
               throw new ConversionException("cannot coerce Float to Double since the value ("
                   + valueOf(o) + ") exceeds that maximum precision of Double.");
@@ -103,6 +111,7 @@ public class DoubleCH implements ConversionHandler {
           }
         });
 
+    //integer,宽化转换
     CNV.put(Integer.class,
         new Converter() {
           public Double convert(Object o) {
@@ -112,6 +121,7 @@ public class DoubleCH implements ConversionHandler {
         }
     );
 
+    //short,宽化转换
     CNV.put(Short.class,
         new Converter() {
           public Double convert(Object o) {
@@ -121,6 +131,7 @@ public class DoubleCH implements ConversionHandler {
         }
     );
 
+    //long,宽化转换
     CNV.put(Long.class,
         new Converter() {
           public Double convert(Object o) {
@@ -131,6 +142,7 @@ public class DoubleCH implements ConversionHandler {
     );
 
 
+    //boolean,true为1,false为0
     CNV.put(Boolean.class,
         new Converter() {
           public Double convert(Object o) {

@@ -33,6 +33,7 @@ public class LongCH implements ConversionHandler {
   private static final Map<Class, Converter> CNV =
       new HashMap<Class, Converter>();
 
+  /** 自实现字符串转long型,采用parseLong来实现 */
   private static Converter stringConverter = new Converter() {
     public Object convert(Object o) {
       if (((String) o).length() == 0) return (long) 0;
@@ -53,10 +54,12 @@ public class LongCH implements ConversionHandler {
   }
 
   static {
+    //字符串转,使用已实现的方式来处理
     CNV.put(String.class,
         stringConverter
     );
 
+    //对象转,先转成字符串,再使用字符串转
     CNV.put(Object.class,
         new Converter() {
           public Object convert(Object o) {
@@ -65,6 +68,7 @@ public class LongCH implements ConversionHandler {
         }
     );
 
+    //bigDecimal转,窄化处理
     CNV.put(BigDecimal.class,
         new Converter() {
           public Long convert(Object o) {
@@ -74,6 +78,7 @@ public class LongCH implements ConversionHandler {
     );
 
 
+    //bigInteger,窄化处理
     CNV.put(BigInteger.class,
         new Converter() {
           public Long convert(Object o) {
@@ -83,6 +88,7 @@ public class LongCH implements ConversionHandler {
     );
 
 
+    //short,宽化处理
     CNV.put(Short.class,
         new Converter() {
           public Object convert(Object o) {
@@ -92,6 +98,7 @@ public class LongCH implements ConversionHandler {
         }
     );
 
+    //long,原样返回
     CNV.put(Long.class,
         new Converter() {
           public Object convert(Object o) {
@@ -101,6 +108,7 @@ public class LongCH implements ConversionHandler {
         }
     );
 
+    //integer,宽化处理
     CNV.put(Integer.class,
         new Converter() {
           public Object convert(Object o) {
@@ -110,6 +118,7 @@ public class LongCH implements ConversionHandler {
         }
     );
 
+    //double,窄化处理
     CNV.put(Double.class,
         new Converter() {
           public Object convert(Object o) {
@@ -117,6 +126,7 @@ public class LongCH implements ConversionHandler {
           }
         });
 
+    //float,窄化处理
     CNV.put(Float.class,
         new Converter() {
           public Object convert(Object o) {
@@ -124,6 +134,7 @@ public class LongCH implements ConversionHandler {
           }
         });
 
+    //boolean,true为1,false为0
     CNV.put(Boolean.class,
         new Converter() {
           public Long convert(Object o) {

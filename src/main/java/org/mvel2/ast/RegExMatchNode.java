@@ -27,7 +27,9 @@ import static org.mvel2.MVEL.eval;
 
 /** 对于 ~= 正确表达式的优化节点(实际上正式表达式由RegExMatch描述) 此对象并不会实际存在用处 */
 public class RegExMatchNode extends ASTNode {
+  /** 要进行匹配的节点 */
   private ASTNode node;
+  /** 正则表达式节点 */
   private ASTNode patternNode;
 
   public RegExMatchNode(ASTNode matchNode, ASTNode patternNode, ParserContext pCtx) {
@@ -45,6 +47,7 @@ public class RegExMatchNode extends ASTNode {
         .matcher(valueOf(eval(expr, node.start, node.offset, ctx, factory))).matches();
   }
 
+  /** 正则匹配返回为boolean */
   public Class getEgressType() {
     return Boolean.class;
   }
