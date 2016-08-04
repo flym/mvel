@@ -21,9 +21,11 @@ package org.mvel2.debug;
 import org.mvel2.ParserContext;
 import org.mvel2.ast.LineLabel;
 import org.mvel2.integration.VariableResolverFactory;
-
+/** 用于表示一个特定的代码执行帧(参考java执行栈帧),相应的执行情况,可以查看到第几行,以及当前的一些变量信息 */
 public class Frame {
+  /** 相应的代码行 */
   private LineLabel label;
+  /** 当前的变量解析工厂 */
   private VariableResolverFactory factory;
 
   public Frame(LineLabel label, VariableResolverFactory factory) {
@@ -31,10 +33,12 @@ public class Frame {
     this.factory = factory;
   }
 
+  /** 获取相应的脚本源文件 */
   public String getSourceName() {
     return label.getSourceFile();
   }
 
+  /** 获取当前解析在第几行 */
   public int getLineNumber() {
     return label.getLineNumber();
   }

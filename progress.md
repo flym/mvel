@@ -16,7 +16,7 @@
 |   MVELRuntime |   |   未完成 |
 |   MVELInterpretedRuntime  |   |   未完成 |
 |   MVEL   |    主运行类    |   已完成 |
-|   MacroProcessor  |   |   未完成 |
+|   MacroProcessor  | 宏处理器  |   已完成 |
 |   Macro   |   宏定义 |   已完成 |
 |   ImmutableElementException   |   不可变集合修改异常   |   已完成 |
 |   ErrorDetail |   |   未完成 |
@@ -26,9 +26,9 @@
 |   ConversionException | 数据转换异常    |   已完成 |
 |   CompileException    |   |   未完成 |
 |   ArrayTools  | 数组工具类  |   已完成 |
-|   ASTBinaryTree   |   |   未完成 |
-|   ASTIterator |   |   未完成 |
-|   ASTLinkedList   |   |   未完成 |
+|   ASTBinaryTree   |  操作符优先级构建树 |   已完成 |
+|   ASTIterator | 节点链定义接口  |   已完成 |
+|   ASTLinkedList   | 节点执行链表  |   已完成 |
 |   CallableProxy   |   调用代理对象  |   已完成 |
 |   CollectionParser    | 集合解析器  |  未完成 |
 |   CompatibilityStrategy   | 类型兼容性策略判定  |   已完成 |
@@ -39,7 +39,7 @@
 |   FunctionParser  |   函数解析器 | 未完成 |
 |   InternalNumber  | 内部统一数字表现形式  |   已完成 |
 |   JITClassLoader  | 内部统一使用的类加载器  |   已完成 |
-|   LineMapper  |   行映射处理   |   未完成 |
+|   LineMapper  |   行映射处理   |   已完成 |
 |   Make    | (未使用)  |   不作处理 |
 |   MethodStub  |   方法句柄    |   已完成 |
 |   MVELClassLoader |   自定义类加载器 |   已完成 |
@@ -147,10 +147,10 @@
 |   ResolverTools   |   解析器工厂工具类    |   已完成 |
 |   VariableResolver    |   变量解析器接口 |   已完成 |
 |   VariableResolverFactory |   解析器工厂接口 |   已完成 |
-|   Debugger    |   |   未完成 |
-|   DebuggerContext |   |   未完成 |
-|   DebugTools  |   |   未完成 |
-|   Frame   |   |   未完成 |
+|   Debugger    | 调试器接口  |   已完成 |
+|   DebuggerContext | 代码调试行上下文  |   已完成 |
+|   DebugTools  | 编译工具类  |   已完成 |
+|   Frame   | 解析代码运行帧  |   已完成 |
 |   ArrayCH |   (未使用)   |   不作处理    |
 |   ArrayHandler    |   数组转换器   |   已完成 |
 |   BigDecimalCH    |   数据转bigDecimal转换器    |   已完成 |

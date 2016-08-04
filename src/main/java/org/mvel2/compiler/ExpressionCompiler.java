@@ -121,7 +121,7 @@ public class ExpressionCompiler extends AbstractParser {
 
       while ((tk = nextToken()) != null) {
         /**
-         * 调试节点？继续处理
+         * 调试节点？继续处理,同时加入到处理链中
          * If this is a debug symbol, just add it and continue.
          */
         if (tk.fields == -1) {

@@ -39,10 +39,12 @@ import static org.mvel2.Operator.ADD;
 import static org.mvel2.Operator.SUB;
 
 /**
+ * 调试辅助工具类
  * @author Christopher Brock
  */
 public class DebugTools {
 
+  /** 对一个表达式进行反编译,即返回可看懂的执行情况.这里的反编译即一种更易懂的toString表示 */
   public static String decompile(Serializable expr) {
     if (expr instanceof CompiledExpression) return decompile((CompiledExpression) expr);
     else if (expr instanceof ExecutableAccessor)
@@ -53,11 +55,14 @@ public class DebugTools {
     else return "NOT A KNOWN PAYLOAD: " + expr.getClass().getName();
   }
 
+  /** 对可运行表达式进行反编译,返回可视化toString形式 */
   public static String decompile(CompiledExpression cExp) {
     return decompile(cExp, false, new DecompileContext());
   }
 
+  /** 反编译上下文,描述当前执行的节点情况 */
   private static final class DecompileContext {
+    /** 当前正在处理的节点计数 */
     public int node = 0;
   }
 
@@ -126,7 +131,7 @@ public class DebugTools {
   }
 
 
-  /** 获取操作符的字符串表示形式 */
+  /** 获取操作符的语义化字符串表示形式 */
   public static String getOperatorSymbol(int operator) {
     switch (operator) {
       case ADD:
@@ -242,6 +247,7 @@ public class DebugTools {
     return "UNKNOWN_OPERATOR";
   }
 
+  /** 获取一个操作符的英文字符串表示形式 */
   public static String getOperatorName(int operator) {
     switch (operator) {
       case ADD:

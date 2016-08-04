@@ -21,7 +21,7 @@ import org.mvel2.ParserContext;
 import org.mvel2.integration.VariableResolverFactory;
 
 /**
- * 用于描述一个特定的调试的代码行标记
+ * 用于描述一个特定的调试的代码行标记,同时表示当前节点为调试节点
  * @author Christopher Brock
  */
 public class LineLabel extends ASTNode {
@@ -34,6 +34,7 @@ public class LineLabel extends ASTNode {
     super(pCtx);
     this.lineNumber = lineNumber;
     this.sourceFile = sourceFile;
+    //当前节点为调试节点
     this.fields = -1;
   }
 

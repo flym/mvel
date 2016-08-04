@@ -149,9 +149,10 @@ public class ASTNode implements Cloneable, Serializable {
    */
   protected volatile Accessor safeAccessor;
 
-  //无任何用处
+  /** 无任何用处 */
+  @Deprecated
   protected int cursorPosition;
-  /** 当前节点的下一步节点(顺序上的下一步) */
+  /** 当前节点的下一步节点(顺序上的下一步),构成链式处理 */
   public ASTNode nextASTNode;
 
   /** 当前解析上下文 */
@@ -446,18 +447,22 @@ public class ASTNode implements Cloneable, Serializable {
     fields |= FQCN;
   }
 
+  @Deprecated
   public int getCursorPosition() {
     return cursorPosition;
   }
 
+  @Deprecated
   public void setCursorPosition(int cursorPosition) {
     this.cursorPosition = cursorPosition;
   }
 
+  /** 当前节点是否应该被废弃 */
   public boolean isDiscard() {
     return fields != -1 && (fields & DISCARD) != 0;
   }
 
+  /** 废弃当前节点 */
   public void discard() {
     this.fields |= DISCARD;
   }

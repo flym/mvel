@@ -326,6 +326,7 @@ public class AbstractParser implements Parser, Serializable {
       }
 
       //如果在调试模式下，则每次调用nextToken，都将一个代码行节点加入到处理当中，以描述当前的处理状态
+      //同时,按照处理逻辑,这里的处理逻辑会将第1个节点返回给调用,即此调试节点会以第1个节点加入到节点处理链中,即astLinkedList中
       if (debugSymbols) {
         if (!lastWasLineLabel) {
           if (pCtx.getSourceFile() == null) {

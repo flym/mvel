@@ -394,6 +394,7 @@ public class CompilerTools {
     return (bn instanceof IntOptimized && bn2.getEgressType() != Integer.class);
   }
 
+  /** 返回一个执行链最终的执行类型 */
   public static Class getReturnType(ASTIterator input, boolean strongTyping) {
     ASTNode begin = input.firstNode();
     if (begin == null) return Object.class;
