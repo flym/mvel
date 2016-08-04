@@ -7,10 +7,10 @@
 |   Unit                |   转换单元    |   已完成 |
 |   ScriptRuntimeException  | 脚本运行期异常   |   已完成 |
 |   PropertyAccessor    |   |   未完成 |
-|   PropertyAccessException |   |   未完成 |
+|   PropertyAccessException | 属性访问异常  |   已完成 |
 |   PreProcessor    | 编译期字符串预处理 |   已完成 |
-|   ParserContext   |   解析上下文   | 未完成   |
-|   ParserConfiguration |   解析配置    |   未完成 |
+|   ParserContext   |   解析上下文   | 已完成   |
+|   ParserConfiguration |   解析配置    |   已完成 |
 |   OptimizationFailure  | asm优化访问异常  | 已完成 |
 |   Operator    | 操作符   |   已完成 |
 |   MVELRuntime |   |   未完成 |
@@ -230,9 +230,9 @@
 |   Invert  |   数字取反节点  |   已完成 |
 |   InvokationContextFactory    |   内部执行上下文解析器工厂    |   未完成 |
 |   IsDef   |   isDef探测节点   |   已完成 |
-|   LineLabel   |   调度代码标记行节点   |   未完成 |
+|   LineLabel   |   调度代码标记行节点   |   已完成 |
 |   LiteralDeepPropertyNode |   多级常量节点  |   未完成 |
-|   LiteralNode |   常量标识节点  |   未完成 |
+|   LiteralNode |   常量标识节点  |   已完成 |
 |   Negation    |   boolean取反节点 |   已完成 |
 |   NestedStatement | 嵌套执行节点标记接口  |   已完成 |
 |   NewObjectNode   |   new对象节点 |   未完成 |

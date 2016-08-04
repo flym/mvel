@@ -48,9 +48,12 @@ import java.util.*;
  * </code</pre>
  */
 public class ParserContext implements Serializable {
+  /** 基于指定的文件进行编译时相应的原文件引用 */
   private String sourceFile;
 
+  /** 基于多行时相应的文件行数 */
   private int lineCount = 1;
+  /** 设置基于多行,当前位置所距行首的距离 */
   private int lineOffset;
 
   /** 父上下文,即在解析过程中,也存在递归解析的过程 */
@@ -58,6 +61,7 @@ public class ParserContext implements Serializable {
   /** 相应的解析配置 */
   private ParserConfiguration parserConfiguration;
 
+  /** 无用属性 */
   private Object evaluationContext;
 
   /**
@@ -68,7 +72,10 @@ public class ParserContext implements Serializable {
   private ArrayList<String> indexedInputs;
   /** 存放当前有顺序的临时变量信息,顺序保证当前变量不会随机分布,之后可以根据此顺序查找具体值 */
   private ArrayList<String> indexedLocals;
-  /** 变量作用域,描述每个变量是否在指定的变量域中,此变量作用域为编译期作用域 */
+  /**
+   * 变量作用域,描述每个变量是否在指定的变量域中,此变量作用域为编译期作用域
+   * 此字段的作用在于可见性,即描述指定的变量在哪一些是可见的,即在哪一层中之前有出现过
+   */
   private ArrayList<Set<String>> variableVisibility;
 
   /** 变量声明以及变量类型定义 */
@@ -76,11 +83,14 @@ public class ParserContext implements Serializable {
   /** 表示需要接收的参数入参信息以及入参类型信息(这些信息需要从外部传入或者是外部必须存在 */
   private Map<String, Class> inputs;
 
+  /** 每个变量的类型中类型参数信息,即用于处理<T>等泛型信息 */
   private transient HashMap<String, Map<String, Type>> typeParameters;
+  /** 临时存储,用于描述如泛型信息的参数类型,比如参数名的多个类型信息,如Map<K,V>中的类型信息 */
   private transient Type[] lastTypeParameters;
   /** 描述全局函数信息 */
   private HashMap<String, Function> globalFunctions;
 
+  /** 描述在编译过程中的错误信息 */
   private transient List<ErrorDetail> errorList;
 
   /** 表达式对应表达式行的一些映射(调试使用) */
@@ -91,14 +101,18 @@ public class ParserContext implements Serializable {
   /** 最新的代码行(调试使用) */
   private LineLabel lastLineLabel;
 
+  /** 最底层解析器,实际上没有被使用 */
+  @Deprecated
   private transient Parser rootParser;
-  /** 编译的编译表达式 */
+  /** 缓存的编译表达式 */
   private transient Map<String, CompiledExpression> compiledExpressionCache;
   /** 针对指定的编译表达式，缓存相应的返回类型 */
   private transient Map<String, Class> returnTypeCache;
 
   /** 当前是否是一个函数上下文,即正在一个解析函数的过程当中 */
   private boolean functionContext = false;
+  /** 无用字段 */
+  @Deprecated
   private boolean compiled = false;
   /** 是否是严格类型调用的 */
   private boolean strictTypeEnforcement = false;
@@ -109,10 +123,15 @@ public class ParserContext implements Serializable {
 
   /** 表示在过程中是否有严重的错误发生 */
   private boolean fatalError = false;
+  /** 无用字段 */
+  @Deprecated
   private boolean retainParserState = false;
   /** 是否有调试标识 */
   private boolean debugSymbols = false;
+  /** 语法块标识,用于临时进行标识,无特殊作用 */
   private boolean blockSymbols = false;
+  /** 无用字段 */
+  @Deprecated
   private boolean executableCodeReached = false;
   /**
    * 是否在解析过程中允许按下标进行变量存储和分配,即开启变量工厂的下标处理模式
@@ -131,31 +150,38 @@ public class ParserContext implements Serializable {
     this.debugSymbols = debugSymbols;
   }
 
+  @Deprecated
   public ParserContext(Parser rootParser) {
     this();
     this.rootParser = rootParser;
   }
 
+  /** 通过一个外界的解析配置信息初始化上下文 */
   public ParserContext(ParserConfiguration parserConfiguration) {
     this.parserConfiguration = parserConfiguration;
   }
 
+  /** 此方法实际无效 */
+  @Deprecated
   public ParserContext(ParserConfiguration parserConfiguration, Object evaluationContext) {
     this(parserConfiguration);
     this.evaluationContext = evaluationContext;
   }
 
+  /** 通过一个已有的解析配置+父类上下文+当前是否为函数上下文构建起新的解析配置对象 */
   public ParserContext(ParserConfiguration parserConfiguration, ParserContext parent, boolean functionContext) {
     this(parserConfiguration);
     this.parent = parent;
     this.functionContext = functionContext;
   }
 
+  /** 使用一个针对对象引入+拦截器构建的解析配置,以及相应的脚本源文构建起解析上下文 */
   public ParserContext(Map<String, Object> imports, Map<String, Interceptor> interceptors, String sourceFile) {
     this.sourceFile = sourceFile;
     this.parserConfiguration = new ParserConfiguration(imports, interceptors);
   }
 
+  /** 构建起一个子上下文,以用于特定的上下文处理,即相应原来的信息进行复制处理,主要用于处理for循环 */
   public ParserContext createSubcontext() {
     ParserContext ctx = new ParserContext(parserConfiguration);
     ctx.sourceFile = sourceFile;
@@ -191,11 +217,13 @@ public class ParserContext implements Serializable {
     return ctx;
   }
 
+  /** 构建一个克隆上下文,即对原上下文是直接引用,但在各个变量的使用时增加相应的溢出标识,主要用于判定for无限循环处理 */
   public ParserContext createColoringSubcontext() {
     if (parent == null) {
       throw new RuntimeException("create a subContext first");
     }
 
+    //在添加,获取变量时即认为会使用新的变量信息,那么即认为会存在变量溢出,那么肯定会有数据的变量,即简单地认为不会出现死循环
     ParserContext ctx = new ParserContext(parserConfiguration) {
       @Override
       public void addVariable(String name, Class type) {
@@ -260,6 +288,7 @@ public class ParserContext implements Serializable {
   }
 
   /**
+   * 判定是否包括指定名称的变量或者是输入参数
    * Tests whether or not a variable or input exists in the current parser context.
    *
    * @param name The name of the identifier.
@@ -319,6 +348,7 @@ public class ParserContext implements Serializable {
   }
 
   /**
+   * 增加记录行,主要用于记录解析到了新的行数
    * Increments the current line count by the specified amount
    *
    * @param increment The number of lines to increment
@@ -358,6 +388,7 @@ public class ParserContext implements Serializable {
   }
 
   /**
+   * 从解析配置中获取指定import名字的类信息
    * Get an import that has been declared, either in the parsed script or programatically
    *
    * @param name The name identifier for the imported class (ie. "HashMap")
@@ -368,6 +399,7 @@ public class ParserContext implements Serializable {
   }
 
   /**
+   * 从解析配置中获取指定import名字的静态引用
    * Get a {@link MethodStub} which wraps a static method import.
    *
    * @param name The name identifier
@@ -378,6 +410,7 @@ public class ParserContext implements Serializable {
   }
 
   /**
+   * 从解析配置中获取指定import名字的引用(静态方法句柄或者是指定类)
    * Returns either an instance of <tt>Class</tt> or {@link MethodStub} (whichever matches).
    *
    * @param name The name identifier.
@@ -388,6 +421,7 @@ public class ParserContext implements Serializable {
   }
 
   /**
+   * 往解析配置中添加一个新的包或者是静态方法引用
    * Adds a package import to a parse session.
    *
    * @param packageName A fully qualified package (eg. <tt>java.util.concurrent</tt>).
@@ -397,6 +431,7 @@ public class ParserContext implements Serializable {
   }
 
   /**
+   * 判定解析配置中是否存在指定名字的引用
    * Tests to see if the specified import exists.
    *
    * @param name A name identifier
@@ -418,6 +453,7 @@ public class ParserContext implements Serializable {
   }
 
   /**
+   * 往解析配置中添加一个类,使用类的简名simpleName作为引用名,后续可以直接进行类引用
    * Adds an import for the specified <tt>Class</tt>.
    *
    * @param cls The instance of the <tt>Class</tt> which represents the imported class.
@@ -426,12 +462,15 @@ public class ParserContext implements Serializable {
     addImport(cls.getSimpleName(), cls);
   }
 
+  /** 往解析配置中添加一个原型引用 */
   public void addImport(Proto proto) {
     parserConfiguration.addImport(proto.getName(), proto);
 
   }
 
   /**
+   * 使用指定的引用名往解析配置中添加一个引用类
+   * 这里的引用名不一定非得是类名,也可以是别名.比如通过x 引用 Txyz这种情况
    * Adds an import for a specified <tt>Class</tt> using an alias.  For example:
    * <pre><code>
    * parserContext.addImport("sys", System.class);
@@ -450,6 +489,7 @@ public class ParserContext implements Serializable {
   }
 
   /**
+   * 通过一个指定的引用名+相应的方法(静态方法)往解析配置中添加相应的引用
    * Adds an import for a specified <tt>Method</tt> representing a static method import using an alias. For example:
    * <pre><code>
    * parserContext.addImport("time", MVEL.getStaticMethod(System.class, "currentTimeMillis", new Class[0]));
@@ -466,6 +506,7 @@ public class ParserContext implements Serializable {
   }
 
   /**
+   * 使用指定的引用名字往解析配置中添加相应的方法句柄
    * Adds a static import for the specified {@link MethodStub} with an alias.
    *
    * @param name   The alias to use
@@ -545,6 +586,7 @@ public class ParserContext implements Serializable {
     makeVisible(name);
   }
 
+  /** 添加相应的变量信息,如果之前存在,则不再添加 */
   public void addVariable(String name, Class type) {
     initializeTables();
     if (variables.containsKey(name) || inputs.containsKey(name)) return;
@@ -553,6 +595,7 @@ public class ParserContext implements Serializable {
     makeVisible(name);
   }
 
+  /** 批量添加多个变量信息 */
   public void addVariables(Map<String, Class> variables) {
     if (variables == null) return;
     initializeTables();
@@ -570,6 +613,7 @@ public class ParserContext implements Serializable {
     inputs.put(name, type);
   }
 
+  /** 添加入参定义及类型,以及类型的泛型参数类型信息 */
   public void addInput(String name, Class type, Class[] typeParameters) {
     if (type == null) type = Object.class;
     addInput(name, type);
@@ -583,6 +627,7 @@ public class ParserContext implements Serializable {
 
     Map<String, Type> t = this.typeParameters.get(name);
 
+    //要求声明的类型长度与当前类的泛型长度应该是一样的
     if (typeParameters.length != type.getTypeParameters().length) {
       throw new RuntimeException("wrong number of type parameters for: " + type.getName());
     }
@@ -594,6 +639,7 @@ public class ParserContext implements Serializable {
     }
   }
 
+  /** 批量添加一组入参信息 */
   public void addInputs(Map<String, Class> inputs) {
     if (inputs == null) return;
     for (Map.Entry<String, Class> entry : inputs.entrySet()) {
@@ -624,6 +670,7 @@ public class ParserContext implements Serializable {
     this.errorList = errorList;
   }
 
+  /** 添加一个错误信息,如果错误信息是严重的,则置相应的标记 */
   public void addError(ErrorDetail errorDetail) {
     if (errorList == null) errorList = new ArrayList<ErrorDetail>();
     else {
@@ -640,6 +687,7 @@ public class ParserContext implements Serializable {
     errorList.add(errorDetail);
   }
 
+  /** 是否发生了严重错误 */
   public boolean isFatalError() {
     return fatalError;
   }
@@ -677,18 +725,22 @@ public class ParserContext implements Serializable {
     }
   }
 
+  @Deprecated
   public boolean isRetainParserState() {
     return retainParserState;
   }
 
+  @Deprecated
   public void setRetainParserState(boolean retainParserState) {
     this.retainParserState = retainParserState;
   }
 
+  @Deprecated
   public Parser getRootParser() {
     return rootParser;
   }
 
+  @Deprecated
   public void setRootParser(Parser rootParser) {
     this.rootParser = rootParser;
   }
@@ -754,6 +806,7 @@ public class ParserContext implements Serializable {
     }
   }
 
+  /** 在当前变量作用域中添加新的变量 */
   public void makeVisible(String var) {
     if (variableVisibility == null || variableVisibility.isEmpty()) {
       throw new RuntimeException("no context");
@@ -769,6 +822,7 @@ public class ParserContext implements Serializable {
     return variableVisibility.get(variableVisibility.size() - 1);
   }
 
+  /** 判定指定的变量曾经出现过,即之前添加过 */
   public boolean isVariableVisible(String var) {
     if (variableVisibility == null || variableVisibility.isEmpty()) {
       return false;
@@ -798,10 +852,12 @@ public class ParserContext implements Serializable {
     this.variables = variables;
   }
 
+  @Deprecated
   public boolean isCompiled() {
     return compiled;
   }
 
+  @Deprecated
   public void setCompiled(boolean compiled) {
     this.compiled = compiled;
   }
@@ -871,6 +927,7 @@ public class ParserContext implements Serializable {
     globalFunctions.put(function.getName(), function);
   }
 
+  /** 在全局函数中获取指定名字的函数定义 */
   public Function getFunction(String name) {
     return globalFunctions == null ? null : globalFunctions.get(name);
   }
@@ -883,10 +940,12 @@ public class ParserContext implements Serializable {
     return globalFunctions != null && globalFunctions.containsKey(name);
   }
 
+  /** 是否具有全局函数 */
   public boolean hasFunction() {
     return globalFunctions != null && globalFunctions.size() != 0;
   }
 
+  /** 为指定引用名字的类添加相应的泛型类型信息 */
   public void addTypeParameters(String name, Class type) {
     if (typeParameters == null) typeParameters = new HashMap<String, Map<String, Type>>();
 
@@ -899,6 +958,7 @@ public class ParserContext implements Serializable {
     typeParameters.put(name, newPkg);
   }
 
+  /** 批量添加泛型类型信息 */
   public void addTypeParameters(Map<String, Map<String, Type>> typeParameters) {
     if (typeParameters == null) return;
     if (this.typeParameters == null) typeParameters = new HashMap<String, Map<String, Type>>();
@@ -919,6 +979,7 @@ public class ParserContext implements Serializable {
     return typeParameters.get(name);
   }
 
+  /** 获取指定变量名之前在泛型类型中注册过的泛型类型信息,因为泛型类型定义为数组,因为返回相应的数组信息 */
   public Type[] getTypeParametersAsArray(String name) {
     Class c = (variables != null && variables.containsKey(name)) ? variables.get(name) : inputs.get(name);
     if (c == null) return null;
@@ -946,14 +1007,17 @@ public class ParserContext implements Serializable {
     this.blockSymbols = blockSymbols;
   }
 
+  /** 在解析过程中是否存在变量溢出(用于判定无限循环) */
   public boolean isVariablesEscape() {
     return variablesEscape;
   }
 
+  @Deprecated
   public boolean isExecutableCodeReached() {
     return executableCodeReached;
   }
 
+  @Deprecated
   public void setExecutableCodeReached(boolean executableCodeReached) {
     this.executableCodeReached = executableCodeReached;
   }
@@ -963,6 +1027,7 @@ public class ParserContext implements Serializable {
     this.optimizationMode = true;
   }
 
+  /** 当前是否正在优化阶段 */
   public boolean isOptimizerNotified() {
     return optimizationMode;
   }
@@ -972,11 +1037,13 @@ public class ParserContext implements Serializable {
     if (indexedLocals == null) indexedLocals = new ArrayList<String>();
   }
 
+  /** 获取之前的顺序参数列表(如函数参数定义) */
   public ArrayList<String> getIndexedInputs() {
     initIndexedVariables();
     return indexedInputs;
   }
 
+  /** 添加顺序入参信息 */
   public void addIndexedInput(String[] variables) {
     initIndexedVariables();
     for (String s : variables) {
@@ -993,6 +1060,8 @@ public class ParserContext implements Serializable {
     }
   }
 
+  /** 没有实际作用 */
+  @Deprecated
   public void addIndexedLocals(Collection<String> variables) {
     if (variables == null) return;
     initIndexedVariables();
@@ -1002,12 +1071,13 @@ public class ParserContext implements Serializable {
     }
   }
 
+  /** 添加一个顺序入参参数 */
   public void addIndexedInput(String variable) {
     initIndexedVariables();
     if (!indexedInputs.contains(variable)) indexedInputs.add(variable);
   }
 
-  /** 添加按顺序的参数变量 */
+  /** 指定添加按顺序的参数变量 */
   public void addIndexedInputs(Collection<String> variables) {
     if (variables == null) return;
     initIndexedVariables();
@@ -1033,6 +1103,7 @@ public class ParserContext implements Serializable {
     return -1;
   }
 
+  @Deprecated
   public Object getEvaluationContext() {
     return evaluationContext;
   }
@@ -1049,10 +1120,12 @@ public class ParserContext implements Serializable {
     this.indexAllocation = indexAllocation;
   }
 
+  /** 返回当前是否是函数上下文中 */
   public boolean isFunctionContext() {
     return functionContext;
   }
 
+  /** 获取相应的解析配置信息 */
   public ParserConfiguration getParserConfiguration() {
     return parserConfiguration;
   }
@@ -1061,6 +1134,7 @@ public class ParserContext implements Serializable {
     return parserConfiguration.getClassLoader();
   }
 
+  /** 获取最近一次的泛型类型信息 */
   public Type[] getLastTypeParameters() {
     return lastTypeParameters;
   }
@@ -1073,10 +1147,12 @@ public class ParserContext implements Serializable {
     return parserConfiguration.isAllowBootstrapBypass();
   }
 
+  /** 配置解析配置的二次编译标记 */
   public void setAllowBootstrapBypass(boolean allowBootstrapBypass) {
     parserConfiguration.setAllowBootstrapBypass(allowBootstrapBypass);
   }
 
+  /** 获取相应的顺序入参的变量名信息 */
   public String[] getIndexedVarNames() {
     if (indexedInputs == null) return new String[0];
 

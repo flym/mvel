@@ -41,10 +41,12 @@ import static org.mvel2.util.ParseTools.forNameWithInner;
 /**
  * 当前解析上下文中所引用的解析配置，解析配置在一定程度上可以在多个上下文中进行共享和处理
  * 只要保证在多个context中传递即可(即通过构建函数传递)
+ * 解析配置主要用于存储相应的引用类信息,因为这些可以认为是全局使用的
  * The reuseable parser configuration object.
  */
 public class ParserConfiguration implements Serializable {
   /** 无用属性 */
+  @Deprecated
   private static final int MAX_NEGATIVE_CACHE_SIZE;
 
   /** 使用到的引用的类名或方法名(不全是类名).也可能为方法句柄，或者是静态字段值等 */
@@ -81,11 +83,13 @@ public class ParserConfiguration implements Serializable {
   public ParserConfiguration() {
   }
 
+  /** 按照指定的引入以及拦截器创建起解析配置 */
   public ParserConfiguration(Map<String, Object> imports, Map<String, Interceptor> interceptors) {
     addAllImports(imports);
     this.interceptors = interceptors;
   }
 
+  /** 使用指定的引入+指定的包引入+拦截器创建起解析配置 */
   public ParserConfiguration(Map<String, Object> imports, HashSet<String> packageImports,
                              Map<String, Interceptor> interceptors) {
     addAllImports(imports);
@@ -114,7 +118,7 @@ public class ParserConfiguration implements Serializable {
     return imports != null ? (MethodStub) imports.get(name) : null;
   }
 
-  /** 获取之前导入的引用信息 */
+  /** 获取之前导入的引用信息(可能为静态引用,也可能为类引用) */
   public Object getStaticOrClassImport(String name) {
     return (imports != null && imports.containsKey(name) ? imports.get(name) : AbstractParser.LITERALS.get(name));
   }
@@ -174,10 +178,12 @@ public class ParserConfiguration implements Serializable {
     Object o;
 
     for (Map.Entry<String, Object> entry : imports.entrySet()) {
+      //方法引用
       if ((o = entry.getValue()) instanceof Method) {
         this.imports.put(entry.getKey(), new MethodStub((Method) o));
       }
       else {
+        //其它引用
         this.imports.put(entry.getKey(), o);
       }
     }
@@ -186,13 +192,17 @@ public class ParserConfiguration implements Serializable {
   /** 检查此引用是否有有效的,不是有效的，则记入失效名单，避免多次解析 */
   private boolean checkForDynamicImport(String className) {
     if (packageImports == null) return false;
+    //本身不是有效的类名开始
     if (!Character.isJavaIdentifierStart(className.charAt(0))) return false;
+    //如果之前就判定为无效,则快速判断
     if (nonValidImports != null && nonValidImports.contains(className)) return false;
 
+    //尝试在之前包引用的情况下,查看此类是否在之前的哪个包下面
     int found = 0;
     Class cls = null;
     for (String pkg : packageImports) {
       try {
+        //package.class ,即一个完整的类
         cls = forNameWithInner(pkg + "." + className, getClassLoader());
         found++;
       }
@@ -201,6 +211,7 @@ public class ParserConfiguration implements Serializable {
       }
     }
 
+    //避免多包下名字冲突
     if (found > 1) throw new RuntimeException("ambiguous class name: " + className);
     if (found == 1) {
       addImport(className, cls);
@@ -254,6 +265,7 @@ public class ParserConfiguration implements Serializable {
     addImport(name, new MethodStub(method));
   }
 
+  /** 使用别名+方法句柄添加相应的引用 */
   public void addImport(String name, MethodStub method) {
     initImports();
     this.imports.put(name, method);
@@ -318,6 +330,7 @@ public class ParserConfiguration implements Serializable {
     if (imports != null) this.imports.putAll(imports);
   }
 
+  /** 未使用到,后面会被删除掉 */
   @Deprecated
   public void setImports(HashMap<String, Object> imports) {
     // TODO: this method is here for backward compatibility. Could it be removed/deprecated?
@@ -355,6 +368,7 @@ public class ParserConfiguration implements Serializable {
     return allowBootstrapBypass;
   }
 
+  /** 设置当前是否允许二次优化标记 */
   public void setAllowBootstrapBypass(boolean allowBootstrapBypass) {
     this.allowBootstrapBypass = allowBootstrapBypass;
   }
