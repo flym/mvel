@@ -30,17 +30,19 @@ public class DynamicFieldAccessor implements AccessorNode {
   private AccessorNode nextNode;
   /** 字段信息 */
   private Field field;
-  /** 参数目标类型 */
+  /** 字段信息的声明类型,或者是期望的类型 */
   private Class targetType;
 
   public DynamicFieldAccessor() {
   }
 
+  /** 使用字段进行构建相应的访问器 */
   public DynamicFieldAccessor(Field field) {
     setField(field);
   }
 
   public Object getValue(Object ctx, Object elCtx, VariableResolverFactory vars) {
+    //因为是获取值,因此不需要进行类型转换
     try {
       if (nextNode != null) {
         return nextNode.getValue(field.get(ctx), elCtx, vars);
@@ -57,10 +59,12 @@ public class DynamicFieldAccessor implements AccessorNode {
 
   public Object setValue(Object ctx, Object elCtx, VariableResolverFactory variableFactory, Object value) {
     try {
+      //有下个节点,因此相应的转换工具由next来进行,这里不作任何处理
       if (nextNode != null) {
         return nextNode.setValue(field.get(ctx), elCtx, variableFactory, value);
       }
       else {
+        //设置值,需要根据相应的字段类型进行类型转换,以转换成相兼容的类型
         field.set(ctx, DataConversion.convert(value, targetType));
         return value;
       }
@@ -74,6 +78,7 @@ public class DynamicFieldAccessor implements AccessorNode {
     return field;
   }
 
+  /** 设置相应的字段信息,同时设置相应的目标类型 */
   public void setField(Field field) {
     this.field = field;
     this.targetType = field.getType();

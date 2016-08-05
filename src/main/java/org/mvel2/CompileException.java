@@ -37,22 +37,32 @@ public class CompileException extends RuntimeException {
 
   /** 当前编译时的错误下标 */
   private int cursor = 0;
+  /** 出错信息时具体的错误偏移量,用于错误显示使用 */
   private int msgOffset = 0;
 
+  /** 出错代码行,第几行 */
   private int lineNumber = 1;
+  /** 出错的列,该行中第几列 */
   private int column = 0;
 
+  /** 无用字段 */
+  @Deprecated
   private int lastLineStart = 0;
 
+  /** 有哪些错误信息,错误详情列表 */
   private List<ErrorDetail> errors;
 
+  /** 出错时上下文,没有实际使用 */
+  @Deprecated
   private Object evaluationContext;
 
+  /** 根据相应的信息,以及错误列表,编译上下文构建出相应的编译异常 */
   public CompileException(String message, List<ErrorDetail> errors, char[] expr, int cursor, ParserContext ctx) {
     super(message);
     this.expr = expr;
     this.cursor = cursor;
 
+    //从第1个错误信息时查找相应的出错行,列等
     if (!errors.isEmpty()) {
       ErrorDetail detail = errors.iterator().next();
       this.cursor = detail.getCursor();
@@ -63,6 +73,7 @@ public class CompileException extends RuntimeException {
     this.errors = errors;
   }
 
+  @Deprecated
   public void setEvaluationContext(Object evaluationContext) {
     this.evaluationContext = evaluationContext;
   }
@@ -88,6 +99,7 @@ public class CompileException extends RuntimeException {
     return generateErrorMessage();
   }
 
+  /** 计算出出错的行和列 */
   private void calcRowAndColumn() {
     if (lineNumber > 1 || column > 1) return;
 
@@ -114,17 +126,21 @@ public class CompileException extends RuntimeException {
     this.column = col;
   }
 
+  /** 找出最接近错误的位置字符串 */
   private CharSequence showCodeNearError(char[] expr, int cursor) {
     if (expr == null) return "Unknown";
 
+    //从出错的前20个到后30个为一个处理段,来进行处理
     int start = cursor - 20;
     int end = (cursor + 30);
 
+    //防止超出结束符的情况,如果结束符超长,则开始往前推30,以保证一个可以分析的代码段
     if (end > expr.length) {
       end = expr.length;
       start -= 30;
     }
 
+    //处理开始段超长的问题
     if (start < 0) {
       start = 0;
     }

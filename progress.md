@@ -19,12 +19,12 @@
 |   MacroProcessor  | 宏处理器  |   已完成 |
 |   Macro   |   宏定义 |   已完成 |
 |   ImmutableElementException   |   不可变集合修改异常   |   已完成 |
-|   ErrorDetail |   |   未完成 |
+|   ErrorDetail | 具体的错误信息  |   已完成 |
 |   DataTypes   |   各种数据类型  |   已完成 |
 |   DataConversion  |   数据转换工具类 |   已完成 |
 |   ConversionHandler   |   转换处理器接口 |   已完成 |
 |   ConversionException | 数据转换异常    |   已完成 |
-|   CompileException    |   |   未完成 |
+|   CompileException    | 描述编译异常信息  |   已完成 |
 |   ArrayTools  | 数组工具类  |   已完成 |
 |   ASTBinaryTree   |  操作符优先级构建树 |   已完成 |
 |   ASTIterator | 节点链定义接口  |   已完成 |
@@ -33,7 +33,7 @@
 |   CollectionParser    | 集合解析器  |  未完成 |
 |   CompatibilityStrategy   | 类型兼容性策略判定  |   已完成 |
 |   CompilerTools   | 编译工具类  |  未完成 |
-|   ErrorUtil   |   |   未完成 |
+|   ErrorUtil   | 错误信息工具  |   已完成 |
 |   ExecutionStack    |  一个简单的执行栈       |    已完成 |
 |   FastList    | 快速(简化)的ArrayList  |   已完成 |
 |   FunctionParser  |   函数解析器 | 未完成 |
@@ -69,21 +69,21 @@
 |   DynamicSetAccessor  |   set动态访问器    |   未完成 |
 |   ASMAccessorOptimizer    |   |   未完成 |
 |   ProducesBytecode    | 属性访问自定义字节码处理器标记接口  |   已完成 |
-|   ArrayCreator    |   |   未完成 |
-|   ExprValueAccessor   |   |   未完成 |
-|   ListCreator |   |   未完成 |
-|   MapCreator  |   |   未完成 |
+|   ArrayCreator    | 数组创建访问器  |   已完成 |
+|   ExprValueAccessor   | 表达式访问器  |   已完成 |
+|   ListCreator | 集合创建访问器  |   已完成 |
+|   MapCreator  | map映射创建访问器  |   已完成 |
 |   MDArrayCreator  |   (未使用)   |   不作处理    |
 |   ArrayAccessor   |   数组访问器   |   已完成 |
 |   ArrayAccessorNest   |   数组访问器(下标需要计算)   |   已完成 |
 |   ArrayLength |   数组长度访问器 |   已完成 |
 |   BaseAccessor    | 级联访问器抽象实现  |   已完成 |
-|   ConstructorAccessor |   构建函数访问器 |   未完成 |
-|   DynamicFieldAccessor    |   字段访问器   |   未完成 |
-|   DynamicFunctionAccessor |   函数访问器   |   未完成 |
+|   ConstructorAccessor |   构建函数访问器 |   已完成 |
+|   DynamicFieldAccessor    |   不定类型字段访问器   |   已完成 |
+|   DynamicFunctionAccessor |   不定名函数访问器   |   已完成 |
 |   DynamicSetterAccessor   |   (未使用)   |   不作处理 |
-|   FieldAccessor   |   字段访问器   |   未完成 |
-|   FieldAccessorNH |   字段访问器(带null处理)  |   未完成 |
+|   FieldAccessor   |   字段访问器   |   已完成 |
+|   FieldAccessorNH |   字段访问器(带null处理)  |   已完成 |
 |   FunctionAccessor    |   函数访问器   |   未完成    |
 |   GetterAccessor  |   getter方法访问器 |   未完成 |
 |   GetterAccessorNH    |   getter方法访问器(带null处理)    |   未完成 |

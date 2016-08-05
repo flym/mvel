@@ -26,12 +26,17 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
+ * 集合创建器,使用已知的值访问器信息直接创建出相应的列表
+ * 用于直接以内联方式创建集合时处理,如 a = [a,b,c]这种创建时,在这种情况下,值信息是已知的
  * @author Christopher Brock
  */
 public class ListCreator implements Accessor {
+  /** 预先处理的值访问器信息 */
   private Accessor[] values;
 
   public Object getValue(Object ctx, Object elCtx, VariableResolverFactory variableFactory) {
+    //实现时,即依次访问相应的值访问器,构建出数组,然后转换为list,即可
+    //这里采用ArrayList来声明具体的实现类型
     Object[] template = new Object[getValues().length];
     for (int i = 0; i < getValues().length; i++) {
       template[i] = getValues()[i].getValue(ctx, elCtx, variableFactory);
@@ -39,6 +44,7 @@ public class ListCreator implements Accessor {
     return new ArrayList<Object>(Arrays.asList(template));
   }
 
+  /** 通过已知的值访问器来创建出相应的访问器 */
   public ListCreator(Accessor[] values) {
     this.values = values;
   }
@@ -47,10 +53,12 @@ public class ListCreator implements Accessor {
     return null;
   }
 
+  /** 声明类型为集合,即List */
   public Class getKnownEgressType() {
     return List.class;
   }
 
+  /** 返回相应的值列表 */
   public Accessor[] getValues() {
     return values;
   }

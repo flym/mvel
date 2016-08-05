@@ -18,15 +18,21 @@
 
 package org.mvel2;
 
+/** 描述一个具体的错误信息 */
 public class ErrorDetail {
 
+  /** 整个表达式 */
   private char[] expr;
+  /** 出错表达式的起始偏移量 */
   private int cursor;
   /** 此错误是否是严重的 */
   private boolean critical;
+  /** 错误描述信息 */
   private String message;
 
+  /** 出错的代码行,第几行 */
   private int lineNumber;
+  /** 出错的列,在这一行的第几列 */
   private int column;
 
 
@@ -59,12 +65,14 @@ public class ErrorDetail {
     return cursor;
   }
 
+  /** 计算出相应的出错行,和出错列 */
   public void calcRowAndColumn() {
     int row = 1;
     int col = 1;
 
     if ((lineNumber != 0 && column != 0) || expr == null || expr.length == 0) return;
 
+    //即从0开始,直到到达出错的位置,然后碰到换行符就+1,然后换行之后,相应的列清0,重新计算
     for (int i = 0; i < cursor; i++) {
       switch (expr[i]) {
         case '\r':
