@@ -53,6 +53,7 @@ public strictfp class MathProcessor {
         val2 == null ? DataTypes.NULL : __resolveType(val2.getClass()), val2);
   }
 
+  /** 2个对象进行计算,并获取相应的值,同时对参数1进行相应的类型推断 */
   public static Object doOperations(Object val1, int operation, int type2, Object val2) {
     return doOperations(val1 == null ? DataTypes.OBJECT : __resolveType(val1.getClass()), val1, operation, type2, val2);
   }
@@ -80,7 +81,7 @@ public strictfp class MathProcessor {
           case BIG_DECIMAL:
             return doBigDecimalArithmetic((BigDecimal) val1, operation, (BigDecimal) val2, false, -1);
           default:
-            //类型2是数字
+            //类型2是数字,则进行相应的数字运算
             if (type2 > 99) {
               return doBigDecimalArithmetic((BigDecimal) val1, operation, getInternalNumberFromType(val2, type2), false, -1);
             }
@@ -126,28 +127,37 @@ public strictfp class MathProcessor {
 
   }
 
+  /** 将相应的数字转换为相应的类型 */
   private static Object toType(Number val, int returnType) {
     switch (returnType) {
+      //转double
       case DataTypes.W_DOUBLE:
       case DataTypes.DOUBLE:
         return val.doubleValue();
+      //转float
       case DataTypes.W_FLOAT:
       case DataTypes.FLOAT:
         return val.floatValue();
+      //转int
       case DataTypes.INTEGER:
       case DataTypes.W_INTEGER:
         return val.intValue();
+      //转long
       case DataTypes.W_LONG:
       case DataTypes.LONG:
         return val.longValue();
+      //转short
       case DataTypes.W_SHORT:
       case DataTypes.SHORT:
         return val.shortValue();
+      //转bigDecimal
       case DataTypes.BIG_DECIMAL:
         return new BigDecimal(val.doubleValue());
+      //转bigInteger
       case DataTypes.BIG_INTEGER:
         return BigInteger.valueOf(val.longValue());
 
+      //不明所以,这里声明转换为字符串,但实际转换为float?
       case DataTypes.STRING:
         return val.doubleValue();
     }
@@ -162,13 +172,16 @@ public strictfp class MathProcessor {
    */
   private static Object doBigDecimalArithmetic(final BigDecimal val1, final int operation, final BigDecimal val2, boolean iNumber, int returnTarget) {
     switch (operation) {
+      //加法
       case ADD:
+        //最终返回数字,则尝试
         if (iNumber) {
           return narrowType(val1.add(val2, MATH_CONTEXT), returnTarget);
         }
         else {
           return val1.add(val2, MATH_CONTEXT);
         }
+        //减法
       case DIV:
         if (iNumber) {
           return narrowType(val1.divide(val2, MATH_CONTEXT), returnTarget);
@@ -177,6 +190,7 @@ public strictfp class MathProcessor {
           return val1.divide(val2, MATH_CONTEXT);
         }
 
+        //除法
       case SUB:
         if (iNumber) {
           return narrowType(val1.subtract(val2, MATH_CONTEXT), returnTarget);
@@ -184,6 +198,7 @@ public strictfp class MathProcessor {
         else {
           return val1.subtract(val2, MATH_CONTEXT);
         }
+        //乘法
       case MULT:
         if (iNumber) {
           return narrowType(val1.multiply(val2, MATH_CONTEXT), returnTarget);
@@ -192,6 +207,7 @@ public strictfp class MathProcessor {
           return val1.multiply(val2, MATH_CONTEXT);
         }
 
+        //乘方
       case POWER:
         if (iNumber) {
           return narrowType(val1.pow(val2.intValue(), MATH_CONTEXT), returnTarget);
@@ -200,6 +216,7 @@ public strictfp class MathProcessor {
           return val1.pow(val2.intValue(), MATH_CONTEXT);
         }
 
+        //取模
       case MOD:
         if (iNumber) {
           return narrowType(val1.remainder(val2), returnTarget);
@@ -208,26 +225,34 @@ public strictfp class MathProcessor {
           return val1.remainder(val2);
         }
 
+        //大于
       case GTHAN:
         return val1.compareTo(val2) == 1 ? Boolean.TRUE : Boolean.FALSE;
+      //大于等于
       case GETHAN:
         return val1.compareTo(val2) >= 0 ? Boolean.TRUE : Boolean.FALSE;
+      //小于
       case LTHAN:
         return val1.compareTo(val2) == -1 ? Boolean.TRUE : Boolean.FALSE;
+      //小于等于
       case LETHAN:
         return val1.compareTo(val2) <= 0 ? Boolean.TRUE : Boolean.FALSE;
+      //等于
       case EQUAL:
         return val1.compareTo(val2) == 0 ? Boolean.TRUE : Boolean.FALSE;
+      //不等于
       case NEQUAL:
         return val1.compareTo(val2) != 0 ? Boolean.TRUE : Boolean.FALSE;
     }
+
+    //其它情况未考虑的,暂返回null值
     return null;
   }
 
   /** 进行普通的运算 */
   private static Object _doOperations(int type1, Object val1, int operation, int type2, Object val2) {
     if (operation < 20) {//操作符小于20,表示是数学操作
-      //第一种情况，表示是同类型操作，包括==和 != 以及整数操作
+      //第一种情况，表示是同类型操作，包括==和 != 以及整数操作,但并不一定都是数字
       if (((type1 > 49 || operation == EQUAL || operation == NEQUAL) && type1 == type2) ||
           (isIntegerType(type1) && isIntegerType(type2) && operation >= BW_AND && operation <= BW_NOT)) {
         return doOperationsSameType(type1, val1, operation, val2);
@@ -248,6 +273,7 @@ public strictfp class MathProcessor {
       // Fix for: MVEL-56
       //字符串与字符操作,就进行联接处理
       else if ((type1 == 1 || type2 == 1) && (type1 == 8 || type1 == 112 || type2 == 8 || type2 == 112)) {
+        //参数1为字符串,则把第2个转换为字符串
         if (type1 == 1) {
           return doOperationNonNumeric(type1, val1, operation, valueOf(val2));
         }
@@ -259,7 +285,10 @@ public strictfp class MathProcessor {
     return doOperationNonNumeric(type1, val1, operation, val2);
   }
 
+  /** 判断两个对象是否是直接的数字运算 */
   private static boolean isNumericOperation(int type1, Object val1, int operation, int type2, Object val2) {
+    //要么两个的类型都是数字
+    //或者是作任意一个为数字,并且另外的可以转换为数字并且相应的操作不能为+,因为可能是字符串+数字,这时候为字符串拼接
     return (type1 > 99 && type2 > 99)
         || (operation != ADD && (type1 > 99 || type2 > 99 || operation < LTHAN || operation > GETHAN) && isNumber(val1) && isNumber(val2));
   }
@@ -279,6 +308,7 @@ public strictfp class MathProcessor {
           list.add(val2);
           return list;
         }
+        //因为之前已经作了数字运算,因此这里的+就只剩下字符串拼接了
         else {
           return valueOf(val1) + valueOf(val2);
         }
@@ -344,6 +374,7 @@ public strictfp class MathProcessor {
         }
 
 
+        //<= 判定
       case LETHAN:
         if (val1 instanceof Comparable) {
           //noinspection unchecked
@@ -374,7 +405,7 @@ public strictfp class MathProcessor {
         + " [vals (" + valueOf(val1) + ", " + valueOf(val2) + ") operation=" + DebugTools.getOperatorName(operation) + " (opcode:" + operation + ") ]");
   }
 
-  /** 安全地eq判定,即处理null值 */
+  /** 安全地eq判定,即处理null值,避免null.equals 的操作 */
   private static Boolean safeEquals(final Object val1, final Object val2) {
     if (val1 != null) {
       return val1.equals(val2) ? Boolean.TRUE : Boolean.FALSE;
@@ -401,6 +432,7 @@ public strictfp class MathProcessor {
             list.addAll((Collection) val2);
             return list;
 
+          //同类型判断,因此不需要进行类型推断
           case EQUAL:
             return val1.equals(val2);
 
@@ -709,7 +741,11 @@ public strictfp class MathProcessor {
     return type;
   }
 
-  /** 获取相应的数字形式 */
+  /**
+   * 获取相应的数字形式,用于数学运算,转换为double来处理
+   *
+   * @param type 相应参数的实际类型
+   */
   private static Double getNumber(Object in, int type) {
     if (in == null || in == BlankLiteral.INSTANCE)
       return 0d;

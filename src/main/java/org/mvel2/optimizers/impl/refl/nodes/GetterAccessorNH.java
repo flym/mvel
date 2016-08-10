@@ -53,6 +53,7 @@ public class GetterAccessorNH implements AccessorNode {
        * HACK: Try to access this another way.
        */
 
+      //退化到属性方法的方式
       return nullHandle(method.getName(), getProperty(method.getName() + "()", ctx), ctx, elCtx, vars);
     }
     catch (Exception e) {
@@ -62,11 +63,13 @@ public class GetterAccessorNH implements AccessorNode {
     }
   }
 
+  /** 使用getter方法和相应的null值处理器进行访问器构建 */
   public GetterAccessorNH(Method method, PropertyHandler nullHandler) {
     this.method = method;
     this.nullHandler = nullHandler;
   }
 
+  /** 返回相应的getter方法 */
   public Method getMethod() {
     return method;
   }
@@ -84,7 +87,10 @@ public class GetterAccessorNH implements AccessorNode {
   }
 
   public Object setValue(Object ctx, Object elCtx, VariableResolverFactory vars, Object value) {
+    //这里并未判断是否有子级节点,实际上应该进行判断
+
     try {
+      //获取相应的值,再转由子节点处理
       Object v = method.invoke(ctx, EMPTY);
       if (v == null) v = nullHandler.getProperty(method.getName(), ctx, vars);
       return nextNode.setValue(v, elCtx, vars, value);
@@ -95,6 +101,7 @@ public class GetterAccessorNH implements AccessorNode {
        * HACK: Try to access this another way.
        */
 
+      //参数处理失败,退化到属性访问的方式
       Object v = getProperty(method.getName() + "()", ctx);
       if (v == null) v = nullHandler.getProperty(method.getName(), ctx, vars);
       return nextNode.setValue(v, elCtx, vars, value);
@@ -111,6 +118,7 @@ public class GetterAccessorNH implements AccessorNode {
     return method.getReturnType();
   }
 
+  /** 执行重写过后的方法 */
   private Object executeOverrideTarget(Method o, Object ctx, Object elCtx, VariableResolverFactory vars) {
     try {
       return nullHandle(o.getName(), o.invoke(ctx, EMPTY), ctx, elCtx, vars);
@@ -120,7 +128,9 @@ public class GetterAccessorNH implements AccessorNode {
     }
   }
 
+  /** 根据当前方法的执行值,先进行null值处理,再根据子级节点进行相应的逻辑调用 */
   private Object nullHandle(String name, Object v, Object ctx, Object elCtx, VariableResolverFactory vars) {
+    //值非空,转由next或直接返回
     if (v != null) {
       if (nextNode != null) {
         return nextNode.getValue(v, elCtx, vars);
@@ -129,6 +139,7 @@ public class GetterAccessorNH implements AccessorNode {
         return v;
       }
     }
+    //值为空,则交由null值处理或继续转向next
     else {
       if (nextNode != null) {
         return nextNode.getValue(nullHandler.getProperty(name, ctx, vars), elCtx, vars);

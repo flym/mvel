@@ -40,6 +40,7 @@ public class CachingMapVariableResolverFactory extends BaseVariableResolverFacto
    */
   protected Map<String, Object> variables;
 
+  /** 通过外部map来构建相应的处理器 */
   public CachingMapVariableResolverFactory(Map variables) {
     this.variables = variables;
   }
@@ -82,6 +83,7 @@ public class CachingMapVariableResolverFactory extends BaseVariableResolverFacto
       return vr;
     }
     else if (variables.containsKey(name)) {
+      //这里通过一个可更新标记的解析器来进行记录,后续即可根据标识判断是否有修改
       variableResolvers.put(name, vr = new SimpleSTValueResolver(variables.get(name), null));
       return vr;
     }

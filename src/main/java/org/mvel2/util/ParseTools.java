@@ -424,6 +424,7 @@ public class ParseTools {
 
   /** 从指定类上查找指定的宽化方法定义(即从指定类的接口或者父类，不处理当前类) */
   public static Method getWidenedTarget(Class cls, Method method) {
+    //静态方法不存在继承问题,因此只能直接返回
     if (Modifier.isStatic(method.getModifiers())) {
       return method;
     }
@@ -433,6 +434,7 @@ public class ParseTools {
     String name = method.getName();
     Class rt = m.getReturnType();
 
+    //先尝试从接口上进行查找
     Class currentCls = cls;
     while (currentCls != null) {
       for (Class iface : currentCls.getInterfaces()) {
@@ -443,8 +445,10 @@ public class ParseTools {
       currentCls = currentCls.getSuperclass();
     }
 
+    //必须保证与当前的参数方法不一样
     if (best != method) return best;
 
+    //再尝试从父类中进行查找
     for (currentCls = cls; currentCls != null; currentCls = currentCls.getSuperclass()) {
       if ((m = getExactMatch(name, args, rt, currentCls)) != null) {
         best = m;
@@ -1137,6 +1141,7 @@ public class ParseTools {
     return false;
   }
 
+  /** 对相应的大数进行窄化处理,并返回窄化后的值, 包括 double,long和int */
   public static Object narrowType(final BigDecimal result, int returnTarget) {
     if (returnTarget == DataTypes.W_DOUBLE || result.scale() > 0) {
       return result.doubleValue();
@@ -1831,6 +1836,7 @@ public class ParseTools {
     return -1;
   }
 
+  /** 判定一个对象是否是数字或者可以转换为数字,这里的转换为实际转换,而不是自定义转换 */
   public static boolean isNumber(Object val) {
     if (val == null) return false;
     if (val instanceof String) return isNumber((String) val);
@@ -1840,6 +1846,7 @@ public class ParseTools {
         || val instanceof Short || val instanceof Character;
   }
 
+  /** 判定一个字符串是否可以转换为数字 */
   public static boolean isNumber(final String val) {
     int len = val.length();
     char c;

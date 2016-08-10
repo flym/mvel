@@ -38,6 +38,7 @@ public class GetterAccessor implements AccessorNode {
 
   public Object getValue(Object ctx, Object elCtx, VariableResolverFactory vars) {
     try {
+      //根据是否有下级节点决定相应的逻辑
       if (nextNode != null) {
         return nextNode.getValue(method.invoke(ctx, EMPTY), elCtx, vars);
       }
@@ -81,10 +82,12 @@ public class GetterAccessor implements AccessorNode {
     }
   }
 
+  /** 通过相应的getter方法进行访问器构建 */
   public GetterAccessor(Method method) {
     this.method = method;
   }
 
+  /** 获取相应的getter方法 */
   public Method getMethod() {
     return method;
   }
@@ -101,12 +104,14 @@ public class GetterAccessor implements AccessorNode {
     return method.getDeclaringClass().getName() + "." + method.getName();
   }
 
+  /** 不直接进行设置值,但是如果有下一级节点,则将相应的值传递给下一级节点 */
   public Object setValue(Object ctx, Object elCtx, VariableResolverFactory vars, Object value) {
     try {
       if (nextNode != null) {
         return nextNode.setValue(method.invoke(ctx, EMPTY), elCtx, vars, value);
       }
       else {
+        //不需要单独设置值
         throw new RuntimeException("bad payload");
       }
     }
@@ -115,6 +120,7 @@ public class GetterAccessor implements AccessorNode {
        * HACK: Try to access this another way.
        */
 
+      //如果调用失败,仍然退化到属性访问的方式
       if (nextNode != null) {
         return nextNode.setValue(getProperty(getPropertyFromAccessor(method.getName()), ctx), elCtx, vars, value);
       }
@@ -134,6 +140,7 @@ public class GetterAccessor implements AccessorNode {
     return method.getReturnType();
   }
 
+  /** 重新调用重写的其它方法 */
   private Object executeOverrideTarget(Method o, Object ctx, Object elCtx, VariableResolverFactory vars) {
     try {
       if (nextNode != null) {

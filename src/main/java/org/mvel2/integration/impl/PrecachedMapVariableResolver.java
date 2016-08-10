@@ -20,11 +20,13 @@ public class PrecachedMapVariableResolver implements VariableResolver {
   /** 之前存放在map的entry对象 */
   private Map.Entry entry;
 
+  /** 通过一个相应的entry以及相应的变量名(key值)进行构建 */
   public PrecachedMapVariableResolver(Map.Entry entry, String name) {
     this.entry = entry;
     this.name = name;
   }
 
+  /** 通过一个相应的entry以及相应的变量名(key值),相应的值类型进行构建 */
   public PrecachedMapVariableResolver(Map.Entry entry, String name, Class knownType) {
     this.name = name;
     this.knownType = knownType;
@@ -50,6 +52,7 @@ public class PrecachedMapVariableResolver implements VariableResolver {
 
   /** 根据声明的类型转换并设置相应的值 */
   public void setValue(Object value) {
+    //如果有类型,则执行进行类型转换
     if (knownType != null && value != null && value.getClass() != knownType) {
       Class t = value.getClass();
       if (!canConvert(knownType, t)) {

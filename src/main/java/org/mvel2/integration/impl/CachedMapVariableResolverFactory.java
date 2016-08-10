@@ -34,6 +34,7 @@ public class CachedMapVariableResolverFactory extends BaseVariableResolverFactor
 
     //已有的存储转换为预填充变量解析器
     for (Map.Entry<String, Object> entry : variables.entrySet()) {
+      //这里使用entry解析器,来达到实时更新的目的,即在这里获取相应的解析器,设置值之后,实际相应的值即直接更新相对应的map信息
       variableResolvers.put(entry.getKey(), new PrecachedMapVariableResolver(entry, entry.getKey()));
     }
 
@@ -56,6 +57,7 @@ public class CachedMapVariableResolverFactory extends BaseVariableResolverFactor
   public VariableResolver createVariable(String name, Object value) {
     VariableResolver vr;
 
+    //通过try catch来进行处理,即先强制获取,并设置值.异常了再来进行添加
     try {
       (vr = getVariableResolver(name)).setValue(value);
       return vr;
@@ -90,14 +92,17 @@ public class CachedMapVariableResolverFactory extends BaseVariableResolverFactor
 
   public VariableResolver getVariableResolver(String name) {
 
+    //先尝试从当前已持有的解析器中获取
     VariableResolver vr = variableResolvers.get(name);
     if (vr != null) {
       return vr;
     }
+    //这里可能是外部的map又发生了变化,并且已经持有此变量,则尝试将新的值重新录入到解析器当中来处理
     else if (variables.containsKey(name)) {
       variableResolvers.put(name, vr = new MapVariableResolver(variables, name));
       return vr;
     }
+    //委托给next处理
     else if (nextFactory != null) {
       return nextFactory.getVariableResolver(name);
     }
@@ -107,6 +112,7 @@ public class CachedMapVariableResolverFactory extends BaseVariableResolverFactor
 
 
   public boolean isResolveable(String name) {
+    //由3个部分构成,当前解析器,外部map以及next解析器工厂
     return (variableResolvers != null && variableResolvers.containsKey(name))
         || (variables != null && variables.containsKey(name))
         || (nextFactory != null && nextFactory.isResolveable(name));

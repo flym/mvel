@@ -25,6 +25,7 @@ import java.math.MathContext;
 /**
  * 使用bigDecimal来作为内部统一的数字表示形式
  * 即提供一个内部通用的数字表现形式
+ * 实际没什么用... 使用此对象的地方可以直接bigDecimal来替换
  * */
 public class InternalNumber extends BigDecimal {
   public InternalNumber(char[] chars, int i, int i1) {

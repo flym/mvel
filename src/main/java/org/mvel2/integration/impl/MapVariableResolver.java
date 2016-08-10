@@ -40,11 +40,13 @@ public class MapVariableResolver implements VariableResolver {
   /** 存储变量信息的map */
   private Map<String, Object> variableMap;
 
+  /** 通过相应的map+key名来进行构建 */
   public MapVariableResolver(Map<String, Object> variableMap, String name) {
     this.variableMap = variableMap;
     this.name = name;
   }
 
+  /** 通过相应的map+key名+值类型来进行构建 */
   public MapVariableResolver(Map<String, Object> variableMap, String name, Class knownType) {
     this.name = name;
     this.knownType = knownType;
@@ -74,6 +76,7 @@ public class MapVariableResolver implements VariableResolver {
 
   /** 设置并转换值 */
   public void setValue(Object value) {
+    //如果有声明类型,则尝试进行类型转换
     if (knownType != null && value != null && value.getClass() != knownType) {
       if (!canConvert(knownType, value.getClass())) {
         throw new RuntimeException("cannot assign " + value.getClass().getName() + " to type: "

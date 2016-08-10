@@ -40,8 +40,10 @@ public class ClassImportResolverFactory extends BaseVariableResolverFactory {
   /** 专门用于类名的引用 */
   private Map<String, Object> dynImports;
 
+  /** 使用相应的解析配置信息和委托工厂进行相应的构建 */
   public ClassImportResolverFactory(ParserConfiguration pCfg, VariableResolverFactory nextFactory, boolean compiled) {
     if (pCfg != null) {
+      //仅在非编译期才将相应的引用拉过来,因为其数据还可能在变
       if (!compiled) {
         packageImports = pCfg.getPackageImports();
       }
@@ -75,7 +77,7 @@ public class ClassImportResolverFactory extends BaseVariableResolverFactory {
     return nextFactory.createVariable(name, value);
   }
 
-  /** 直接使用类名引用一个类 */
+  /** 直接使用类名引用一个类,即动态期引用,在执行过程中才进行引用 */
   public Class addClass(Class clazz) {
     if (dynImports == null) dynImports = new HashMap<String, Object>();
     dynImports.put(clazz.getSimpleName(), clazz);
@@ -84,6 +86,7 @@ public class ClassImportResolverFactory extends BaseVariableResolverFactory {
 
   public boolean isTarget(String name) {
     if (name == null) return false;
+    //当前引用由静态编译期引用和动态引用来进行支持
     return (imports != null && imports.containsKey(name)) || (dynImports != null && dynImports.containsKey(name));
   }
 
@@ -94,6 +97,7 @@ public class ClassImportResolverFactory extends BaseVariableResolverFactory {
         || isNextResolveable(name)) {
       return true;
     }
+    //尝试从相应的包引用中找到相应的类,如果找到成功,则加入动态引用当中
     else if (packageImports != null) {
       for (String s : packageImports) {
         try {
@@ -113,6 +117,7 @@ public class ClassImportResolverFactory extends BaseVariableResolverFactory {
 
   @Override
   public VariableResolver getVariableResolver(String name) {
+    //由3部分构建,静态引用,动态引用,以及委托工厂
     if (isResolveable(name)) {
       if (imports != null && imports.containsKey(name)) {
         return new SimpleValueResolver(imports.get(name));

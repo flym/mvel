@@ -39,7 +39,7 @@ public abstract class BaseVariableResolverFactory implements VariableResolverFac
   /** 委托的下一个解析器工厂 */
   protected VariableResolverFactory nextFactory;
 
-  /** 用于描述在基于下标的存储中，当前工厂的处理偏移量，即相应的存储数组并不是完成用于存储当前工厂的 */
+  /** 用于描述在基于下标的存储中，当前工厂的处理偏移量，即相应的存储数组并不是完全用于存储当前变量作用域的 */
   protected int indexOffset = 0;
   /** 用于存储当前能够解析的基于下标的变量名集合 */
   protected String[] indexedVariableNames;
@@ -59,9 +59,11 @@ public abstract class BaseVariableResolverFactory implements VariableResolverFac
 
   public VariableResolver getVariableResolver(String name) {
     if (isResolveable(name)) {
+      //如果当前能处理,则从当前作用域中获取
       if (variableResolvers.containsKey(name)) {
         return variableResolvers.get(name);
       }
+      //从委托(父级)获取
       else if (nextFactory != null) {
         return nextFactory.getVariableResolver(name);
       }
@@ -113,6 +115,7 @@ public abstract class BaseVariableResolverFactory implements VariableResolverFac
   }
 
   public VariableResolver createIndexedVariable(int index, String name, Object value) {
+    //因为当前默认不支持下标存储,则委托给next来处理
     if (nextFactory != null) {
       return nextFactory.createIndexedVariable(index - indexOffset, name, value);
     }
@@ -122,6 +125,7 @@ public abstract class BaseVariableResolverFactory implements VariableResolverFac
   }
 
   public VariableResolver getIndexedVariableResolver(int index) {
+    //当前默认不支持下标,委托给子级处理
     if (nextFactory != null) {
       return nextFactory.getIndexedVariableResolver(index - indexOffset);
     }
@@ -131,6 +135,7 @@ public abstract class BaseVariableResolverFactory implements VariableResolverFac
   }
 
   public VariableResolver createIndexedVariable(int index, String name, Object value, Class<?> type) {
+    //当前默认不支持下标,委托给子级处理
     if (nextFactory != null) {
       return nextFactory.createIndexedVariable(index - indexOffset, name, value, type);
     }
@@ -139,6 +144,7 @@ public abstract class BaseVariableResolverFactory implements VariableResolverFac
     }
   }
 
+  /** 返回当前作用域的变量解析器 */
   public Map<String, VariableResolver> getVariableResolvers() {
     return variableResolvers;
   }
@@ -187,6 +193,7 @@ public abstract class BaseVariableResolverFactory implements VariableResolverFac
 
   public void setTiltFlag(boolean tiltFlag) {
     this.tiltFlag = tiltFlag;
+    //级联处理
     if (nextFactory != null) nextFactory.setTiltFlag(tiltFlag);
   }
 }

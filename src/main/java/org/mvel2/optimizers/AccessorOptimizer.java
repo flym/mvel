@@ -22,6 +22,7 @@ import org.mvel2.ParserContext;
 import org.mvel2.compiler.Accessor;
 import org.mvel2.integration.VariableResolverFactory;
 
+/** 访问器的优先器定义,即对通用的方法器进行优化处理.如普通的a.b,可以优化为一个getter调用,或者是属性访问,而不必要每次都进行查找,探测等 */
 public interface AccessorOptimizer {
   /**
    * 必要的初始化,此初始化在整个生命周期中只会被执行一次
@@ -47,6 +48,7 @@ public interface AccessorOptimizer {
   /** 获取当前创建的优化访问器处理的结果值 */
   public Object getResultOptPass();
 
+  /** 返回结果的声明类型 */
   public Class getEgressType();
 
   /** 是否是常量优化 */
