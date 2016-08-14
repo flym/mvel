@@ -29,13 +29,16 @@ import static java.lang.System.currentTimeMillis;
 
 /** 用于执行get访问的动态访问器(如字段读取，方法调用等) */
 public class DynamicGetAccessor implements DynamicAccessor {
+  /** 相应的表达式 */
   private char[] expr;
+  /** 当前处理的起始点 */
   private int start;
+  /** 当前处理的语句长度 */
   private int offset;
 
   /** 上一次优化访问时间(即在一定时间内上一次统计时间) */
   private long stamp;
-  /** 处理类型，有0和3可选，分别表示获取和对象创建(2不存在，由collectionAccessor完成) */
+  /** 处理类型，有0和3可选，分别表示获取和对象创建(2的访问将转由collection处理) */
   private int type;
 
   /** 在时间区间内的运行统计次数 */
@@ -52,6 +55,7 @@ public class DynamicGetAccessor implements DynamicAccessor {
   /** 当前的优化访问器 */
   private Accessor _accessor;
 
+  /** 使用解析上下文, 当前区间的表达式,以及指定的访问器创建结构 */
   public DynamicGetAccessor(ParserContext pCtx, char[] expr, int start, int offset, int type, Accessor _accessor) {
     this._safeAccessor = this._accessor = _accessor;
     this.type = type;
@@ -92,6 +96,7 @@ public class DynamicGetAccessor implements DynamicAccessor {
     return _accessor.setValue(ctx, elCtx, variableFactory, value);
   }
 
+  /** 执行实际的优化过程 */
   private Object optimize(Object ctx, Object elCtx, VariableResolverFactory variableResolverFactory) {
 
     //过载保护，避免无限创建新类(其实没什么用)
@@ -99,14 +104,18 @@ public class DynamicGetAccessor implements DynamicAccessor {
       DynamicOptimizer.enforceTenureLimit();
     }
 
+    //这里采用asm优化器来进行优化,即直接执行相应的字节码
     AccessorOptimizer ao = OptimizerFactory.getAccessorCompiler("ASM");
     switch (type) {
+      //正常对象访问
       case DynamicOptimizer.REGULAR_ACCESSOR:
         _accessor = ao.optimizeAccessor(pCtx, expr, start, offset, ctx, elCtx, variableResolverFactory, false, null);
         return ao.getResultOptPass();
+      //对象创建过程
       case DynamicOptimizer.OBJ_CREATION:
         _accessor = ao.optimizeObjectCreation(pCtx, expr, start, offset, ctx, elCtx, variableResolverFactory);
         return _accessor.getValue(ctx, elCtx, variableResolverFactory);
+      //内联集合访问,这里实际上不会走到这里
       case DynamicOptimizer.COLLECTION:
         _accessor = ao.optimizeCollection(pCtx, ctx, null, expr, start, offset, ctx, elCtx, variableResolverFactory);
         return _accessor.getValue(ctx, elCtx, variableResolverFactory);
@@ -114,25 +123,31 @@ public class DynamicGetAccessor implements DynamicAccessor {
     return null;
   }
 
+  /** 反优化,即取消之前的优化 */
   public void deoptimize() {
+    //重置为安全访问器,即反射访问的方式
     this._accessor = this._safeAccessor;
     opt = false;
     runcount = 0;
     stamp = currentTimeMillis();
   }
 
+  /** 上次统计时间 */
   public long getStamp() {
     return stamp;
   }
 
+  /** 运行计数 */
   public int getRuncount() {
     return runcount;
   }
 
+  /** 声明类型为安全访问顺的声明类型 */
   public Class getKnownEgressType() {
     return _safeAccessor.getKnownEgressType();
   }
 
+  /** 返回当前正在使用的访问器,可能是优化版本,也可能是优化版本 */
   public Accessor getAccessor() {
     return _accessor;
   }

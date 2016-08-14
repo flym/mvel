@@ -26,10 +26,13 @@ import org.mvel2.optimizers.OptimizerFactory;
 
 import static java.lang.System.currentTimeMillis;
 
-/** 处理对象设置值之类的动态访问器 */
+/** 处理对象设置值之类的动态优化访问器 */
 public class DynamicSetAccessor implements DynamicAccessor {
+  /** 处理的表达式 */
   private char[] property;
+  /** 当前语句起始下标 */
   private int start;
+  /** 当前语句长度位 */
   private int offset;
 
   /** 是否优化过 */
@@ -40,7 +43,9 @@ public class DynamicSetAccessor implements DynamicAccessor {
   private long stamp;
 
   private ParserContext context;
+  /** 可安全调用的访问器 */
   private final Accessor _safeAccessor;
+  /** 当前使用的访问器(可能为优化版本) */
   private Accessor _accessor;
   /** 描述(没什么用) */
   private String description;
@@ -58,6 +63,8 @@ public class DynamicSetAccessor implements DynamicAccessor {
   }
 
   public Object setValue(Object ctx, Object elCtx, VariableResolverFactory variableFactory, Object value) {
+    //如果未优化,则按照处理策略进行优化
+    //处理策略即在指定时间内运行了多少次
     if (!opt) {
       if (++runcount > DynamicOptimizer.tenuringThreshold) {
         if ((currentTimeMillis() - stamp) < DynamicOptimizer.timeSpan) {
@@ -79,11 +86,13 @@ public class DynamicSetAccessor implements DynamicAccessor {
     throw new RuntimeException("value cannot be read with this accessor");
   }
 
+  /** 对相应的表达式进行优化 */
   private Object optimize(Object ctx, Object elCtx, VariableResolverFactory variableResolverFactory, Object value) {
     if (DynamicOptimizer.isOverloaded()) {
       DynamicOptimizer.enforceTenureLimit();
     }
 
+    //采用asm进行优化处理
     AccessorOptimizer ao = OptimizerFactory.getAccessorCompiler("ASM");
     _accessor = ao.optimizeSetAccessor(context, property, start, offset, ctx, elCtx,
         variableResolverFactory, false, value, value != null ? value.getClass() : Object.class);
@@ -92,6 +101,7 @@ public class DynamicSetAccessor implements DynamicAccessor {
     return value;
   }
 
+  /** 反优化处理 */
   public void deoptimize() {
     this._accessor = this._safeAccessor;
     opt = false;
@@ -107,6 +117,7 @@ public class DynamicSetAccessor implements DynamicAccessor {
     this.description = description;
   }
 
+  /** 相应的声明类型即安全访问器的声明类型 */
   public Class getKnownEgressType() {
     return _safeAccessor.getKnownEgressType();
   }

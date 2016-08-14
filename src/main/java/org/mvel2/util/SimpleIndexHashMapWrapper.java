@@ -14,8 +14,12 @@ import java.util.*;
  * @author Mike Brock
  */
 public class SimpleIndexHashMapWrapper<K, V> implements Map<K, V> {
+  /** 实际上无用 */
+  @Deprecated
   private int indexCounter;
+  /** 相应的内部访问器,基于key,value结构 */
   private final Map<K, ValueContainer<K, V>> wrappedMap;
+  /** 相应的值访问器,基于下标 */
   private final ArrayList<ValueContainer<K, V>> indexBasedLookup;
 
   public SimpleIndexHashMapWrapper() {
@@ -23,6 +27,12 @@ public class SimpleIndexHashMapWrapper<K, V> implements Map<K, V> {
     this.indexBasedLookup = new ArrayList<ValueContainer<K, V>>();
   }
 
+  /**
+   * 使用之前的结构 来创建相应的数据结构
+   *
+   * @param wrapper      之前的结构
+   * @param allocateOnly 是否只分配结构,而不设置值,即是否将之前结构中的值copy过来
+   */
   public SimpleIndexHashMapWrapper(SimpleIndexHashMapWrapper<K, V> wrapper, boolean allocateOnly) {
     this.indexBasedLookup = new ArrayList<ValueContainer<K, V>>(wrapper.indexBasedLookup.size());
     this.wrappedMap = new HashMap<K, ValueContainer<K, V>>();
@@ -31,6 +41,7 @@ public class SimpleIndexHashMapWrapper<K, V> implements Map<K, V> {
     int index = 0;
     if (allocateOnly) {
       for (ValueContainer<K, V> key : wrapper.indexBasedLookup) {
+        //这里的值持有器为null,即不copy相应的值
         vc = new ValueContainer<K, V>(index++, key.getKey(), null);
         indexBasedLookup.add(vc);
         wrappedMap.put(key.getKey(), vc);
@@ -46,6 +57,7 @@ public class SimpleIndexHashMapWrapper<K, V> implements Map<K, V> {
   }
 
 
+  /** 使用已知的key值来构建起容器结构 */
   public SimpleIndexHashMapWrapper(K[] keys) {
     this.wrappedMap = new HashMap<K, ValueContainer<K, V>>(keys.length * 2);
     this.indexBasedLookup = new ArrayList<ValueContainer<K, V>>(keys.length);
@@ -60,7 +72,9 @@ public class SimpleIndexHashMapWrapper<K, V> implements Map<K, V> {
     initWithKeys(keys);
   }
 
+  /** 初始化相应的key值 */
   public void initWithKeys(K[] keys) {
+    //好将相应的值持有器添加到相应的map和list中
     int index = 0;
     ValueContainer<K, V> vc;
     for (K key : keys) {
@@ -70,12 +84,14 @@ public class SimpleIndexHashMapWrapper<K, V> implements Map<K, V> {
     }
   }
 
+  @Deprecated
   public void addKey(K key) {
     ValueContainer<K, V> vc = new ValueContainer<K, V>(indexCounter++, key, null);
     this.indexBasedLookup.add(vc);
     this.wrappedMap.put(key, vc);
   }
 
+  @Deprecated
   public void addKey(K key, V value) {
     ValueContainer<K, V> vc = new ValueContainer<K, V>(indexCounter++, key, value);
     this.indexBasedLookup.add(vc);
@@ -102,10 +118,12 @@ public class SimpleIndexHashMapWrapper<K, V> implements Map<K, V> {
     return wrappedMap.get(key).getValue();
   }
 
+  /** 根据下标访问相应的值 */
   public V getByIndex(int index) {
     return indexBasedLookup.get(index).getValue();
   }
 
+  /** 与 getByIndex 相同 */
   public K getKeyAtIndex(int index) {
     return indexBasedLookup.get(index).getKey();
   }
@@ -115,15 +133,17 @@ public class SimpleIndexHashMapWrapper<K, V> implements Map<K, V> {
     return wrappedMap.get(key).getIndex();
   }
 
+  /** 修改相应的值 */
   public V put(K key, V value) {
     ValueContainer<K, V> vc = wrappedMap.get(key);
     if (vc == null)
       throw new RuntimeException("cannot add a new entry.  you must allocate a new key with addKey() first.");
 
-    indexBasedLookup.add(vc);
+    indexBasedLookup.add(vc);//这里应该为有bug,不应该再添加相应的值持有器
     return wrappedMap.put(key, vc).getValue();
   }
 
+  /** 在指定的位置中设置相应的值 */
   public void putAtIndex(int index, V value) {
     ValueContainer<K, V> vc = indexBasedLookup.get(index);
     vc.setValue(value);
@@ -153,9 +173,13 @@ public class SimpleIndexHashMapWrapper<K, V> implements Map<K, V> {
     throw new UnsupportedOperationException();
   }
 
+  /** 一个相应的值持有器,可以理解为相应的Map.Entry */
   private class ValueContainer<K, V> {
+    /** 当前的访问下标 */
     private int index;
+    /** key值 */
     private K key;
+    /** value值 */
     private V value;
 
     public ValueContainer(int index, K key, V value) {

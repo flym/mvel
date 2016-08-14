@@ -57,9 +57,11 @@ public class DefaultLocalVariableResolverFactory extends MapVariableResolverFact
   }
 
 
+  /** 实现基于下标访问变量解析器的语义 */
   public VariableResolver getIndexedVariableResolver(int index) {
     if (indexedVariableNames == null) return null;
 
+    //这里表示相应的变量是存在的,但没有相应的解析器,因此进行相应的创建
     if (indexedVariableResolvers[index] == null) {
       /**
        * If the register is null, this means we need to forward-allocate the variable onto the
@@ -73,12 +75,16 @@ public class DefaultLocalVariableResolverFactory extends MapVariableResolverFact
   public VariableResolver getVariableResolver(String name) {
     if (indexedVariableNames == null) return super.getVariableResolver(name);
 
+    //以下表示开启相应的下标解析,因此会首先从当前下标解析器中进行处理
     int idx;
     //   if (variableResolvers.containsKey(name)) return variableResolvers.get(name);
+    //相应的下标存在
     if ((idx = variableIndexOf(name)) != -1) {
+      //没有解析器,则马上创建一个
       if (indexedVariableResolvers[idx] == null) {
         indexedVariableResolvers[idx] = new SimpleValueResolver(null);
       }
+      //同时放到相应的map解析器中,双向存储
       variableResolvers.put(indexedVariableNames[idx], null);
       return indexedVariableResolvers[idx];
     }
@@ -94,6 +100,7 @@ public class DefaultLocalVariableResolverFactory extends MapVariableResolverFact
 
     try {
       int idx;
+      //如果当前已存在相应的变量,则创建起相应的解析器
       if ((idx = variableIndexOf(name)) != -1) {
         vr = new SimpleValueResolver(value);
         if (indexedVariableResolvers[idx] == null) {
@@ -113,6 +120,7 @@ public class DefaultLocalVariableResolverFactory extends MapVariableResolverFact
       vr = null;
     }
 
+    //进行相应的类型判定,即不允许重复添加
     if (!newVar && vr != null && vr.getType() != null) {
       throw new RuntimeException("variable already defined within scope: " + vr.getType() + " " + name);
     }
@@ -122,6 +130,7 @@ public class DefaultLocalVariableResolverFactory extends MapVariableResolverFact
     }
   }
 
+  /** 不要终止委托类标记,即当前内部的提前返回,并不需要外层同样进行处理 */
   private boolean noTilt = false;
 
   public VariableResolverFactory setNoTilt(boolean noTilt) {

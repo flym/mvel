@@ -27,11 +27,13 @@ public class ItemResolverFactory extends BaseVariableResolverFactory {
   /** 相应单个解析的封装 */
   private final ItemResolver resolver;
 
+  /** 由一个单值解析器和委托工厂创建起相应的作用域 */
   public ItemResolverFactory(ItemResolver resolver, VariableResolverFactory nextFactory) {
     this.resolver = resolver;
     this.nextFactory = nextFactory;
   }
 
+  /** 创建变量,因为当前为单值作用域,因此如果当前单值变量名不相同,则委托给next处理 */
   public VariableResolver createVariable(String name, Object value) {
     if (isTarget(name)) {
       resolver.setValue(value);
@@ -43,6 +45,7 @@ public class ItemResolverFactory extends BaseVariableResolverFactory {
   }
 
   public VariableResolver createVariable(String name, Object value, Class<?> type) {
+    //不允许重复新建
     if (isTarget(name)) {
       throw new RuntimeException("variable already defined in scope: " + name);
     }
@@ -55,10 +58,12 @@ public class ItemResolverFactory extends BaseVariableResolverFactory {
     return isTarget(name) ? resolver : nextFactory.getVariableResolver(name);
   }
 
+  /** 当前是否能解析,即当前单值所存储的变量名是否与参数名相同 */
   public boolean isTarget(String name) {
     return resolver.getName().equals(name);
   }
 
+  /** 通过当前单值的变量名和委托解析来判定是否可解析参数名 */
   public boolean isResolveable(String name) {
     return resolver.getName().equals(name) || (nextFactory != null && nextFactory.isResolveable(name));
   }

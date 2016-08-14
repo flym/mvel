@@ -39,7 +39,7 @@ public interface AccessorOptimizer {
   public Accessor optimizeSetAccessor(ParserContext pCtx, char[] property, int start, int offset, Object ctx, Object thisRef,
                                       VariableResolverFactory factory, boolean rootThisRef, Object value, Class ingressType);
 
-  /** 创建一个用于集合访问的优化器 */
+  /** 创建一个用于集合访问的优化器,此处的集合为内联集合,即直接{1,2,3}这种直接创建方式 */
   public Accessor optimizeCollection(ParserContext pCtx, Object collectionGraph, Class type, char[] property, int start, int offset, Object ctx, Object thisRef, VariableResolverFactory factory);
 
   /** 创建一个用于对象创建的访问器 */

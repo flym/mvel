@@ -37,7 +37,7 @@ import java.util.Set;
 @SuppressWarnings({"unchecked"})
 public class MapVariableResolverFactory extends BaseVariableResolverFactory {
   /**
-   * 用来存储当前解析器作用域的数据值信息
+   * 用来存储当前作用域的参数名信息,则通过当前map来判定是否能解析变量.而具体的解析器由放在父类的resolverMap中
    * Holds the instance of the variables.
    */
   protected Map<String, Object> variables;
@@ -70,6 +70,7 @@ public class MapVariableResolverFactory extends BaseVariableResolverFactory {
   public VariableResolver createVariable(String name, Object value) {
     VariableResolver vr;
 
+    //采用try catch来决定是否新建变量
     try {
       (vr = getVariableResolver(name)).setValue(value);
       return vr;
@@ -89,24 +90,29 @@ public class MapVariableResolverFactory extends BaseVariableResolverFactory {
       vr = null;
     }
 
+    //不允许重复创建对象
     if (vr != null && vr.getType() != null) {
       throw new RuntimeException("variable already defined within scope: " + vr.getType() + " " + name);
     }
     else {
+      //使用map变量解析器,即相应的解析器与外部map共用数据
       addResolver(name, vr = new MapVariableResolver(variables, name, type)).setValue(value);
       return vr;
     }
   }
 
   public VariableResolver getVariableResolver(String name) {
+    //先判定当前是否已经有解析器
     VariableResolver vr = variableResolvers.get(name);
     if (vr != null) {
       return vr;
     }
+    //当前没有解析器,但当前变量域中存在此变量
     else if (variables.containsKey(name)) {
       variableResolvers.put(name, vr = new MapVariableResolver(variables, name));
       return vr;
     }
+    //都没有,则转由next处理
     else if (nextFactory != null) {
       return nextFactory.getVariableResolver(name);
     }
@@ -115,6 +121,7 @@ public class MapVariableResolverFactory extends BaseVariableResolverFactory {
   }
 
 
+  /** 通过解析器map+变量名map+next共同判定是否能解析相应的name */
   public boolean isResolveable(String name) {
     return (variableResolvers.containsKey(name))
         || (variables != null && variables.containsKey(name))

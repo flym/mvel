@@ -16,6 +16,7 @@ public class StackResetResolverFactory implements VariableResolverFactory {
   private VariableResolverFactory delegate;
 
   public StackResetResolverFactory(VariableResolverFactory delegate) {
+    //这里重新设置相应的处理逻辑,即重置,以保证相应的栈式处理能够按预期工作,而不是因为标识位提前返回
     delegate.setTiltFlag(false);
     this.delegate = delegate;
   }
@@ -81,6 +82,7 @@ public class StackResetResolverFactory implements VariableResolverFactory {
   }
 
   public void setTiltFlag(boolean tilt) {
+    //仅当委托类为false时才处理,以保证不会多次改变设置
     if (!delegate.tiltFlag()) {
       delegate.setTiltFlag(tilt);
     }

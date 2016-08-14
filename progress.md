@@ -49,9 +49,9 @@
 |   ProtoParser |   |   未完成 |
 |   ReflectionUtil  | 类型处理工具类  |   已完成 |
 |   SharedVariableSpaceModel    | (未使用)  |   不作处理 |
-|   SimpleIndexHashMapWrapper   |   |   未完成 |
+|   SimpleIndexHashMapWrapper   |   |   已完成 |
 |   SimpleVariableSpaceModel    | (未使用)  |   不作处理 |
-|   Soundex |   |   未完成 |
+|   Soundex | 基于字母分析相似度  |   不作处理(无特别作用) |
 |   Stack   | 栈接口(此接口无用)    |   不作处理 |
 |   StackElement    |   栈节点 |   已完成 |
 |   StaticFieldStub |   静态字段句柄(未使用) |   不作处理    |
@@ -63,10 +63,10 @@
 |   VariableSpaceModel  | (未使用)  |   不作处理 |
 |   DynamicAccessor |   动态访问器   |   已完成 |
 |   DynamicClassLoader  |   动态类优化加载器    |   已完成 |
-|   DynamicCollectionAccessor   |   |   未完成 |
-|   DynamicGetAccessor  |   get动态访问器    |   未完成 |
-|   DynamicOptimizer    |   动态访问优化器 |   未完成 |
-|   DynamicSetAccessor  |   set动态访问器    |   未完成 |
+|   DynamicCollectionAccessor   | 内联集合动态优化访问器  |   已完成 |
+|   DynamicGetAccessor  |   get动态优化访问器    |   已完成 |
+|   DynamicOptimizer    |   动态访问优化器 |   已完成 |
+|   DynamicSetAccessor  |   set动态优化访问器    |   已完成 |
 |   ASMAccessorOptimizer    |   |   未完成 |
 |   ProducesBytecode    | 属性访问自定义字节码处理器标记接口  |   已完成 |
 |   ArrayCreator    | 数组创建访问器  |   已完成 |
@@ -119,22 +119,22 @@
 |   CachedMapVariableResolverFactory    |   实时缓存map解析器工厂  |   已完成 |
 |   CachingMapVariableResolverFactory   |   指定缓存map解析器工厂    |   已完成 |
 |   ClassImportResolverFactory  |   类引用解析器工厂    |   已完成 |
-|   DefaultLocalVariableResolverFactory |   本地作用域解析器工厂  |   未完成 |
-|   FunctionVariableResolverFactory |   函数体内解析器工厂   |   未完成 |
-|   ImmutableDefaultFactory |   不可变解析器工厂    |   未完成|
-|   IndexedVariableResolverFactory  |   下标解析器工厂 |   未完成 |
-|   IndexVariableResolver   |   下标解析器   |   未完成 |
-|   ItemResolverFactory |   单值解析器工厂 |   未完成 |
+|   DefaultLocalVariableResolverFactory |   本地作用域解析器工厂  |   已完成 |
+|   FunctionVariableResolverFactory |   函数体内解析器工厂   |   已完成 |
+|   ImmutableDefaultFactory |   不可变解析器工厂    |   已完成|
+|   IndexedVariableResolverFactory  |   下标解析器工厂 |   已完成 |
+|   IndexVariableResolver   |   下标解析器   |   已完成 |
+|   ItemResolverFactory |   单值解析器工厂 |   已完成 |
 |   LocalVariableResolverFactory    |   本地作用域解析器工厂标记接口  |   已完成 |
 |   MapVariableResolver |   外部map解析器  |   已完成 |
-|   MapVariableResolverFactory  |   外部map解析器工厂  |   未完成 |
+|   MapVariableResolverFactory  |   外部map解析器工厂  |   已完成 |
 |   PrecachedMapVariableResolver    |   map占位entity解析器  |   已完成 |
-|   SimpleSTValueResolver   |   声明值解析器  |   未完成 |
-|   SimpleValueResolver |   单值解析器   |   未完成 |
+|   SimpleSTValueResolver   |   声明值解析器  |   已完成 |
+|   SimpleValueResolver |   单值解析器   |   已完成 |
 |   SimpleVariableResolverFactory   |   (未使用)   |   不作处理    |
-|   StackDelimiterResolverFactory   |   委托解析处理工厂    |   未完成 |
-|   StackDemarcResolverFactory  |   委托解析但不中断委托类解析器工厂    |   未完成 |
-|   StackResetResolverFactory   |   栈式可重用解析器工厂  |   未完成 |
+|   StackDelimiterResolverFactory   |   委托解析处理工厂    |   已完成 |
+|   StackDemarcResolverFactory  |   委托解析但不中断委托类解析器工厂    |   已完成 |
+|   StackResetResolverFactory   |   栈式可重用解析器工厂  |   已完成 |
 |   StaticMethodImportResolver  |   静态方法引用解析器(未使用)   |   不作处理 |
 |   StaticMethodImportResolverFactory   |   (未使用)   |   不作处理    |
 |   TypeInjectionResolverFactory    |   (未使用)   |   不作处理    |
@@ -181,18 +181,18 @@
 |   CompiledAccExpression   |   已编译访问器表达式   |   未完成 |
 |   CompiledExpression  |   编译表达式   |   未完成 |
 |   EndWithValue    |   (未使用)   |   不作处理    |
-|   ExecutableAccessor  |   可执行的节点访问器   |   未完成 |
+|   ExecutableAccessor  |   可执行的节点访问器   |   已完成 |
 |   ExecutableAccessorSafe  | 安全标记执行节点访问器  |   已完成 |
 |   ExecutableLiteral   |   常量计算单元  |   已完成 |
 |   ExecutableStatement |   可执行节点接口 |   已完成 |
 |   ExpressionCompiler  |   表达式编译器    |   未完成 |
-|   Parser  |   编译器接口定义 |   未完成 |
+|   Parser  |   编译器接口定义 |   已完成 |
 |   PropertyVerifier    |   属性验证器   |   未完成 |
 |   And |   &&节点    |   已完成 |
 |   ArraySize   |   数组长度表示  |   已完成 |
 |   AssertNode  |   断言节点    |   已完成 |
 |   Assignment  |   赋值节点接口  |   已完成 |
-|   AssignmentNode  |   赋值节点    |   未完成 |
+|   AssignmentNode  |   赋值节点    |   已完成 |
 |   ASTNode |   抽象语法树节点统一类  |   未完成 |
 |   BinaryOperation |   2元数字操作节点  |   已完成 |
 |   BlockNode   |   语法块节点标记接口   |   已完成 |
@@ -223,7 +223,7 @@
 |   Instance    |   instanceOf节点    |   已完成 |
 |   IntAdd  |   整数相加节点  |   已完成 |
 |   IntDiv  |   整数相除节点  |   已完成 |
-|   InterceptorWrapper  |   拦截器包装节点 |   未完成 |
+|   InterceptorWrapper  |   拦截器包装节点 |   已完成 |
 |   IntMult |   整数相乘节点  |   已完成 |
 |   IntOptimized    |   整数处理优化节点接口  |   已完成 |
 |   IntSub  |   整数相减节点  |   已完成 |

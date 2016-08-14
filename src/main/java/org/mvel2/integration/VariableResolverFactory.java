@@ -34,6 +34,8 @@ import java.util.Set;
 public interface VariableResolverFactory extends Serializable {
   /**
    * 根据变量名和相应的值创建出一个变量解析器
+   * 此方法还有修改对象值的作用,如果相应的变量已经存在,则进行数据修改
+   * 此方法可以理解为save or update
    * Creates a new variable.  This probably doesn't need to be implemented in most scenarios.  This is
    * used for variable assignment.
    *
@@ -49,6 +51,8 @@ public interface VariableResolverFactory extends Serializable {
 
   /**
    * 根据变量名+相应的值以及期望的类型创建出变量解析器
+   * 调用此创建的前提必须是相应的变量名必须是新出现的,如果是之前已经创建好了,则会报相应的错误
+   * 可以理解为此方法为创建对象的语义
    * Creates a new variable, and assigns a static type. It is expected the underlying factory and resolver
    * will enforce this.
    *

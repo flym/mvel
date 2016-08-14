@@ -60,6 +60,7 @@ public class FunctionVariableResolverFactory extends BaseVariableResolverFactory
   /** 修改变量值信息(如果有)，否则创建新的变量解析器 */
   public VariableResolver createVariable(String name, Object value) {
     VariableResolver resolver = getVariableResolver(name);
+    //之前没有相应的解析器,则准备新建一个
     if (resolver == null) {
       int idx = increaseRegisterTableSize();
       this.indexedVariableNames[idx] = name;
@@ -88,13 +89,16 @@ public class FunctionVariableResolverFactory extends BaseVariableResolverFactory
   /** 修改指定下标原的解析器 */
   public VariableResolver createIndexedVariable(int index, String name, Object value) {
     index = index - indexOffset;
+    //之前存在,则直接修改
     if (indexedVariableResolvers[index] != null) {
       indexedVariableResolvers[index].setValue(value);
     }
     else {
+      //直接创建相应的解析器
       indexedVariableResolvers[index] = new SimpleValueResolver(value);
     }
 
+    //快速占位处理
     variableResolvers.put(name, null);
 
     return indexedVariableResolvers[index];
@@ -182,6 +186,7 @@ public class FunctionVariableResolverFactory extends BaseVariableResolverFactory
     this.indexedVariableResolvers = vr;
   }
 
+  /** 返回相应的函数 */
   public Function getFunction() {
     return function;
   }
@@ -191,6 +196,7 @@ public class FunctionVariableResolverFactory extends BaseVariableResolverFactory
   }
 
 
+  /** 函数内层返回不再影响到外层的执行,默认为false,即会影响到 */
   private boolean noTilt = false;
 
   public VariableResolverFactory setNoTilt(boolean noTilt) {

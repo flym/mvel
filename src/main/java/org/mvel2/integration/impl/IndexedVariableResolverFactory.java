@@ -33,16 +33,19 @@ import java.util.Set;
  */
 public class IndexedVariableResolverFactory extends BaseVariableResolverFactory {
 
+  /** 使用指定的变量名数组+相应的变量值解析器数组构建起作用域 */
   public IndexedVariableResolverFactory(String[] varNames, VariableResolver[] resolvers) {
     this.indexedVariableNames = varNames;
     this.indexedVariableResolvers = resolvers;
   }
 
+  /** 使用相应的变量名数组+相应的变量值数组构建起作用域 */
   public IndexedVariableResolverFactory(String[] varNames, Object[] values) {
     this.indexedVariableNames = varNames;
     this.indexedVariableResolvers = createResolvers(values, varNames.length);
   }
 
+  /** 使用相应的变量名+相应的变量值,以及相应的委托工厂创建起作用域 */
   public IndexedVariableResolverFactory(String[] varNames, Object[] values, VariableResolverFactory nextFactory) {
     this.indexedVariableNames = varNames;
     this.nextFactory = new MapVariableResolverFactory();
@@ -51,15 +54,19 @@ public class IndexedVariableResolverFactory extends BaseVariableResolverFactory 
 
   }
 
+  /** 根据一个已经有值的数组对象创建起一个指定长度的解析器数组 */
   private static VariableResolver[] createResolvers(Object[] values, int size) {
     VariableResolver[] vr = new VariableResolver[size];
     for (int i = 0; i < size; i++) {
+      //这里如果相应的的数组已解析完毕,则使用简单解析器占位,否则使用相应的数组解析器,以达到数据双向修改的目的
       vr[i] = i >= values.length ? new SimpleValueResolver(null) : new IndexVariableResolver(i, values);
     }
     return vr;
   }
 
+  /** 对指定下标进行处理 */
   public VariableResolver createIndexedVariable(int index, String name, Object value) {
+    //当前作用域基于下标处理,因此直接操作相应的下标即可
     VariableResolver r = indexedVariableResolvers[index];
     r.setValue(value);
     return r;
@@ -99,6 +106,7 @@ public class IndexedVariableResolverFactory extends BaseVariableResolverFactory 
     throw new UnresolveablePropertyException("unable to resolve variable '" + name + "'");
   }
 
+  /** 是否可解析,则当前的下标解析器+委托类来决定 */
   public boolean isResolveable(String name) {
     return isTarget(name) || (nextFactory != null && nextFactory.isResolveable(name));
   }
@@ -136,6 +144,7 @@ public class IndexedVariableResolverFactory extends BaseVariableResolverFactory 
 
   }
 
+  /** 当前解析器工厂是基于数组工作的 */
   @Override
   public boolean isIndexedFactory() {
     return true;

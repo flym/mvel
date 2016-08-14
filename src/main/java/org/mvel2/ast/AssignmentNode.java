@@ -62,10 +62,13 @@ public class AssignmentNode extends ASTNode implements Assignment {
 
     int assignStart;
 
+    //这里表示有相应的赋值过程
     if ((assignStart = find(expr, start, offset, '=')) != -1) {
+      //从=号之前的被认为是变量名
       this.varName = createStringTrimmed(expr, start, assignStart - start);
       this.assignmentVar = varName;
 
+      //=号后面的表达式start标记
       this.start = skipWhitespace(expr, assignStart + 1);
       if (this.start >= start + offset) {
         throw new CompileException("unexpected end of statement", expr, assignStart + 1);
@@ -73,16 +76,20 @@ public class AssignmentNode extends ASTNode implements Assignment {
 
       this.offset = offset - (this.start - start);
 
+      //编译后面的表达式,同时认为相应的声明类型就是表达式的返回类型
       if ((fields & COMPILE_IMMEDIATE) != 0) {
         this.egressType = (statement = (ExecutableStatement)
             subCompileExpression(expr, this.start, this.offset, pCtx)).getKnownEgressType();
       }
 
+      //这里通过对之前的变量判断是否有[]这种符号,即前面的是否为数组或集合访问
       if (col = ((endOfName = findFirst('[', 0, this.varName.length(), indexTarget = this.varName.toCharArray())) > 0)) {
+        //是集合访问,设置相应的标记,同时设置相应的集合访问表达式,即最终需要达到一个accExpr.setValue的目的
         if (((this.fields |= COLLECTION) & COMPILE_IMMEDIATE) != 0) {
           accExpr = (CompiledAccExpression) compileSetExpression(indexTarget, pCtx);
         }
 
+        //重新设置相应的变量名以及相应的下标数字
         this.varName = new String(expr, start, endOfName);
         index = new String(indexTarget, endOfName, indexTarget.length - endOfName);
       }
@@ -140,6 +147,7 @@ public class AssignmentNode extends ASTNode implements Assignment {
   public Object getReducedValue(Object ctx, Object thisValue, VariableResolverFactory factory) {
     checkNameSafety(varName);
 
+    //采用解释的方式来进行运行,则尝试通过属性访问的方式来进行处理
     MVELInterpretedRuntime runtime = new MVELInterpretedRuntime(expr, start, offset, ctx, factory, pCtx);
 
     if (col) {

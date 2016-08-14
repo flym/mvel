@@ -5,6 +5,8 @@ import org.mvel2.integration.VariableResolver;
 /**
  * 使用数组+下标来存储变量值的变量解析器
  * 变量在存储时声明相应在数组中的下标，后续即可根据此下标进行数据操作和处理
+ * 此解析器的目的在于达到双向工作的目的,即本身修改了解析器内部的值,同时还修改之之前由外部传入的数组.
+ * 即数组是之前由外部传入的,这里的解析器只是一个委托访问的目的
  */
 public class IndexVariableResolver implements VariableResolver {
   /** 相应的下标位置 */

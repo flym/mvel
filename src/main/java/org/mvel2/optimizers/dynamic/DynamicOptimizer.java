@@ -34,10 +34,17 @@ import static org.mvel2.optimizers.OptimizerFactory.SAFE_REFLECTIVE;
 import static org.mvel2.optimizers.OptimizerFactory.getAccessorCompiler;
 import static org.mvel2.optimizers.impl.asm.ASMAccessorOptimizer.setMVELClassLoader;
 
+/**
+ * 用于描述一个可以动态切换访问方式的优化器
+ * 其优化器通过创建出2个版本的访问器,并且在运行期间根据运行的效果进行相应的运行状态切换
+ * 当前可用的优化器分别为反射调用和asm字节码执行,这里即是通过切换这2种来达到动态访问的目的
+ */
 public class DynamicOptimizer extends AbstractOptimizer implements AccessorOptimizer {
-  /** 用于支持第一步的优化访问，表示先使用此优化器进行访问 */
+  /** 用于支持第一步的优化访问，表示先使用此优化器进行访问,这里即通过反射的方式处理 */
   private AccessorOptimizer firstStage = getAccessorCompiler(SAFE_REFLECTIVE);
 
+  /** 无用字段 */
+  @Deprecated
   private static final Object oLock = new Object();
   /** 当前所使用的优化器加载类 */
   private volatile static DynamicClassLoader classLoader;
@@ -52,7 +59,12 @@ public class DynamicOptimizer extends AbstractOptimizer implements AccessorOptim
   public static int maximumTenure = 1500;
   /** 总共还原了多少类(即从优化到反优化) */
   public static int totalRecycled = 0;
+  @Deprecated
   private static volatile boolean useSafeClassloading = false;
+  /**
+   * 通过读写锁来进行相应的隔离处理,即在使用访问器时为读锁,而需要要修改相应的访问器时为写锁,
+   * 则之前相应的访问都停住,以保证相应的反优化能够正常运行,即避免在使用asm优化器时,另一个线程又来修改相应的优化器,甚至销毁
+   */
   private static ReadWriteLock lock = new ReentrantReadWriteLock();
   private static Lock readLock = lock.readLock();
   private static Lock writeLock = lock.writeLock();
@@ -61,10 +73,15 @@ public class DynamicOptimizer extends AbstractOptimizer implements AccessorOptim
     _init();
   }
 
+  /** 设置相应的加载器 */
   private static void _init() {
     setMVELClassLoader(classLoader = new DynamicClassLoader(currentThread().getContextClassLoader(), maximumTenure));
   }
 
+  /**
+   * 强制反优化所有访问器,以避免之前生成类之后
+   * 但实际上没有什么作用,因此后续又会持续相应的优化过程,然后再反优化,因此会有相应的问题
+   */
   public static void enforceTenureLimit() {
     writeLock.lock();
     try {
@@ -80,6 +97,7 @@ public class DynamicOptimizer extends AbstractOptimizer implements AccessorOptim
 
   public static final int REGULAR_ACCESSOR = 0;
 
+  /** 进行正常的方法调用或访问 */
   public Accessor optimizeAccessor(ParserContext pCtx, char[] property, int start, int offset, Object ctx, Object thisRef,
                                    VariableResolverFactory factory, boolean rootThisRef, Class ingressType) {
     readLock.lock();
@@ -87,13 +105,15 @@ public class DynamicOptimizer extends AbstractOptimizer implements AccessorOptim
       pCtx.optimizationNotify();
       return classLoader.registerDynamicAccessor(new DynamicGetAccessor(pCtx, property, start, offset, 0,
           firstStage.optimizeAccessor(pCtx, property, start, offset, ctx, thisRef, factory, rootThisRef, ingressType)));
-    } finally {
+    }
+    finally {
       readLock.unlock();
     }
   }
 
   public static final int SET_ACCESSOR = 1;
 
+  /** 进行动态的set方法调用 */
   public Accessor optimizeSetAccessor(ParserContext pCtx, char[] property, int start, int offset, Object ctx, Object thisRef,
                                       VariableResolverFactory factory, boolean rootThisRef, Object value, Class valueType) {
 
@@ -101,33 +121,38 @@ public class DynamicOptimizer extends AbstractOptimizer implements AccessorOptim
     try {
       return classLoader.registerDynamicAccessor(new DynamicSetAccessor(pCtx, property, start, offset,
           firstStage.optimizeSetAccessor(pCtx, property, start, offset, ctx, thisRef, factory, rootThisRef, value, valueType)));
-    } finally {
+    }
+    finally {
       readLock.unlock();
     }
   }
 
   public static final int COLLECTION = 2;
 
+  /** 进行动态的内联集合类访问 */
   public Accessor optimizeCollection(ParserContext pCtx, Object rootObject, Class type, char[] property, int start,
                                      int offset, Object ctx, Object thisRef, VariableResolverFactory factory) {
     readLock.lock();
     try {
       return classLoader.registerDynamicAccessor(new DynamicCollectionAccessor(pCtx, rootObject, type, property, start, offset, 2,
           firstStage.optimizeCollection(pCtx, rootObject, type, property, start, offset, ctx, thisRef, factory)));
-    } finally {
+    }
+    finally {
       readLock.unlock();
     }
   }
 
   public static final int OBJ_CREATION = 3;
 
+  /** 进行动态的对象创建访问 */
   public Accessor optimizeObjectCreation(ParserContext pCtx, char[] property, int start, int offset,
                                          Object ctx, Object thisRef, VariableResolverFactory factory) {
     readLock.lock();
     try {
       return classLoader.registerDynamicAccessor(new DynamicGetAccessor(pCtx, property, start, offset, 3,
           firstStage.optimizeObjectCreation(pCtx, property, start, offset, ctx, thisRef, factory)));
-    } finally {
+    }
+    finally {
       readLock.unlock();
     }
   }
@@ -137,10 +162,12 @@ public class DynamicOptimizer extends AbstractOptimizer implements AccessorOptim
     return classLoader.isOverloaded();
   }
 
+  /** 获取相应的返回值,即第一个反射优化器的结果值 */
   public Object getResultOptPass() {
     return firstStage.getResultOptPass();
   }
 
+  /** 相应的声明类型即第一个优化器处理的声明类型 */
   public Class getEgressType() {
     return firstStage.getEgressType();
   }
