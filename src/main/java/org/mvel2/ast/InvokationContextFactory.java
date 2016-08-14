@@ -23,6 +23,7 @@ public class InvokationContextFactory extends MapVariableResolverFactory {
   @Override
   public VariableResolver createVariable(String name, Object value) {
     //处理变量时,需要根据2者,看哪个能解析,如果外部不能解析,则退回到定义作用域来处理
+    //即在处理时,首先判断是否已之前定义过的,如果确定是之前定义过的,则跳回到之前的逻辑当中
     if (isResolveable(name) && !protoContext.isResolveable(name)) {
       return nextFactory.createVariable(name, value);
     }

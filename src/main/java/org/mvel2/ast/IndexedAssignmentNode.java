@@ -195,6 +195,7 @@ public class IndexedAssignmentNode extends ASTNode implements Assignment {
     this.register = register;
   }
 
+  /** 当前节点为赋值节点 */
   public boolean isAssignment() {
     return true;
   }
@@ -204,6 +205,7 @@ public class IndexedAssignmentNode extends ASTNode implements Assignment {
     return name;
   }
 
+  /** 因为当前节点为a += xx 类似这样的操作,因此不是新声明节点 */
   public boolean isNewDeclaration() {
     return false;
   }

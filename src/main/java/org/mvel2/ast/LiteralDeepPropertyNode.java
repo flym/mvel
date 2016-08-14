@@ -27,10 +27,12 @@ import static org.mvel2.optimizers.OptimizerFactory.getThreadAccessorOptimizer;
 
 /**
  * 描述一个有.号的多级常量属性节点，如类名描述信息等
+ * 仅用于类型设置,无特别的作用
  * @author Christopher Brock
  */
 @SuppressWarnings({"CaughtExceptionImmediatelyRethrown"})
 public class LiteralDeepPropertyNode extends ASTNode {
+  /** 相应的常量值 */
   private Object literal;
 
   public LiteralDeepPropertyNode(char[] expr, int start, int offset, int fields, Object literal, ParserContext pCtx) {

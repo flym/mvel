@@ -27,11 +27,11 @@ import org.mvel2.math.MathProcessor;
 import static org.mvel2.MVEL.eval;
 import static org.mvel2.util.ParseTools.subCompileExpression;
 
-/** 描述一个已经在解析上下文中声明过的变量的运算并赋值操作 */
+/** 描述一个已经在解析上下文中声明过的变量的运算并进行x=赋值操作 */
 public class IndexedOperativeAssign extends ASTNode {
   /** 相应变量在之前注册过的下标值(即在变量工厂中的变量位置值) */
   private final int register;
-  /** 用于描述右边相应的表达式 即 */
+  /** 用于描述右边相应的表达式 即 a += xx 中的右边部分 */
   private ExecutableStatement statement;
   /** 相应的运算符 */
   private final int operation;

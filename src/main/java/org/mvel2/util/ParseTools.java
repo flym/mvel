@@ -2055,6 +2055,11 @@ public class ParseTools {
     return -1;
   }
 
+  /**
+   * 返回指定类型的子类型
+   * 如果是数组,则返回数组的包装类型,并作迭代判断,否则返回类型本身
+   * 最终返回一个不是数组的类型
+   */
   public static Class getBaseComponentType(Class cls) {
     while (cls.isArray()) {
       cls = cls.getComponentType();
@@ -2062,6 +2067,10 @@ public class ParseTools {
     return cls;
   }
 
+  /**
+   * 返回指定类型的子类型
+   * 如果是数组,则返回数组的包装类型,否则返回类型本身
+   */
   public static Class getSubComponentType(Class cls) {
     if (cls.isArray()) {
       cls = cls.getComponentType();
@@ -2069,6 +2078,7 @@ public class ParseTools {
     return cls;
   }
 
+  /** 此字符是否是一个空格或[( 这样的连接2个语句的字符 */
   public static boolean isJunct(char c) {
     switch (c) {
       case '[':

@@ -43,6 +43,7 @@ public class Substatement extends ASTNode {
   }
 
   public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
+    //执行时,直接返回内部的执行即可
     return statement.getValue(ctx, thisValue, factory);
   }
 
@@ -51,6 +52,7 @@ public class Substatement extends ASTNode {
   }
 
 
+  /** 返回内部的执行节点 */
   public ExecutableStatement getStatement() {
     return statement;
   }

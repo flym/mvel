@@ -32,7 +32,7 @@ import java.util.List;
 import static org.mvel2.util.CompilerTools.expectType;
 import static org.mvel2.util.ParseTools.*;
 
-/** todo fold表达式解析  */
+/** 用于描述特殊的fold语法节点  */
 public class Fold extends ASTNode {
   private ExecutableStatement subEx;
   private ExecutableStatement dataEx;

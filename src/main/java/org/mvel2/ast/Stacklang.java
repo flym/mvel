@@ -38,6 +38,7 @@ public class Stacklang extends BlockNode {
     //每个指令集以分号进行分隔
     String[] instructions = new String(expr, blockStart, blockOffset).split(";");
 
+    //编译相应的指令集
     instructionList = new ArrayList<Instruction>(instructions.length);
     for (String s : instructions) {
       instructionList.add(parseInstruction(s.trim()));
@@ -48,6 +49,7 @@ public class Stacklang extends BlockNode {
 
   @Override
   public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
+    //整个执行栈,即是以解释模式运行的,因此直接从之前的解释栈中返回即可
     ExecutionStack stk = new ExecutionStack();
     stk.push(getReducedValue(stk, thisValue, factory));
     //如果栈中有多个值,则返回最之前的那个值(好奇怪...)
@@ -202,23 +204,29 @@ public class Stacklang extends BlockNode {
           }
           stack.push(instruction.cache);
           break;
+        //弹出值
         case Operator.POP:
           stack.pop();
           break;
+        //复制顶层值
         case Operator.DUP:
           stack.dup();
           break;
+        //标记指令,用于跳转时处理
         case Operator.LABEL:
           break;
+        //带条件跳转
         case Operator.JUMPIF:
           if (!stack.popBoolean()) continue;
 
-          //指令跳转
+          //指令 无条件跳转
         case Operator.JUMP:
+          //这里直接跳转到之前记标记的位置
           if (instruction.cache != null) {
             i1 = (Integer) instruction.cache;
           }
           else {
+            //找到相应之前的标记指令,并找到相应的位置,直接跳转到相应的位置
             for (int i2 = 0; i2 < instructionList.size(); i2++) {
               Instruction ins = instructionList.get(i2);
               if (ins.opcode == Operator.LABEL &&
@@ -229,15 +237,19 @@ public class Stacklang extends BlockNode {
             }
           }
           break;
+        //相等指令
         case Operator.EQUAL:
           stack.push(stack.pop().equals(stack.pop()));
           break;
+        //不相等指令
         case Operator.NEQUAL:
           stack.push(!stack.pop().equals(stack.pop()));
           break;
+        //栈顶操作
         case Operator.REDUCE:
           stack.op();
           break;
+        //操作数交换指令
         case Operator.XSWAP:
           stack.xswap2();
           break;

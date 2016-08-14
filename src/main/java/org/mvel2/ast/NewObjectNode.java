@@ -88,6 +88,7 @@ public class NewObjectNode extends ASTNode {
           egressType = Class.forName(typeDescr.getClassName(), true, getClassLoader());
         }
         catch (ClassNotFoundException e) {
+          //初始化失败,则表示相应的类型并不存在,因此添加严重错误
           if (pCtx.isStrongTyping())
             pCtx.addError(new ErrorDetail(expr, start, true, "could not resolve class: " + typeDescr.getClassName()));
           return;
@@ -198,6 +199,7 @@ public class NewObjectNode extends ASTNode {
 
         if (factory != null && factory.isResolveable(typeDescr.getClassName())) {
           try {
+            //这里强行获取相应的变量并认为是类信息,后续有classCast判定
             egressType = (Class) factory.getVariableResolver(typeDescr.getClassName()).getValue();
             rewriteClassReferenceToFQCN(COMPILE_IMMEDIATE);
 
@@ -241,6 +243,7 @@ public class NewObjectNode extends ASTNode {
          * Check to see if the optimizer actually produced the object during optimization.  If so,
          * we return that value now.
          */
+        //如果相应的计算结果已经确定,则直接返回相应的处理结果
         if (optimizer.getResultOptPass() != null) {
           egressType = optimizer.getEgressType();
           return optimizer.getResultOptPass();
@@ -258,11 +261,14 @@ public class NewObjectNode extends ASTNode {
   }
 
 
+  /** 以解释运行的方式来解析相应的new 对象的过程 */
   public Object getReducedValue(Object ctx, Object thisValue, VariableResolverFactory factory) {
     try {
+      //如果是对象,则仍按照对象的初始化来进行
       if (typeDescr.isArray()) {
         Class cls = findClass(factory, typeDescr.getClassName(), pCtx);
 
+        //以解释运行的方式处理对象构建
         int[] s = new int[typeDescr.getArrayLength()];
         ArraySize[] arraySize = typeDescr.getArraySize();
 
@@ -276,24 +282,30 @@ public class NewObjectNode extends ASTNode {
         String[] cnsRes = captureContructorAndResidual(name, 0, name.length);
         List<char[]> constructorParms = parseMethodOrConstructor(cnsRes[0].toCharArray());
 
+        //这里表示是存在函数或方法调用的
         if (constructorParms != null) {
+          //从第一个( 往前找出相应的类型信息
           Class cls = findClass(factory, new String(subset(name, 0, findFirst('(', 0, name.length, name))).trim(), pCtx);
 
+          //参数使用解释模式来进行处理
           Object[] parms = new Object[constructorParms.size()];
           for (int i = 0; i < constructorParms.size(); i++) {
             parms[i] = eval(constructorParms.get(i), ctx, factory);
           }
 
+          //查找到有效的构造函数
           Constructor cns = getBestConstructorCandidate(parms, cls, false);
 
           if (cns == null)
             throw new CompileException("unable to find constructor for: " + cls.getName(), expr, start);
 
+          //可能存在的参数类型转换
           for (int i = 0; i < parms.length; i++) {
             //noinspection unchecked
             parms[i] = convert(parms[i], cns.getParameterTypes()[i]);
           }
 
+          //因为可能存在new a(xx).b 这样的级联访问,因此继续采用解释模式来获取相应的属性
           if (cnsRes.length > 1) {
             return PropertyAccessor.get(cnsRes[1], cns.newInstance(parms), factory, thisValue, pCtx);
           }
@@ -365,6 +377,7 @@ public class NewObjectNode extends ASTNode {
 
     public Class getKnownEgressType() {
       try {
+        //里面为数组的构建方式
         return Class.forName("[L" + arrayType.getName() + ";");
       }
       catch (ClassNotFoundException cne) {

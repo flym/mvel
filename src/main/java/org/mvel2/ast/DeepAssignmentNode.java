@@ -84,6 +84,7 @@ public class DeepAssignmentNode extends ASTNode implements Assignment {
       property = new String(expr);
     }
 
+    //对当前属性进行解析并处理
     if ((fields & COMPILE_IMMEDIATE) != 0) {
       acc = (CompiledAccExpression) compileSetExpression(property.toCharArray(), start, offset, pCtx);
     }
@@ -94,10 +95,13 @@ public class DeepAssignmentNode extends ASTNode implements Assignment {
   }
 
   public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
+    //重新编译单元
     if (statement == null) {
       statement = (ExecutableStatement) subCompileExpression(expr, this.start, this.offset, pCtx);
       acc = (CompiledAccExpression) compileSetExpression(property.toCharArray(), statement.getKnownEgressType(), pCtx);
     }
+    //在之前已经将statement,转换为a+b,因此这里整个表达式即为a = a +b,即对后面进行求值,再重新设置回去
+    //如果本身没有+= 这种操作符,则直接即为a = b这种
     acc.setValue(ctx, thisValue, factory, ctx = statement.getValue(ctx, thisValue, factory));
     return ctx;
   }
@@ -109,6 +113,7 @@ public class DeepAssignmentNode extends ASTNode implements Assignment {
 
   @Override
   public String getAbsoluteName() {
+    //最靠前的属性即为第1个.之前,这里不需要作判断,因为编译时已经处理过了
     return property.substring(0, property.indexOf('.'));
   }
 
@@ -124,6 +129,7 @@ public class DeepAssignmentNode extends ASTNode implements Assignment {
     return false;
   }
 
+  /** 是赋值节点 */
   public boolean isAssignment() {
     return true;
   }

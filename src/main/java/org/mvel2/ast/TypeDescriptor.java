@@ -65,6 +65,7 @@ public class TypeDescriptor implements Serializable {
   public void updateClassName(char[] name, int start, int offset, int fields) {
     this.expr = name;
 
+    //不是一个有效的类型定义
     if (offset == 0 || !ParseTools.isIdentifierPart(name[start]) || isDigit(name[start])) return;
 
     //在new后面只有两种情况，一种为（,即声明声明，另一种为[声明数组，这里进行了判定
@@ -122,10 +123,13 @@ public class TypeDescriptor implements Serializable {
     }
   }
 
+  /** 此类型是否是数组 */
   public boolean isArray() {
+    //即查看是否有arraySize的属性
     return arraySize != null;
   }
 
+  /** 如果是数组,则返回相应的维数,即一维还是多维 */
   public int getArrayLength() {
     return arraySize.length;
   }
@@ -134,6 +138,7 @@ public class TypeDescriptor implements Serializable {
     return arraySize;
   }
 
+  /** 返回相应的数组的长度的编译单元 */
   public ExecutableStatement[] getCompiledArraySize() {
     return compiledArraySize;
   }
@@ -146,6 +151,7 @@ public class TypeDescriptor implements Serializable {
     this.className = className;
   }
 
+  /** 当前类型是否为普通类声明 */
   public boolean isClass() {
     return className != null && className.length() != 0;
   }
@@ -180,6 +186,7 @@ public class TypeDescriptor implements Serializable {
 
   /** 根据描述符以及当前要创建的类创建出类型信息(即创建当前类或者是数组类的简化判定) */
   public static Class getClassReference(ParserContext ctx, Class cls, TypeDescriptor tDescr) throws ClassNotFoundException {
+    //针对数组类型作特殊判定,如果是数组,则转换相应的数组类
     if (tDescr.isArray()) {
       cls = cls.isPrimitive() ?
           toPrimitiveArrayType(cls) :

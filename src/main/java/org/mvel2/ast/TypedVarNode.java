@@ -46,6 +46,7 @@ public class TypedVarNode extends ASTNode implements Assignment {
     this.offset = offset;
 
     int assignStart;
+    //找到相应的=操作符,后面的即为相应的赋值表达式
     if ((assignStart = find(this.expr = expr, start, offset, '=')) != -1) {
       checkNameSafety(name = createStringTrimmed(expr, start, assignStart - start));
       this.offset -= (assignStart - start);
@@ -56,9 +57,11 @@ public class TypedVarNode extends ASTNode implements Assignment {
       }
     }
     else {
+      //因为在前面调用时已经进行了判定,因此不会走到这里的逻辑
       checkNameSafety(name = new String(expr, start, offset));
     }
 
+    //尝试判断一个相应的类型兼容,如果之前有声明相应的类型,这里则尝试进行类型检查
     if ((fields & COMPILE_IMMEDIATE) != 0) {
       Class x = pCtx.getVarOrInputType(name);
       if (x != null && x != Object.class && !x.isAssignableFrom(egressType)) {
@@ -70,6 +73,7 @@ public class TypedVarNode extends ASTNode implements Assignment {
 
   public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
     if (statement == null) statement = (ExecutableStatement) subCompileExpression(expr, start, offset, pCtx);
+    //因为是新声明,因此直接带相应的声明类型进行处理,以保证是新的变量处理
     factory.createVariable(name, ctx = statement.getValue(ctx, thisValue, factory), egressType);
     return ctx;
   }
@@ -93,6 +97,7 @@ public class TypedVarNode extends ASTNode implements Assignment {
     return expr;
   }
 
+  /** 是新值声明节点 */
   public boolean isNewDeclaration() {
     return true;
   }

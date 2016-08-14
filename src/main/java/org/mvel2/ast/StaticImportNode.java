@@ -50,10 +50,12 @@ public class StaticImportNode extends ASTNode {
       int mark;
       
       ClassLoader classLoader = getClassLoader();
-      
+
+      //最后一个.之前的被认为是类名
       declaringClass = Class.forName(new String(expr, start, (mark = findLast('.', start, offset, this.expr = expr)) - start),
           true, classLoader );
 
+      //后面的被认为是方法
       methodName = new String(expr, ++mark, offset - (mark - start));
 
       if (resolveMethod() == null) {
@@ -66,6 +68,7 @@ public class StaticImportNode extends ASTNode {
     }
   }
 
+  /** 尝试根据类+相应的方法名找到相应的静态方法 */
   private Method resolveMethod() {
     for (Method meth : declaringClass.getMethods()) {
       if (isStatic(meth.getModifiers()) && methodName.equals(meth.getName())) {
@@ -75,11 +78,13 @@ public class StaticImportNode extends ASTNode {
     return null;
   }
 
+  /** 返回相应的静态方法 */
   public Method getMethod() {
     return method;
   }
 
   public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
+    //其执行,即在上下作用域中创建一个相应的变量处理工厂
     factory.createVariable(methodName, method == null ? method = resolveMethod() : method);
     return null;
   }

@@ -46,7 +46,7 @@
 |   NullType    |   空值类型    |   已完成 |
 |   ParseTools  |   解析工具类   |   已完成 |
 |   PropertyTools   |   类型,方法,属性工具类   |   已完成 |
-|   ProtoParser |   |   未完成 |
+|   ProtoParser | 原型解析器  |   不作处理(无特别作用) |
 |   ReflectionUtil  | 类型处理工具类  |   已完成 |
 |   SharedVariableSpaceModel    | (未使用)  |   不作处理 |
 |   SimpleIndexHashMapWrapper   |   |   已完成 |
@@ -67,7 +67,7 @@
 |   DynamicGetAccessor  |   get动态优化访问器    |   已完成 |
 |   DynamicOptimizer    |   动态访问优化器 |   已完成 |
 |   DynamicSetAccessor  |   set动态优化访问器    |   已完成 |
-|   ASMAccessorOptimizer    |   |   未完成 |
+|   ASMAccessorOptimizer    | 使用ASM进行处理的优化器  |   未完成 |
 |   ProducesBytecode    | 属性访问自定义字节码处理器标记接口  |   已完成 |
 |   ArrayCreator    | 数组创建访问器  |   已完成 |
 |   ExprValueAccessor   | 表达式访问器  |   已完成 |
@@ -107,7 +107,7 @@
 |   ThisValueAccessor   |   this引用访问器   |   已完成 |
 |   Union   | 联合节点  |   已完成 |
 |   VariableAccessor    |   变量信息访问器 |   已完成 |
-|   WithAccessor    |   |   未完成 |
+|   WithAccessor    | 支持with语法的处理  |   不作处理(无特别作用) |
 |   ReflectiveAccessorOptimizer |   反射访问优化器 |   未完成 |
 |   AbstractOptimizer   |  抽象优化器    |   未完成 |
 |   AccessorOptimizer   |   访问优化器接口定义   |   已完成 |
@@ -199,22 +199,22 @@
 |   BooleanNode |   二元操作定义  |   已完成 |
 |   Contains    |   contains包含节点    |   已完成 |
 |   Convertable |    convert转换节点    |   已完成 |
-|   DeclProtoVarNode    |   原型变量声明节点    |   未完成 |
-|   DeclTypedVarNode    |   变量声明节点  |   未完成 |
-|   DeepAssignmentNode  |   深度赋值节点  |   未完成 |
+|   DeclProtoVarNode    |   原型变量声明节点    |   不作处理(无特别作用) |
+|   DeclTypedVarNode    |   变量声明节点  |   已完成 |
+|   DeepAssignmentNode  |   深度赋值节点  |   已完成 |
 |   DoNode  |   do循环节点  |   已完成 |
 |   DoUntilNode |   do until语法块节点   |   已完成 |
 |   EndOfStatement  |   语句结束标记节点    |   已完成 |
-|   Fold    |   fold表达式节点   |   未完成 |
+|   Fold    |   fold表达式节点   |   不作处理(无特别作用) |
 |   ForEachNode |   增强for循环节点   |   已完成 |
 |   ForNode |   for循环节点 |   已完成 |
 |   Function    |   函数定义节点  |   未完成 |
 |   FunctionInstance    |   函数实例节点  |   未完成 |
 |   IfNode  |   if节点    |   已完成 |
-|   ImportNode  |   import引入节点  |   未完成 |
-|   IndexedAssignmentNode   |   已解析变量赋值节点   |   未完成 |
-|   IndexedDeclTypedVarNode |   指定变量位置声明节点  |   未完成 |
-|   IndexedOperativeAssign  |   已解析变量操作赋值节点 |   未完成 |
+|   ImportNode  |   import引入节点  |   已完成 |
+|   IndexedAssignmentNode   |   已解析变量赋值节点   |   已完成 |
+|   IndexedDeclTypedVarNode |   指定变量位置声明节点  |   已完成 |
+|   IndexedOperativeAssign  |   已解析变量x=操作赋值节点 |   已完成 |
 |   IndexedPostFixDecNode   |   已解析变量后置--节点 |   已完成 |
 |   IndexedPostFixIncNode   |   已解析变量后置++节点 |   已完成 |
 |   IndexedPreFixDecNode    |   已解析变量前置--节点 |   已完成 |
@@ -228,26 +228,26 @@
 |   IntOptimized    |   整数处理优化节点接口  |   已完成 |
 |   IntSub  |   整数相减节点  |   已完成 |
 |   Invert  |   数字取反节点  |   已完成 |
-|   InvokationContextFactory    |   内部执行上下文解析器工厂    |   未完成 |
+|   InvokationContextFactory    |   内部执行上下文解析器工厂    |   已完成 |
 |   IsDef   |   isDef探测节点   |   已完成 |
 |   LineLabel   |   调度代码标记行节点   |   已完成 |
-|   LiteralDeepPropertyNode |   多级常量节点  |   未完成 |
+|   LiteralDeepPropertyNode |   多级常量节点  |   已完成 |
 |   LiteralNode |   常量标识节点  |   已完成 |
 |   Negation    |   boolean取反节点 |   已完成 |
 |   NestedStatement | 嵌套执行节点标记接口  |   已完成 |
-|   NewObjectNode   |   new对象节点 |   未完成 |
-|   NewObjectPrototype  |   new函数对象节点   |   未完成 |
-|   NewPrototypeNode    |   new原型节点 |   未完成 |
-|   OperativeAssign |   变量操作赋值节点    |   未完成 |
+|   NewObjectNode   |   new对象节点 |   已完成 |
+|   NewObjectPrototype  |   new函数对象节点   |   已完成 |
+|   NewPrototypeNode    |   new原型节点 |   不作处理(无特别作用) |
+|   OperativeAssign |   变量操作增量赋值节点    |   已完成 |
 |   OperatorNode    |   操作符节点   |   已完成 |
 |   Or  |   or操作节点  |   已完成 |
 |   PostFixDecNode  |   后置--节点  |   已完成 |
 |   PostFixIncNode  |   后置++节点  |   已完成 |
 |   PreFixDecNode   |   前置--节点  |   已完成 |
 |   PreFixIncNode   |   前置++节点  |   已完成 |
-|   Proto   |   原型结构节点  |   未完成 |
-|   PrototypalFunctionInstance  |   原型函数调用实例    |   未完成 |
-|   ProtoVarNode    |   原型属性声明节点    |   未完成 |
+|   Proto   |   原型结构节点  |   不作处理(无特别作用) |
+|   PrototypalFunctionInstance  |   原型函数调用实例    |   不作处理(无特别作用) |
+|   ProtoVarNode    |   原型属性声明节点    |   不作处理(无特别作用) |
 |   ReduceableCodeException |   (未使用)   |   不作处理    |
 |   RedundantCodeException  |   无限循环异常  |   已完成 |
 |   RegExMatch  |   正则匹配表达式节点   |   已完成 |
@@ -255,16 +255,16 @@
 |   ReturnNode  |   return节点    |   已完成 |
 |   Safe    | 安全调用标记接口  |   已完成 |
 |   Sign    |   表达式取负节点 |   已完成 |
-|   Soundslike  |   |   未完成 |
-|   Stacklang   |   堆栈指令集节点 |   未完成 |
-|   StaticImportNode    |   静态引用方法节点    |   未完成 |
-|   Strsim  | 字符串匹配度节点  |   未完成 |
-|   Substatement    |   子程序节点   |   未完成 |
-|   ThisWithNode    |   with当前对象节点  |   未完成 |
-|   TypeCast    |   类型转换节点  |   未完成 |
-|   TypeDescriptor  |   类型声明节点  |   未完成 |
-|   TypedVarNode    |   指定类型声明节点    |   未完成 |
+|   Soundslike  |  相似度指令 |   不作处理(无特别作用) |
+|   Stacklang   |   堆栈指令集节点 |   已完成 |
+|   StaticImportNode    |   静态引用方法节点    |   已完成 |
+|   Strsim  | 字符串匹配度节点  |   不作处理(无特别作用) |
+|   Substatement    |   子程序节点   |   已完成 |
+|   ThisWithNode    |   with当前对象节点  |   不作处理(无特别作用) |
+|   TypeCast    |   类型转换节点  |   已完成 |
+|   TypeDescriptor  |   类型声明节点  |   已完成 |
+|   TypedVarNode    |   指定类型声明节点    |   已完成 |
 |   Union   |   联合节点    |   已完成 |
 |   UntilNode   |   until节点(与while相对)   |   已完成 |
 |   WhileNode   |   while循环节点   |   已完成 |
-|   WithNode    |   with节点  |   未完成 |
+|   WithNode    |   with节点  |   不作处理(无特别作用) |

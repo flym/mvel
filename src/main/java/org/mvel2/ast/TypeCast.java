@@ -45,6 +45,8 @@ public class TypeCast extends ASTNode {
 
     if ((fields & COMPILE_IMMEDIATE) != 0) {
 
+      //对后面的执行节点进行处理.如果后面节点返回不是object,则表示是一个具体的类型.则进行转换
+      //这里首先通过转换来处理,如果不能转换,则判断是否是宽转换,即(Collection)list这种转换处理,如果仍不是,则throw 相应的异常
       if ((statement = (ExecutableStatement) subCompileExpression(expr, start, offset, pCtx))
           .getKnownEgressType() != Object.class
           && !canConvert(cast, statement.getKnownEgressType())) {
@@ -60,10 +62,13 @@ public class TypeCast extends ASTNode {
     }
   }
 
+  /** 两个类型之间是否能进行相应的类型转换 */
   private boolean canCast(Class from, Class to) {
+    //a为b的父类型或者是 a的某个声明接口是b的父类
     return isAssignableFrom(from, to) || (from.isInterface() && interfaceAssignable(from, to));
   }
 
+  /** 两个类是接口兼容的,用于宽化转换检查 */
   private boolean interfaceAssignable(Class from, Class to) {
     for (Class c : from.getInterfaces()) {
       if (c.isAssignableFrom(to)) return true;
@@ -73,6 +78,7 @@ public class TypeCast extends ASTNode {
 
 
   public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
+    //根据宽化逻辑采用简单的cast 或者是类型转换处理
     //noinspection unchecked
     return widen ? typeCheck(statement.getValue(ctx, thisValue, factory), egressType) : convert(statement.getValue(ctx, thisValue, factory), egressType);
   }
@@ -83,6 +89,7 @@ public class TypeCast extends ASTNode {
         convert(eval(expr, start, offset, ctx, factory), egressType);
   }
 
+  /** 检查相应的实例类型是否是指定类型的实例 */
   private static Object typeCheck(Object inst, Class type) {
     if (inst == null) return null;
     if (type.isInstance(inst)) {

@@ -51,13 +51,14 @@ public class OperativeAssign extends ASTNode {
     this.offset = offset;
 
     if ((fields & COMPILE_IMMEDIATE) != 0) {
+      //声明类型直接以后面的计算声明类型来表示
       egressType = (statement = (ExecutableStatement) subCompileExpression(expr, start, offset, pCtx)).getKnownEgressType();
 
       if (pCtx.isStrongTyping()) {
         knownInType = ParseTools.__resolveType(egressType);
       }
 
-      //在上下文中注册类型，以方便了解当前对象类型信息
+      //在上下文中注册类型，因为之前已判断没有此变量或参数
       if (!pCtx.hasVarOrInput(varName)) {
         pCtx.addInput(varName, egressType);
       }
@@ -66,6 +67,7 @@ public class OperativeAssign extends ASTNode {
 
   public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
     //因为在前面并没有对varName作特殊处理,因此这里如果varName为a[i]这里即会出错
+    //这里直接通过解析器的方式获取相应的值,然后执行相应的操作,再设置回去即可
     VariableResolver resolver = factory.getVariableResolver(varName);
     resolver.setValue(ctx = MathProcessor.doOperations(resolver.getValue(), operation, knownInType, statement.getValue(ctx, thisValue, factory)));
     return ctx;

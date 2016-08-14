@@ -7,6 +7,7 @@ import org.mvel2.util.CompilerTools;
 
 import static org.mvel2.util.Soundex.soundex;
 
+/** 描述一个soundsLike操作符运算节点,即两个字符串之间是否有一定的相似性 */
 public class Soundslike extends ASTNode {
   private ASTNode stmt;
   private ASTNode soundslike;
@@ -40,6 +41,7 @@ public class Soundslike extends ASTNode {
 
   }
 
+  /** 返回类型为boolean类型 */
   public Class getEgressType() {
     return Boolean.class;
   }

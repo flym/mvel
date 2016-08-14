@@ -39,6 +39,7 @@ public class IndexedDeclTypedVarNode extends ASTNode implements Assignment {
   }
 
   public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
+    //因为之前指定了相应的下标位置,因此这里直接进行声明即可
     factory.createIndexedVariable(register, null, egressType);
     return ctx;
   }
@@ -56,10 +57,12 @@ public class IndexedDeclTypedVarNode extends ASTNode implements Assignment {
     return new char[0];
   }
 
+  /** 当前节点为声明节点 */
   public boolean isAssignment() {
     return true;
   }
 
+  /** 当前节点为新声明节点(并未赋值) */
   public boolean isNewDeclaration() {
     return true;
   }
