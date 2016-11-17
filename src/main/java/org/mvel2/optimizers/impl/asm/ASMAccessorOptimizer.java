@@ -91,6 +91,7 @@ import static org.mvel2.util.Varargs.paramTypeVarArgsSafe;
 
 
 /**
+ * 实现基于asm字节码处理的优化器，通过直接分析字节码来达到执行的目的
  * Implementation of the MVEL Just-in-Time (JIT) compiler for Property Accessors using the ASM bytecode
  * engineering library.
  * <p/>

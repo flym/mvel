@@ -6,15 +6,15 @@
 |   UnresolveablePropertyException |    不能解析变量异常    | 已完成   |
 |   Unit                |   转换单元    |   已完成 |
 |   ScriptRuntimeException  | 脚本运行期异常   |   已完成 |
-|   PropertyAccessor    |   |   未完成 |
+|   PropertyAccessor    | 单个属性的解释运行版本  |   已完成 |
 |   PropertyAccessException | 属性访问异常  |   已完成 |
 |   PreProcessor    | 编译期字符串预处理 |   已完成 |
 |   ParserContext   |   解析上下文   | 已完成   |
 |   ParserConfiguration |   解析配置    |   已完成 |
 |   OptimizationFailure  | asm优化访问异常  | 已完成 |
 |   Operator    | 操作符   |   已完成 |
-|   MVELRuntime |   |   未完成 |
-|   MVELInterpretedRuntime  |   |   未完成 |
+|   MVELRuntime |  处理编译执行单元的主要运算逻辑 |   已完成 |
+|   MVELInterpretedRuntime  | 负责解释运行相应的表达式  |   已完成 |
 |   MVEL   |    主运行类    |   已完成 |
 |   MacroProcessor  | 宏处理器  |   已完成 |
 |   Macro   |   宏定义 |   已完成 |
@@ -30,13 +30,13 @@
 |   ASTIterator | 节点链定义接口  |   已完成 |
 |   ASTLinkedList   | 节点执行链表  |   已完成 |
 |   CallableProxy   |   调用代理对象  |   已完成 |
-|   CollectionParser    | 集合解析器  |  未完成 |
+|   CollectionParser    | 集合解析器  |  已完成 |
 |   CompatibilityStrategy   | 类型兼容性策略判定  |   已完成 |
-|   CompilerTools   | 编译工具类  |  未完成 |
+|   CompilerTools   | 编译工具类  |  已完成 |
 |   ErrorUtil   | 错误信息工具  |   已完成 |
 |   ExecutionStack    |  一个简单的执行栈       |    已完成 |
 |   FastList    | 快速(简化)的ArrayList  |   已完成 |
-|   FunctionParser  |   函数解析器 | 未完成 |
+|   FunctionParser  |   函数解析器 | 已完成 |
 |   InternalNumber  | 内部统一数字表现形式  |   已完成 |
 |   JITClassLoader  | 内部统一使用的类加载器  |   已完成 |
 |   LineMapper  |   行映射处理   |   已完成 |
@@ -108,8 +108,8 @@
 |   Union   | 联合节点  |   已完成 |
 |   VariableAccessor    |   变量信息访问器 |   已完成 |
 |   WithAccessor    | 支持with语法的处理  |   不作处理(无特别作用) |
-|   ReflectiveAccessorOptimizer |   反射访问优化器 |   未完成 |
-|   AbstractOptimizer   |  抽象优化器    |   未完成 |
+|   ReflectiveAccessorOptimizer |   反射访问优化器 |   已完成 |
+|   AbstractOptimizer   |  抽象优化器    |   已完成 |
 |   AccessorOptimizer   |   访问优化器接口定义   |   已完成 |
 |   OptimizationNotSupported    |   优化不受支持异常    |   已完成 |
 |   OptimizerFactory    |   优化器工厂   |   已完成 |
@@ -174,12 +174,12 @@
 |   StringArrayCH   |   对象转string[]转换器  |   已完成 |
 |   StringCH    |   对象转string转换器    |   已完成 |
 |   UnitConversion  |   (未使用)   |   不作处理    |
-|   AbstractParser  |   抽象解析器   |   未完成 |
+|   AbstractParser  |   抽象解析器   |   已完成 |
 |   Accessor    |   属性访问器接口 |   已完成 |
 |   AccessorNode    |   节点访问器接口 |   已完成 |
 |   BlankLiteral    |   空值常量定义  |   已完成 |
-|   CompiledAccExpression   |   已编译访问器表达式   |   未完成 |
-|   CompiledExpression  |   编译表达式   |   未完成 |
+|   CompiledAccExpression   |   已编译访问器表达式   |   已完成 |
+|   CompiledExpression  |   编译表达式   |   已完成 |
 |   EndWithValue    |   (未使用)   |   不作处理    |
 |   ExecutableAccessor  |   可执行的节点访问器   |   已完成 |
 |   ExecutableAccessorSafe  | 安全标记执行节点访问器  |   已完成 |
@@ -187,13 +187,13 @@
 |   ExecutableStatement |   可执行节点接口 |   已完成 |
 |   ExpressionCompiler  |   表达式编译器    |   未完成 |
 |   Parser  |   编译器接口定义 |   已完成 |
-|   PropertyVerifier    |   属性验证器   |   未完成 |
+|   PropertyVerifier    |   属性验证器   |   已完成 |
 |   And |   &&节点    |   已完成 |
 |   ArraySize   |   数组长度表示  |   已完成 |
 |   AssertNode  |   断言节点    |   已完成 |
 |   Assignment  |   赋值节点接口  |   已完成 |
 |   AssignmentNode  |   赋值节点    |   已完成 |
-|   ASTNode |   抽象语法树节点统一类  |   未完成 |
+|   ASTNode |   抽象语法树节点统一类  |   已完成 |
 |   BinaryOperation |   2元数字操作节点  |   已完成 |
 |   BlockNode   |   语法块节点标记接口   |   已完成 |
 |   BooleanNode |   二元操作定义  |   已完成 |
@@ -208,8 +208,8 @@
 |   Fold    |   fold表达式节点   |   不作处理(无特别作用) |
 |   ForEachNode |   增强for循环节点   |   已完成 |
 |   ForNode |   for循环节点 |   已完成 |
-|   Function    |   函数定义节点  |   未完成 |
-|   FunctionInstance    |   函数实例节点  |   未完成 |
+|   Function    |   函数定义节点  |   已完成 |
+|   FunctionInstance    |   函数实例节点  |   已完成 |
 |   IfNode  |   if节点    |   已完成 |
 |   ImportNode  |   import引入节点  |   已完成 |
 |   IndexedAssignmentNode   |   已解析变量赋值节点   |   已完成 |
@@ -219,7 +219,7 @@
 |   IndexedPostFixIncNode   |   已解析变量后置++节点 |   已完成 |
 |   IndexedPreFixDecNode    |   已解析变量前置--节点 |   已完成 |
 |   IndexedPreFixIncNode    |   已解析变量前置++节点 |   已完成 |
-|   InlineCollectionNode    |   内部集合表达式节点   |   未完成 |
+|   InlineCollectionNode    |   字面量集合表达式节点   |   已完成 |
 |   Instance    |   instanceOf节点    |   已完成 |
 |   IntAdd  |   整数相加节点  |   已完成 |
 |   IntDiv  |   整数相除节点  |   已完成 |

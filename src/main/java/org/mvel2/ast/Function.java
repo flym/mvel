@@ -40,6 +40,7 @@ import static org.mvel2.util.ParseTools.subCompileExpression;
 public class Function extends ASTNode implements Safe {
   /** 函数名 */
   protected String name;
+  /** 相应的执行代码块(即函数内部实现代码) */
   protected ExecutableStatement compiledBlock;
 
   /** 参数定义信息 */
@@ -79,6 +80,7 @@ public class Function extends ASTNode implements Safe {
 
     //pCtx.declareFunction(this);
 
+    //解析函数执行体，因此重新建立一个解析上下文
     ParserContext ctx = new ParserContext(pCtx.getParserConfiguration(), pCtx, true);
 
     //单独声明函数,即声明为全局静态,否则认为是在一个函数体内再声明函数,那么就不是一个全局的,可以理解为就是一个普通的闭包函数
@@ -128,6 +130,7 @@ public class Function extends ASTNode implements Safe {
     ctx.addIndexedInputs(ctx.getVariables().keySet());
     ctx.getVariables().clear();
 
+    //编译相应的执行块
     this.compiledBlock = (ExecutableStatement) subCompileExpression(expr, blockStart, blockOffset, ctx);
 
     this.parameters = new String[ctx.getIndexedInputs().size()];
@@ -145,6 +148,7 @@ public class Function extends ASTNode implements Safe {
     pCtx.addVariable(name, Function.class);
   }
 
+  /** 函数定义执行，即产生一个函数实体对象 */
   public Object getReducedValueAccelerated(Object ctx, Object thisValue, VariableResolverFactory factory) {
     //执行即创建起整个函数,如果有name就加入到变量作用域中,同时返回其处理,以方便在后续处理
     PrototypalFunctionInstance instance = new PrototypalFunctionInstance(this, new MapVariableResolverFactory());
@@ -167,7 +171,7 @@ public class Function extends ASTNode implements Safe {
     return instance;
   }
 
-  /** 执行真正的调用过程 */
+  /** 执行真正的调用过程,即在已经产生了一个函数实例之后，再进行函数调用 */
   public Object call(Object ctx, Object thisValue, VariableResolverFactory factory, Object[] parms) {
     if (parms != null && parms.length != 0) {
       // detect tail recursion
@@ -228,6 +232,7 @@ public class Function extends ASTNode implements Safe {
     }
   }
 
+  /** 获取相应的执行代码块 */
   public ExecutableStatement getCompiledBlock() {
     return compiledBlock;
   }

@@ -101,6 +101,7 @@ import static org.mvel2.util.PropertyTools.isEmpty;
 import static org.mvel2.util.Soundex.soundex;
 
 /**
+ * 核心解析器，用于解析相应的表达式，即词法分析器，将相应的表达式分块转换为节点
  * This is the core parser that the subparsers extend.
  *
  * @author Christopher Brock
@@ -123,11 +124,13 @@ public class AbstractParser implements Parser, Serializable {
   /** 表示当前正在作的操作 */
   protected int fields;
 
-  /** 表示操作溢出了 */
+  /** 表示操作溢出了,或者表示相应的操作不能够再继续进行 */
   protected static final int OP_OVERFLOW = -2;
   /** 表示操作需要提前终止,如and || 这种 */
   protected static final int OP_TERMINATE = -1;
+  /** 栈操作，表示当前操作桢已经处理完毕，可以理解为当前的一个 表达式已经计算完毕，如 a > b ? c :d 这样的一个子表达式 */
   protected static final int OP_RESET_FRAME = 0;
+  /** 栈操作，表示需要继续运行 */
   protected static final int OP_CONTINUE = 1;
 
   /** 提前处理 = 操作 (而不是单独成项),即a=3,可以为a=3 1个赋值节点,也可以是a op 3 3个节点,这里的greedy即前者 */
@@ -141,6 +144,7 @@ public class AbstractParser implements Parser, Serializable {
   /** 当前是否是编译模式，在编译模式下某些操作不能马上进行执行(如变量处理等) */
   protected boolean compileMode = false;
 
+  /** 表示解析的表达式是否是常量表达式 */
   protected int literalOnly = -1;
 
   /** 最新处理行的行头的下标值 */
@@ -171,7 +175,10 @@ public class AbstractParser implements Parser, Serializable {
 
   /** 当前解析上下文 */
   protected ParserContext pCtx;
-  /** 临时栈,用于辅助stack进行处理 */
+  /**
+   * 临时栈,用于辅助stack进行处理,仅用于一些高优化级运算数，不便于在stack中处理的,主要用于处理优先级操作问题
+   * 正常的情况下辅助器仅用于保存最近的操作数和操作符
+   */
   protected ExecutionStack dStack;
   /** 解释模式下所使用的当前上下文 */
   protected Object ctx;
@@ -1647,7 +1654,7 @@ public class AbstractParser implements Parser, Serializable {
   }
 
   /**
-   * 处理当前节点,即当前节点还需要一些额外处理
+   * 处理当前有类型声明的节点,即当前节点还需要一些额外处理
    * Process the current typed node
    *
    * @param decl node is a declaration or not
@@ -1656,6 +1663,7 @@ public class AbstractParser implements Parser, Serializable {
    */
   private ASTNode procTypedNode(boolean decl) {
     while (true) {
+      //上一个字点为字符串，那么认为此字符串应该表示一个类型信息，先更换为类型节点信息，以方便下面使用
       if (lastNode.getLiteralValue() instanceof String) {
         char[] tmp = ((String) lastNode.getLiteralValue()).toCharArray();
         TypeDescriptor tDescr = new TypeDescriptor(tmp, 0, tmp.length, 0);
@@ -1669,12 +1677,15 @@ public class AbstractParser implements Parser, Serializable {
         }
       }
 
+      //上一个节点为类型节点
       if (lastNode.isLiteral() && lastNode.getLiteralValue() instanceof Class) {
+        //因为使用新的类型声明节点替换了此节点，因此当前节点被废除
         lastNode.discard();
 
         captureToEOS();
 
         if (decl) {
+          //仅仅是声明节点
           splitAccumulator.add(new DeclTypedVarNode(new String(expr, st, cursor - st), expr, st, cursor - st,
               (Class) lastNode.getLiteralValue(), fields | ASTNode.ASSIGN, pCtx));
         }
@@ -1684,6 +1695,7 @@ public class AbstractParser implements Parser, Serializable {
               lastNode.getLiteralValue(), pCtx));
         }
       }
+      //原型节点
       else if (lastNode instanceof Proto) {
         captureToEOS();
         if (decl) {
@@ -1697,6 +1709,7 @@ public class AbstractParser implements Parser, Serializable {
       }
 
       // this redundant looking code is needed to work with the interpreter and MVELSH properly.
+      //这里因为不是编译阶段，可能是解释运行阶段，因此尝试从栈中找到上一次的类型信息
       else if ((fields & ASTNode.COMPILE_IMMEDIATE) == 0) {
         if (stk.peek() instanceof Class) {
           captureToEOS();
@@ -1729,6 +1742,7 @@ public class AbstractParser implements Parser, Serializable {
       }
 
       skipWhitespace();
+      //如果存在 逗号，表示是多个声明，如 var a = 3,b =2的这种
       if (cursor < end && expr[cursor] == ',') {
         st = ++cursor;
         splitAccumulator.add(new EndOfStatement(pCtx));
@@ -1910,8 +1924,8 @@ public class AbstractParser implements Parser, Serializable {
 
         return lastNode = function;
       }
+      //原型解析，不作翻译
       case PROTO: {
-        //todo 原型解析
         if (ProtoParser.isUnresolvedWaiting()) {
           ProtoParser.checkForPossibleUnresolvedViolations(expr, cursor, pCtx);
         }
@@ -2128,6 +2142,8 @@ public class AbstractParser implements Parser, Serializable {
   }
 
   /**
+   * 判断接下来的字符是否是有效变量
+   * 在处理中跳过连续的空白，因为空白本身也无特殊处理
    * Checks to see if the next part of the statement is an identifier part.
    *
    * @return boolean true if next part is identifier part.
@@ -2412,6 +2428,7 @@ public class AbstractParser implements Parser, Serializable {
   }
 
   /**
+   * 重新设置相应的表达式，并且在处理时去掉前后空白字符
    * Set and finesse the expression, trimming an leading or proceeding whitespace.
    *
    * @param expression the expression
@@ -2442,6 +2459,7 @@ public class AbstractParser implements Parser, Serializable {
   }
 
   /**
+   * 重新设置相应的表达式信息
    * Set and finesse the expression, trimming an leading or proceeding whitespace.
    *
    * @param expression the expression
@@ -2468,6 +2486,7 @@ public class AbstractParser implements Parser, Serializable {
   }
 
   /**
+   * 读取当前下标前一个字符
    * Return the last character (delta -1 of cursor position).
    *
    * @return -
@@ -2478,7 +2497,7 @@ public class AbstractParser implements Parser, Serializable {
   }
 
   /**
-   * 往前跳一位，读取下一个字符
+   * 读取当前下标下一个字符
    * Return the next character (delta 1 of cursor position).
    *
    * @return -
@@ -2493,6 +2512,8 @@ public class AbstractParser implements Parser, Serializable {
   }
 
   /**
+   * 返回从当前下标往前指定位移处的字符，如果超出限度，则返回0,主要用于在某些场景中提前探测一些操作数据
+   * 如a+= 这种,或者是 >>> 这种
    * Return the character, forward of the currrent cursor position based on the specified range delta.
    *
    * @param range -
@@ -2506,6 +2527,8 @@ public class AbstractParser implements Parser, Serializable {
   }
 
   /**
+   * 判断接下来碰到的字符肯定是变量名或者是一个字，字符串
+   * 即认为在二元操作的右边或者是赋值后应该是一个有效的数据，而不是继续为 操作符
    * Returns true if the next is an identifier or literal.
    *
    * @return true of false
@@ -2522,6 +2545,7 @@ public class AbstractParser implements Parser, Serializable {
   }
 
   /**
+   * 移动当前下标，并且返回下一个有效下标处(下标仅+1,并不继续移动)
    * Increment one cursor position, and move cursor to next non-blank part.
    *
    * @return cursor position
@@ -2532,6 +2556,7 @@ public class AbstractParser implements Parser, Serializable {
   }
 
   /**
+   * 下标移到下一个非空的字符处
    * Move to next cursor position from current cursor position.
    *
    * @return cursor position
@@ -2563,6 +2588,7 @@ public class AbstractParser implements Parser, Serializable {
    * begin with.
    * <p/>
    * Determines whether or not the logical statement is manually terminated with a statement separator (';').
+   * 判断一个语句是否是非正常中断的，比如 c = a + b，后面并没有一个有效的分号,但仍认为是需要中断的
    *
    * @return -
    */
@@ -2578,10 +2604,12 @@ public class AbstractParser implements Parser, Serializable {
   protected static final int GET = 2;
   protected static final int GET_OR_CREATE = 3;
 
+  /** 在当前解析上下文中添加相应的错误信息，错误下标从起始点算起 */
   protected void addFatalError(String message) {
     pCtx.addError(new ErrorDetail(expr, st, true, message));
   }
 
+  /** 在当前解析上下文添加严重错误，错误信息从指定下标开始 */
   protected void addFatalError(String message, int start) {
     pCtx.addError(new ErrorDetail(expr, start, true, message));
   }
@@ -2598,6 +2626,7 @@ public class AbstractParser implements Parser, Serializable {
     OPERATORS.putAll(loadLanguageFeaturesByLevel(level));
   }
 
+  /** 加载操作符常量表 */
   public static HashMap<String, Integer> loadLanguageFeaturesByLevel(int languageLevel) {
     HashMap<String, Integer> operatorsTable = new HashMap<String, Integer>();
     switch (languageLevel) {
@@ -2693,25 +2722,39 @@ public class AbstractParser implements Parser, Serializable {
   }
 
   /**
-   * 在当前栈上进行操作数递减操作
+   * 在当前栈上进行操作数递减操作,即针对常量数据进行处理
    * 相应的操作也会继续判定后续的节点,以保证操作数优先级的正确性
    * 在当前处理时,相应的栈中已经有相应的操作数以及当前操作符了,则接下来的操作就是进一步判定可能的优先顺序,以进行处理
+   * 最终返回此操作的处理结果
    * Reduce the current operations on the stack.
    *
    * @param operator the operator
+   *                 表示当前栈里面最上面的操作符是什么
    * @return a stack control code
+   * 返回值 -2,表示碰到了非常量节点
+   * 返回值 -1,表示相应的操作应该提前结束
    */
   protected int arithmeticFunctionReduction(int operator) {
     ASTNode tk;
+    //用于表示在处理过程中后面的操作符，而operator会在过程中表示为当前操作符,2个操作符用于实现比如 a + b * c 中的2个操作符
+    //因为优先级之间的操作仅会涉及到2个操作符，因此不需要更多的变量
+    //因为只有 加减  和 乘除 两类操作
     int operator2;
 
     /**
      * 下一个节点仍是运算符,还可能继续处理
      * If the next token is an operator, we check to see if it has a higher
      * precdence.
+     * 这里主要处理优化级问题，以保证高优先级的数据先处理
      */
     if ((tk = nextToken()) != null) {
+      //这里栈里的数为 a b +(a + b)，如果碰到 优先级更高的操作符，如 a + b - c，则需要切换为 a + b c *的这种，以支持处理后缀表达式
+      //在整个处理中，让stack存储低优先级操作，dstack保留高优先级操作,直到碰到低优先级或同优先级的操作为止,这样可以保证优先级不会出错
+      //并且dstack中的优先级都是比stack中高的，因此即使将dstack数据回到stack，也是可以保证这部分运算顺序先执行
+      //同时在处理高优先级时，会根据后缀操作处理过程调整相应的栈内数据顺序
+      //这里首先判断是否是四则运算，因为四则运算的优先级较高，如果仍比四则运算优先级高的，就直接单独处理了
       if (isArithmeticOperator(operator2 = tk.getOperator()) && PTABLE[operator2] > PTABLE[operator]) {
+        //这里将操作符和操作数交换，以将之前表达式后面的操作数提及后面处理
         stk.xswap();
         /**
          * The current arith. operator is of higher precedence the last.
@@ -2723,21 +2766,29 @@ public class AbstractParser implements Parser, Serializable {
          * Check to see if we're compiling or executing interpretively.  If we're compiling, we really
          * need to stop if this is not a literal.
          */
+        //如果后面的操作数不是常量，则表示当前不可继续执行操作，因此暂存相应的数据，终止处理
         if (compileMode && !tk.isLiteral()) {
 
 
+          //这里将操作符放在栈前面，那么在相应的执行表达式expressionCompiler中，就会重新放入前面来
           splitAccumulator.push(tk, new OperatorNode(operator2, expr, st, pCtx));
           return OP_OVERFLOW;
         }
 
+        //因为这里优先级比前面高，加到辅助栈中
+        //同时重置当前操作符为后面的这个操作符
         dStack.push(operator = operator2, tk.getReducedValue(ctx, ctx, variableFactory));
 
+        //对后面的连续调用进行处理，直到不再是算术处理
         while (true) {
           // look ahead again
+          //这里后面的优先级比当前更高
           if ((tk = nextToken()) != null && (operator2 = tk.getOperator()) != -1
               && operator2 != END_OF_STMT && PTABLE[operator2] > PTABLE[operator]) {
             // if we have back to back operations on the stack, we don't xswap
 
+            //新操作数优先级更高，继续将旧的数据放到栈中
+            //这时的顺序为中缀顺序，即放到主栈中的顺序为 a + b，这里的中缀在后续主栈进行deduce时再转换为后缀处理
             if (dStack.isReduceable()) {
               stk.copyx2(dStack);
             }
@@ -2745,14 +2796,20 @@ public class AbstractParser implements Parser, Serializable {
             /**
              * This operator is of higher precedence, or the same level precedence.  push to the RHS.
              */
+            //将新优先级的放入辅助栈，继续支持同样的流程
             dStack.push(operator = operator2, nextToken().getReducedValue(ctx, ctx, variableFactory));
 
             continue;
           }
           else if (tk != null && operator2 != -1 && operator2 != END_OF_STMT) {
+            //优先级相同
             if (PTABLE[operator2] == PTABLE[operator]) {
+              //辅助栈中有数据,因为同优先级，因此将相应的操作数和符入到主栈，并且进行计算。减少相应的辅助栈数据
               if (!dStack.isEmpty()) dreduce();
               else {
+                //辅助栈没数据,并且这里明确表示主栈中的优先级和当前应该是一致的，因此直接全量性地对主栈进行操作
+                //因为这里的dstack为空的情况仅有可能是进入了 下一个else 的情况，仅碰到了低优先级数据，导致会对栈中高优先级的操作进行处理
+                //这里采用xswap_op是因为在之前相应的操作符和操作数已经被调整顺序了，而不是正常的后缀形式
                 while (stk.isReduceable()) {
                   stk.xswap_op();
                 }
@@ -2762,6 +2819,7 @@ public class AbstractParser implements Parser, Serializable {
                * This operator is of the same level precedence.  push to the RHS.
                */
 
+              //因为是同优先级，因此直接放到辅助栈中,可以认为与优先级大于左边相同
               dStack.push(operator = operator2, nextToken().getReducedValue(ctx, ctx, variableFactory));
 
               continue;
@@ -2770,10 +2828,12 @@ public class AbstractParser implements Parser, Serializable {
               /**
                * The operator doesn't have higher precedence. Therfore reduce the LHS.
                */
+              //当前优先级更低，因此将辅助栈入主栈，并进行计算
               while (dStack.size() > 1) {
                 dreduce();
               }
 
+              //接下来的操作，以将主栈中所有比当前优先级高的运算都进行计算，包括优先级高的或者是同优先级
               operator = tk.getOperator();
               // Reduce the lesser or equal precedence operations.
               while (stk.size() != 1 && stk.peek2() instanceof Integer &&
@@ -2788,24 +2848,32 @@ public class AbstractParser implements Parser, Serializable {
              * There are no more tokens.
              */
 
+            //进入到这里，就表示没有更多的操作符，可能为end，也可能为return
+            //因为如果辅助栈有数据，则copy到主栈，并计算值
             if (dStack.size() > 1) {
               dreduce();
             }
 
+            //这里因为主栈作了处理，如果主栈有更多的数据，那么一定是 a + b这种方式，因此这里将操作符提至后面
             if (stk.isReduceable()) stk.xswap();
 
             break;
           }
 
+          //进入到这里，表示碰到了操作符节点，但是是低优先级的，因此需要判断是否还需要继续处理
+          //因为and or会对相应的运算逻辑产生影响，因此单独进行处理,让调用者进行判断是否继续处理
           if ((tk = nextToken()) != null) {
             switch (operator) {
               case AND: {
+                //and，第1个返回false，则不可再往下执行
                 if (!(stk.peekBoolean())) return OP_TERMINATE;
+                //这里表示还需要继续执行第2个and语句
                 else {
                   splitAccumulator.add(tk);
                   return AND;
                 }
               }
+              //or 第1个返回true,不需要再继续执行，因此提前中断处理
               case OR: {
                 if ((stk.peekBoolean())) return OP_TERMINATE;
                 else {
@@ -2814,16 +2882,20 @@ public class AbstractParser implements Parser, Serializable {
                 }
               }
 
+              //低优先级,直接按中缀加入到主栈中
               default:
                 stk.push(operator, tk.getReducedValue(ctx, ctx, variableFactory));
             }
           }
         }
       }
+      //这里强制要求相应的操作节点为操作符节点，也可以是如return，;这种节点，其操作符为 -1
       else if (!tk.isOperator()) {
         throw new CompileException("unexpected token: " + tk.getName(), expr, st);
       }
+      //表示后面的操作符优先级更低，因此不需要再处理了，这里对当前主数据栈进行递减操作，以表示可以对前面的数据进行处理了
       else {
+        //因为这里类似于主栈的顺序没有被修改过，因此直接进行reduce
         reduce();
         splitAccumulator.push(tk);
       }
@@ -2831,9 +2903,11 @@ public class AbstractParser implements Parser, Serializable {
 
     // while any values remain on the stack
     // keep XSWAPing and reducing, until there is nothing left.
+    //如果栈中有更多操作数和操作符，则进行相应的递减操作
     if (stk.isReduceable()) {
       while (true) {
         reduce();
+        //这里因为之前的栈中的顺序为中缀顺序，这里需要转换为后缀处理
         if (stk.isReduceable()) {
           stk.xswap();
         }
@@ -2846,6 +2920,11 @@ public class AbstractParser implements Parser, Serializable {
     return OP_RESET_FRAME;
   }
 
+  /**
+   * 将辅助栈中的数据放到数据栈中，并对数据栈进行操作处理
+   * 这里的辅助栈中的数据为 + b，即操作数在前，那么放到stk栈时，就会放到最上面,即将操作符放到最上面，这样以方便主栈进行运算操作
+   * 这里的处理可以认为当前辅助栈中的优先级都很高，因此要先进行计算，不再需要与后面的操作数再进行判断了
+   */
   private void dreduce() {
     stk.copy2(dStack);
     stk.op();
@@ -2856,12 +2935,16 @@ public class AbstractParser implements Parser, Serializable {
    * (ie. val1 op val2).  This is not the same as a binary operation, although binary operations would appear
    * to have 3 structures as well.  A binary structure (or also a junction in the expression) compares the
    * current state against 2 downrange structures (usually an op and a val).
+   * 对相应的操作栈进行递减操作，即根据最上面的操作符处理操作数，然后将结果重新入栈
+   * 在处理时，因为相应的操作符已经提前pop出来，因此相应的操作将操作符作为参数传递
+   * 在整个处理过程中，栈中的数据都是常量 ，因此可以直接进行处理。因为这里数据都是在处理过程中加到栈中的
    */
   protected void reduce() {
     Object v1, v2;
     int operator;
     try {
       switch (operator = (Integer) stk.pop()) {
+        //二元操作
         case ADD:
         case SUB:
         case DIV:
@@ -2877,16 +2960,19 @@ public class AbstractParser implements Parser, Serializable {
           stk.op(operator);
           break;
 
+        //and处理 因为顺序为 a b && 因此要先算a,再算b
         case AND:
           v1 = stk.pop();
           stk.push(((Boolean) stk.pop()) && ((Boolean) v1));
           break;
 
+        //or处理,因为顺序为 a b && 因此要先算a,再算b
         case OR:
           v1 = stk.pop();
           stk.push(((Boolean) stk.pop()) || ((Boolean) v1));
           break;
 
+        //or 处理
         case CHOR:
           v1 = stk.pop();
           if (!isEmpty(v2 = stk.pop()) || !isEmpty(v1)) {
@@ -2894,22 +2980,27 @@ public class AbstractParser implements Parser, Serializable {
             stk.push(!isEmpty(v2) ? v2 : v1);
             return;
           }
+          //2个数据都是空的，则直接加一个null到栈中
           else stk.push(null);
           break;
 
+        //正则处理
         case REGEX:
           stk.push(java.util.regex.Pattern.compile(java.lang.String.valueOf(stk.pop()))
               .matcher(java.lang.String.valueOf(stk.pop())).matches());
           break;
 
+        //instance of
         case INSTANCEOF:
           stk.push(((Class) stk.pop()).isInstance(stk.pop()));
           break;
 
+        //转换操作
         case CONVERTABLE_TO:
           stk.push(org.mvel2.DataConversion.canConvert(stk.peek2().getClass(), (Class) stk.pop2()));
           break;
 
+        //contains 处理,处理逻辑与 pop 相似，这里的peek2 和 pop2 能达到两次pop相同的结果
         case CONTAINS:
           stk.push(containsCheck(stk.peek2(), stk.pop2()));
           break;
@@ -2923,6 +3014,7 @@ public class AbstractParser implements Parser, Serializable {
           stk.push(similarity(java.lang.String.valueOf(stk.pop()), java.lang.String.valueOf(stk.pop())));
           break;
 
+        //默认情况下，认为为位移操作，因此进行位移相应处理
         default:
           reduceNumeric(operator);
       }
@@ -2938,6 +3030,7 @@ public class AbstractParser implements Parser, Serializable {
     }
   }
 
+  /** 使用相应的操作符,针对不同的数据类型进行不同的操作 */
   private void reduceNumeric(int operator) {
     Object op1 = stk.peek2();
     Object op2 = stk.pop2();
@@ -2959,6 +3052,7 @@ public class AbstractParser implements Parser, Serializable {
     }
   }
 
+  /** 对2个int数据进行操作 这里为位移操作 */
   private void reduce(int op1, int operator, int op2) {
     switch (operator) {
       case BW_AND:
@@ -2993,6 +3087,7 @@ public class AbstractParser implements Parser, Serializable {
     }
   }
 
+  /** 对1个int和1个long类型数据进行操作 这里为位移操作 */
   private void reduce(int op1, int operator, long op2) {
     switch (operator) {
       case BW_AND:
@@ -3027,6 +3122,7 @@ public class AbstractParser implements Parser, Serializable {
     }
   }
 
+  /** 对1个long和1个int类型数据进行操作 这里为位移操作 */
   private void reduce(long op1, int operator, int op2) {
     switch (operator) {
       case BW_AND:
@@ -3061,6 +3157,7 @@ public class AbstractParser implements Parser, Serializable {
     }
   }
 
+  /** 对2个long类型数据进行操作 这里为位移操作 */
   private void reduce(long op1, int operator, long op2) {
     switch (operator) {
       case BW_AND:
@@ -3095,6 +3192,7 @@ public class AbstractParser implements Parser, Serializable {
     }
   }
 
+  /** 获取当前已经编译到的下标位置 */
   public int getCursor() {
     return cursor;
   }
@@ -3103,6 +3201,7 @@ public class AbstractParser implements Parser, Serializable {
     return expr;
   }
 
+  @Deprecated
   private static int asInt(final Object o) {
     return (Integer) o;
   }

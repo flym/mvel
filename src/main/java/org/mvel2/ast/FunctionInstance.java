@@ -18,6 +18,7 @@ public class FunctionInstance {
     return function;
   }
 
+  /** 执行调用过程，即调用当前函数 */
   public Object call(Object ctx, Object thisValue, VariableResolverFactory factory, Object[] parms) {
     return function.call(ctx, thisValue, factory, parms);
   }

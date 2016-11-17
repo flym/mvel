@@ -33,6 +33,7 @@ public class EndOfStatement extends ASTNode {
     this.literal = getOperator();
   }
 
+  /** 结束符也算术操作符的一部分 */
   public boolean isOperator() {
     return true;
   }

@@ -51,7 +51,7 @@ public class CollectionParser {
   /** 表达式结束位置 */
   private int end;
 
-  /** 当前处理的数据类型(处理中赋值) */
+  /** 当前处理的数据类型,即实际处理的数组，集合的类型信息 */
   private int type;
 
   /** 相应的处理类型,认为是ArrayList */
@@ -61,7 +61,7 @@ public class CollectionParser {
   /** 认为是hashmap */
   public static final int MAP = 2;
 
-  /** 具体的数据类型 */
+  /** 具体的集合中每一个数据的类型(非数组类型) */
   private Class colType;
   /** 认为的编译上下文 */
   private ParserContext pCtx;
@@ -76,6 +76,7 @@ public class CollectionParser {
     this.type = type;
   }
 
+  /** 解析一个集合的属性表达式,并根据子编译选项决定是否每一项进行编译 */
   public Object parseCollection(char[] property, int start, int offset, boolean subcompile, ParserContext pCtx) {
     this.property = property;
     this.pCtx = pCtx;
@@ -89,6 +90,7 @@ public class CollectionParser {
     return parseCollection(subcompile);
   }
 
+  /** 解析一个集合的属性表达式，并根据其传入的声明子类型进行定义和解析 */
   public Object parseCollection(char[] property, int start, int offset, boolean subcompile, Class colType, ParserContext pCtx) {
     if (colType != null) this.colType = getBaseComponentType(colType);
     this.property = property;
@@ -107,8 +109,10 @@ public class CollectionParser {
   }
 
   /**
-   * 编译并返回已编译好的结果(即最终的处理数据),最终以list的方式或map方式返回
+   * 编译并返回已编译好的结果(即最终的处理数据),最终以list的方式或map方式,数组方式返回
    * 返回类型取决于相应数据的类型
+   * 针对为{a:b}的这种类型，返回的数据为List<Map> 类型
+   * 因为默认的type即为0，因此默认返回的类型均是List类型
    *
    * @param subcompile 是否要对每一项进行编译
    */
@@ -124,6 +128,7 @@ public class CollectionParser {
 
     int st = start;
 
+    //在解析前已经了数据的类型，因此这里先根据类型创建好相应的结果信息
     if (type != -1) {
       switch (type) {
         case ARRAY:
@@ -138,7 +143,7 @@ public class CollectionParser {
 
     //临时对象,用于表示在过程中的不同中间对象
     Object curr = null;
-    //根据数据格式,重新解析相应的类型
+    //根据数据格式,重新解析相应的类型,即前面已经确定是集合或map，但还可能是数组
     int newType = -1;
 
 
@@ -162,16 +167,20 @@ public class CollectionParser {
           /**
            * 处理在数组中存在[new int[]{1,2}]的这种情况
            * 这里会定位于后面的{1,2},这样进行判定,同时相应的类型由外层的单个数据类型来决定
-           * 同时在解析{a:b}这种表达式时,会在外层解析为一个list,内层解析为map,然后在处理时,再认为整个对象为map
-           * 这样达到即解析集合,又解析map的目的(可以认为有点混乱)
+           * 对于map，则认为这里已经到达 {a:[1,2]}的这种情况，那么相应的 key值肯定已经确定，只需要将后面的[1,2]解析为list,然后再以
+           * key为a,value为[1,2]放到map中即可
+           * 针对{a:1}的这种类型，在这里进入内部解析时，已经把相应的{ [ 去掉，因此内部只解析a:1，那么这样就内部解析为map，但外部仍然为List类型
            * Sub-parse nested collections.
            */
+          //这里拿到内层的数据值,通过传入一个参考的过程对象的类型进行解析
           Object o = new CollectionParser(newType).parseCollection(property, (st = cursor) + 1,
               (cursor = balancedCapture(property, st, end, property[st])) - st - 1, subcompile, colType, pCtx);
 
+          //如果外层为map,放到map中即可
           if (type == MAP) {
             map.put(curr, o);
           }
+          //外层为list，直接加到其中即可
           else {
             list.add(curr = o);
           }
@@ -192,6 +201,7 @@ public class CollectionParser {
 
           continue;
 
+          //处理碰到(，双引号这种需要特殊处理的表达式,即对整个表达式认为一个统一的数据信息
         case '(':
           cursor = balancedCapture(property, cursor, end, '(');
 
@@ -204,7 +214,8 @@ public class CollectionParser {
           break;
 
         case ',':
-          //到达分隔符,这里即认为已经解析完一条数据了
+          //到达分隔符,这里即认为已经解析完一条数据了,这些数据均没有继续解析，可以认为是一个未经解析的表达式
+          //这里的表达式直接使用字符串将其预填充起来
           if (type != MAP) {
             list.add(new String(property, st, cursor - st).trim());
           }
@@ -213,6 +224,7 @@ public class CollectionParser {
             map.put(curr, createStringTrimmed(property, st, cursor - st));
           }
 
+          //语法及类型效验，在子编译的过程中进行
           if (subcompile) {
             subCompile(st, cursor - st);
           }
@@ -221,15 +233,18 @@ public class CollectionParser {
 
           break;
 
-        //碰到:号,则重新认为要解析的数据为map类型,因此重新设置值进行处理
+        //碰到:号,因为之前碰到{，认为为数组，那么这里重新认定为map,即使传入的参数为array，也会更正为map，主要原因为传入的类型可能也并不确定，即
+        //是一个参考的类型值
+        // 则重新认为要解析的数据为map类型,因此重新设置值进行处理
         case ':':
           if (type != MAP) {
             map = new HashMap<Object, Object>();
             type = MAP;
           }
-          //认为之前的解析值为key
+          //认为之前的解析值为key,认为直接是一个字符串
           curr = createStringTrimmed(property, st, cursor - st);
 
+          //key也需要进行编译和校验
           if (subcompile) {
             subCompile(st, cursor - st);
           }
@@ -267,6 +282,7 @@ public class CollectionParser {
       if (subcompile) subCompile(st, cursor - st);
     }
 
+    //根据实际的类型再进行处理，同时返回其正确的类型信息
     switch (type) {
       case MAP:
         return map;
@@ -277,6 +293,10 @@ public class CollectionParser {
     }
   }
 
+  /**
+   * 尝试对每一个子表达式，如list中的解析顶，map中的解析value值进行编译，并且判断其是否能和声明的集合内的对象类型进行兼容
+   * 同时判断其语法是否正确
+   */
   private void subCompile(int start, int offset) {
     if (colType == null) {
       subCompileExpression(property, start, offset, pCtx);
@@ -289,6 +309,7 @@ public class CollectionParser {
     }
   }
 
+  /** 当前解析是否是强类型解析 */
   private boolean isStrongType() {
     return pCtx != null && pCtx.isStrongTyping();
   }

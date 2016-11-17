@@ -114,7 +114,7 @@ public class ParserContext implements Serializable {
   /** 无用字段 */
   @Deprecated
   private boolean compiled = false;
-  /** 是否是严格类型调用的 */
+  /** 是否是严格类型调用的，即相应的泛型也严格处理 */
   private boolean strictTypeEnforcement = false;
   /** 是否是强类型处理 */
   private boolean strongTyping = false;

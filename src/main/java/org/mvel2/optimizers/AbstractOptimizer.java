@@ -28,6 +28,8 @@ import static java.lang.Thread.currentThread;
 import static org.mvel2.util.ParseTools.*;
 
 /**
+ * 抽象的优化解析器，用于定义一些公用的信息，以及定义一些公用的方法，通用的逻辑处理等
+ *
  * @author Christopher Brock
  */
 public class AbstractOptimizer extends AbstractParser {
@@ -37,6 +39,7 @@ public class AbstractOptimizer extends AbstractParser {
   protected static final int METH = 1;
   /** 表示集合访问 */
   protected static final int COL = 2;
+  /** 表示特殊的with访问 */
   protected static final int WITH = 3;
 
   /** 当前处理是否是集合 */
@@ -75,6 +78,7 @@ public class AbstractOptimizer extends AbstractParser {
        * inspecting for ()'s.  The first union area we come to where no brackets are present is our
        * test-point for a class reference.  If we find a class, we pass the reference to the
        * property accessor along  with trailing methods (if any).
+       * 这里查找方式为从后往前进行查找
        *
        */
       boolean meth = false;
@@ -83,21 +87,29 @@ public class AbstractOptimizer extends AbstractParser {
       for (int i = end - 1; i > start; i--) {
         switch (expr[i]) {
           case '.':
+            //找到一个.符号，表示可能直接是字段访问或者是方法读取 ,如 a.b 这种方式，那么下面的处理直接处理a,而忽略b，因此后面再处理b属性
             if (!meth) {
+              //这里的last和i可能并不相同，如last可能直接为 end属性，即表示直接就是 a.b 处理
+              //而另一种情况就是 a.b()属性，这里last和i就是相同的
               ClassLoader classLoader = pCtx != null ? pCtx.getClassLoader() : currentThread().getContextClassLoader();
               String test = new String(expr, start, (cursor = last) - start);
               try {
+                //先处理类后面直接带.class的类
                 if (MVEL.COMPILER_OPT_SUPPORT_JAVA_STYLE_CLASS_LITERALS && test.endsWith(".class"))
                   test = test.substring(0, test.length() - 6);
 
+                //尝试直接加载此类
                 return Class.forName(test, true, classLoader);
               }
               catch (ClassNotFoundException cnfe) {
                 try {
+                  //因为上面加载失败了，那么可能是内部类，这里尝试加载内部类
                   return findInnerClass(test, classLoader, cnfe);
                 }
                 catch (ClassNotFoundException e) { /* ignore */ }
+                //这里可能处理的数据了 a.b 而a为类，b为字段或方法，因此尝试使用i 处理a 类
                 Class cls = forNameWithInner(new String(expr, start, i - start), classLoader);
+                //认为剩下的数据为字段或方法，尝试进行加载处理
                 String name = new String(expr, i + 1, end - i - 1);
                 try {
                   return cls.getField(name);
@@ -111,10 +123,13 @@ public class AbstractOptimizer extends AbstractParser {
               }
             }
 
+            //这里是因为找到()，则相应的标记置true,这里将last重新进行处理，表示a.b()先由last到(处，这里再到a的后面的下标处
+            //然后在这里将last和i置为一样
             meth = false;
             last = i;
             break;
 
+          //这里表示碰到代码块，无其它作用，先直接跳过，可能为内部类初始化块
           case '}':
             i--;
             for (int d = 1; i > start && d != 0; i--) {
@@ -133,9 +148,11 @@ public class AbstractOptimizer extends AbstractParser {
             }
             break;
 
+          //碰到)，表示肯定是方法调用,但这里仅用于查找相应的方法实例，而并不是方法调用本身，因此将跳过相应的方法参数信息
           case ')':
             i--;
 
+            //采用相应的d作为深度，一直找到相匹配的 (为止
             for (int d = 1; i > start && d != 0; i--) {
               switch (expr[i]) {
                 case ')':
@@ -144,6 +161,7 @@ public class AbstractOptimizer extends AbstractParser {
                 case '(':
                   d--;
                   break;
+                //跳过字符串
                 case '"':
                 case '\'':
                   char s = expr[i];
@@ -151,11 +169,13 @@ public class AbstractOptimizer extends AbstractParser {
               }
             }
 
+            //这里作相应的标记，表示为字符串,并且相应的last标记往前推进
             meth = true;
             last = i++;
             break;
 
 
+          //碰到字符串，跳过
           case '\'':
             while (--i > start) {
               if (expr[i] == '\'' && expr[i - 1] != '\\') {
@@ -164,6 +184,7 @@ public class AbstractOptimizer extends AbstractParser {
             }
             break;
 
+          //碰到字符串，跳过
           case '"':
             while (--i > start) {
               if (expr[i] == '"' && expr[i - 1] != '\\') {
@@ -267,6 +288,7 @@ public class AbstractOptimizer extends AbstractParser {
   }
 
   /**
+   * 跳过相应的空白块
    * Skip to the next non-whitespace position.
    */
   protected void whiteSpaceSkip() {
@@ -276,7 +298,7 @@ public class AbstractOptimizer extends AbstractParser {
   }
 
   /**
-   * 查找指定的字符，直到找到为止
+   * 查找指定的字符，直到找到为止,同时相应的相应的下标会往前递进
    *
    * @param c - character to scan to.
    * @return - returns true is end of statement is hit, false if the scan scar is countered.
@@ -296,6 +318,7 @@ public class AbstractOptimizer extends AbstractParser {
     return true;
   }
 
+  /** 从后往前找到最后一个用于处理联合操作的下标值，如 a.b.c, 将找到c前面的位置。而a.b{{1+2}},将找到b后面的大括号的位置 */
   protected int findLastUnion() {
     int split = -1;
     int depth = 0;
@@ -303,6 +326,7 @@ public class AbstractOptimizer extends AbstractParser {
     int end = start + length;
     for (int i = end - 1; i != start; i--) {
       switch (expr[i]) {
+        //因为是从后往前，因此对后右括号需要深度加1,表示需要从前找到相匹配的符号
         case '}':
         case ']':
           depth++;
@@ -310,17 +334,21 @@ public class AbstractOptimizer extends AbstractParser {
 
         case '{':
         case '[':
+          //归0表示找到相匹配的信息，否则继续
           if (--depth == 0) {
             split = i;
+            //因为碰到{ [,表示是集合访问
             collection = true;
           }
           break;
+        // . 符号，正常的调用访问
         case '.':
           if (depth == 0) {
             split = i;
           }
           break;
       }
+      //找到数据，直接退出
       if (split != -1) break;
     }
 

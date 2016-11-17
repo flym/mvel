@@ -63,6 +63,7 @@ public class ReturnNode extends ASTNode {
     return eval(expr, start, offset, ctx, new StackDemarcResolverFactory(factory));
   }
 
+  /** return 也算作操作符的一部分，但优先级最低 */
   @Override
   public boolean isOperator() {
     return true;

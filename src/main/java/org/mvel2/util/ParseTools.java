@@ -1363,6 +1363,7 @@ public class ParseTools {
         break;
     }
 
+    //如果两边的类型都相同，则认为可能是 类似于 " "这种，那么直接顺序查找即可
     if (type == term) {
       for (start++; start < end; start++) {
         if (chars[start] == type) {
@@ -1370,8 +1371,10 @@ public class ParseTools {
         }
       }
     }
+    //两边的类型不相同，则是类似 [ ] 这种，但在中间又会碰到类似 [[ 的这种访问，则使用depth来表示实际递进的数据结构深度值
     else {
       for (start++; start < end; start++) {
+        //处理注解，会跳过相应的注释信息
         if (start < end && chars[start] == '/') {
           if (start + 1 == end) return start;
           if (chars[start + 1] == '/') {
@@ -1396,13 +1399,17 @@ public class ParseTools {
             }
           }
         }
+        //到结尾
         if (start == end) return start;
+        //处理字符串
         if (chars[start] == '\'' || chars[start] == '"') {
           start = captureStringLiteral(chars[start], chars, start, end);
         }
+        //处理深度，即又碰到一个 [这种
         else if (chars[start] == type) {
           depth++;
         }
+        //碰到反向的标记，如果depth为0,即表示已经到达正确的匹配点，这里则可以进行相应的数据返回
         else if (chars[start] == term && --depth == 0) {
           return start;
         }
@@ -2040,6 +2047,7 @@ public class ParseTools {
     return same / baselength;
   }
 
+  /** 查找到字符串数组针对于set时，其正确的结尾属性,如 a.b,其结尾为a,并且相应的位置为 a.的位置，b则为要处理的属性 */
   public static int findAbsoluteLast(char[] array) {
     int depth = 0;
     for (int i = array.length - 1; i >= 0; i--) {
@@ -2070,6 +2078,7 @@ public class ParseTools {
   /**
    * 返回指定类型的子类型
    * 如果是数组,则返回数组的包装类型,否则返回类型本身
+   * 这里与base不同，这里如果是数组，仅降维一层
    */
   public static Class getSubComponentType(Class cls) {
     if (cls.isArray()) {

@@ -69,6 +69,7 @@ public class ExecutionStack {
   /**
    * 入栈2个对象,其中第二个对象为一个操作符对象，即插入的数据为 对象 + 操作符
    * 在后序的处理中，将直接通过此操作符将相应的节点以及之前插入的节点进行直接运算或者是编译处理
+   * 在使用辅助栈时，第二个对象反而为操作数，这是因为将其copy至主栈时，仍保持原有顺序，在后续再采用xswap进行运算
    */
   public void push(Object obj1, Object obj2) {
     size += 2;
@@ -106,7 +107,7 @@ public class ExecutionStack {
     throw new ScriptRuntimeException("expected Boolean; but found: " + (element.value == null ? "null" : element.value.getClass().getName()));
   }
 
-  /** 从第2个执行栈出栈2个节点,然后加到当前栈中 */
+  /** 从第2个执行栈出栈2个节点,然后加到当前栈中,并且采用更换顺序的方式处理 */
   public void copy2(ExecutionStack es) {
     element = new StackElement(new StackElement(element, es.element.value), es.element.next.value);
     es.element = es.element.next.next;
@@ -207,6 +208,8 @@ public class ExecutionStack {
    * 如之前为 a + b
    * 但由于整个表达式为 a + b * c
    * 由之前的入栈为 a b +,切换优先顺序为 a + value,因此这里进行的为这种处理方式
+   *
+   * 后注：之所以这样处理的原因在于这些数据都是通过辅助栈按照中缀的方式放到在主栈的，因此这里直接按中缀计算处理
    */
   public void xswap_op() {
     element = new StackElement(element.next.next.next, doOperations(element.next.next.value, (Integer) element.next.value, element.value));

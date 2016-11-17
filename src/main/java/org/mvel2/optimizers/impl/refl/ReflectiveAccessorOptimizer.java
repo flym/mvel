@@ -17,18 +17,10 @@
  */
 package org.mvel2.optimizers.impl.refl;
 
-import org.mvel2.CompileException;
-import org.mvel2.MVEL;
-import org.mvel2.OptimizationFailure;
-import org.mvel2.ParserContext;
-import org.mvel2.PropertyAccessException;
+import org.mvel2.*;
 import org.mvel2.ast.FunctionInstance;
 import org.mvel2.ast.TypeDescriptor;
-import org.mvel2.compiler.Accessor;
-import org.mvel2.compiler.AccessorNode;
-import org.mvel2.compiler.ExecutableLiteral;
-import org.mvel2.compiler.ExecutableStatement;
-import org.mvel2.compiler.PropertyVerifier;
+import org.mvel2.compiler.*;
 import org.mvel2.integration.GlobalListenerFactory;
 import org.mvel2.integration.PropertyHandler;
 import org.mvel2.integration.VariableResolver;
@@ -39,52 +31,10 @@ import org.mvel2.optimizers.impl.refl.collection.ArrayCreator;
 import org.mvel2.optimizers.impl.refl.collection.ExprValueAccessor;
 import org.mvel2.optimizers.impl.refl.collection.ListCreator;
 import org.mvel2.optimizers.impl.refl.collection.MapCreator;
-import org.mvel2.optimizers.impl.refl.nodes.ArrayAccessor;
-import org.mvel2.optimizers.impl.refl.nodes.ArrayAccessorNest;
-import org.mvel2.optimizers.impl.refl.nodes.ArrayLength;
-import org.mvel2.optimizers.impl.refl.nodes.ConstructorAccessor;
-import org.mvel2.optimizers.impl.refl.nodes.DynamicFieldAccessor;
-import org.mvel2.optimizers.impl.refl.nodes.DynamicFunctionAccessor;
-import org.mvel2.optimizers.impl.refl.nodes.FieldAccessor;
-import org.mvel2.optimizers.impl.refl.nodes.FieldAccessorNH;
-import org.mvel2.optimizers.impl.refl.nodes.FunctionAccessor;
-import org.mvel2.optimizers.impl.refl.nodes.GetterAccessor;
-import org.mvel2.optimizers.impl.refl.nodes.GetterAccessorNH;
-import org.mvel2.optimizers.impl.refl.nodes.IndexedCharSeqAccessor;
-import org.mvel2.optimizers.impl.refl.nodes.IndexedCharSeqAccessorNest;
-import org.mvel2.optimizers.impl.refl.nodes.IndexedVariableAccessor;
-import org.mvel2.optimizers.impl.refl.nodes.ListAccessor;
-import org.mvel2.optimizers.impl.refl.nodes.ListAccessorNest;
-import org.mvel2.optimizers.impl.refl.nodes.MapAccessor;
-import org.mvel2.optimizers.impl.refl.nodes.MapAccessorNest;
-import org.mvel2.optimizers.impl.refl.nodes.MethodAccessor;
-import org.mvel2.optimizers.impl.refl.nodes.MethodAccessorNH;
-import org.mvel2.optimizers.impl.refl.nodes.Notify;
-import org.mvel2.optimizers.impl.refl.nodes.NullSafe;
-import org.mvel2.optimizers.impl.refl.nodes.PropertyHandlerAccessor;
-import org.mvel2.optimizers.impl.refl.nodes.SetterAccessor;
-import org.mvel2.optimizers.impl.refl.nodes.StaticReferenceAccessor;
-import org.mvel2.optimizers.impl.refl.nodes.StaticVarAccessor;
-import org.mvel2.optimizers.impl.refl.nodes.StaticVarAccessorNH;
-import org.mvel2.optimizers.impl.refl.nodes.ThisValueAccessor;
-import org.mvel2.optimizers.impl.refl.nodes.Union;
-import org.mvel2.optimizers.impl.refl.nodes.VariableAccessor;
-import org.mvel2.optimizers.impl.refl.nodes.WithAccessor;
-import org.mvel2.util.ArrayTools;
-import org.mvel2.util.ErrorUtil;
-import org.mvel2.util.MethodStub;
-import org.mvel2.util.NullType;
-import org.mvel2.util.ParseTools;
-import org.mvel2.util.PropertyTools;
-import org.mvel2.util.StringAppender;
+import org.mvel2.optimizers.impl.refl.nodes.*;
+import org.mvel2.util.*;
 
-import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Member;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
+import java.lang.reflect.*;
 import java.util.List;
 import java.util.Map;
 
@@ -118,11 +68,15 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
   /** 当前处理结束临时存储的值 */
   private Object val;
 
+  /** 当前优化中所使用的变量工厂 */
   private VariableResolverFactory variableFactory;
 
+  /** 特殊标记，表示当前已经执行结束 */
   private static final int DONE = -1;
 
+  /** 表示空参数的一个常量信息 */
   private static final Object[] EMPTYARG = new Object[0];
+  /** 表示空参数类型的一个常量，如用于读取构造函数 */
   private static final Class[] EMPTYCLS = new Class[0];
 
   /** 表示当前处理属性刚开始(即处理位置在首位) */
@@ -151,6 +105,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
     this.thisRef = thisRef;
   }
 
+  /** 进行相应的get式访问优化 */
   public Accessor optimizeAccessor(ParserContext pCtx, char[] property, int start, int offset, Object ctx, Object thisRef,
                                    VariableResolverFactory factory, boolean root, Class ingressType) {
     this.rootNode = this.currNode = null;
@@ -171,6 +126,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
     return compileGetChain();
   }
 
+  /** 进行相应的设置值访问器创建 */
   public Accessor optimizeSetAccessor(ParserContext pCtx, char[] property, int start, int offset, Object ctx,
                                       Object thisRef, VariableResolverFactory factory, boolean rootThisRef,
                                       Object value, Class ingressType) {
@@ -362,7 +318,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
     cursor = start;
 
     try {
-      //第1个if调用
+      //如果不能重写默认的访问逻辑，则使用默认的处理方式
       if (!MVEL.COMPILER_OPT_ALLOW_OVERRIDE_ALL_PROPHANDLING) {
         while (cursor < end) {
           switch (nextSubToken()) {
@@ -386,7 +342,9 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
           }
 
           first = false;
+          //调整相应的返回类型
           if (curr != null) returnType = curr.getClass();
+          //支持安全式访问
           if (cursor < end) {
             if (nullSafe) {
               int os = expr[cursor] == '.' ? 1 : 0;
@@ -399,6 +357,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
         }
 
       }
+      //按照支持扩展式访问方式处理
       else {
         while (cursor < end) {
           switch (nextSubToken()) {
@@ -421,11 +380,14 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
           first = false;
           if (curr != null) returnType = curr.getClass();
           if (cursor < end) {
+            //支持安全式访问,因为要支持安全式访问，因此添加一个nullsafe节点
             if (nullSafe) {
               int os = expr[cursor] == '.' ? 1 : 0;
               addAccessorNode(new NullSafe(expr, cursor + os, length - cursor - os, pCtx));
+              //这里支持安全式访问，如果当前处理值为null,则提前返回
               if (curr == null) break;
             }
+            //因为还没有解析完毕，但当前值已为null,则直接报NPE
             if (curr == null) throw new NullPointerException();
           }
           staticAccess = false;
@@ -477,6 +439,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
     }
   }
 
+  /** 处理with访问 */
   private Object getWithProperty(Object ctx) {
     currType = null;
     String root = start == cursor ? null : new String(expr, start, cursor - 1).trim();
@@ -489,9 +452,11 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
     return wa.getValue(ctx, thisRef, variableFactory);
   }
 
+  /** 支持按照扩展式的访问方式进行处理 */
   private Object getBeanPropertyAO(Object ctx, String property)
       throws Exception {
 
+    //通知相应的监控器
     if (GlobalListenerFactory.hasGetListeners()) {
       notifyGetListeners(ctx, property, variableFactory);
       addAccessorNode(new Notify(property));
@@ -504,6 +469,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
 
   /** 读取属性值信息 */
   private Object getBeanProperty(Object ctx, String property) throws Exception {
+    //如果当前类型为通用类型，或者相应的解析上下文并不是强类型的，则将当前类型设置为null，即非强类型处理
     if ((pCtx == null ? currType : pCtx.getVarOrInputTypeOrNull(property)) == Object.class
         && !pCtx.isStrongTyping()) {
       currType = null;
@@ -533,6 +499,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
 
           return variableFactory.getIndexedVariableResolver(idx).getValue();
         }
+        //这里表示变量工厂能够直接解析此变量(并且不是基于下标处理的)，这里添加变量访问器，并直接访问此变量
         else {
           addAccessorNode(new VariableAccessor(property));
 
@@ -637,6 +604,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
       if ((f.getModifiers() & Modifier.STATIC) != 0) {
         o = f.get(null);
 
+        //分为支持空处理和不支持空处理2个逻辑处理方式
         if (hasNullPropertyHandler()) {
           addAccessorNode(new StaticVarAccessorNH((Field) member, getNullMethodHandler()));
           if (o == null) o = getNullMethodHandler().getProperty(member.getName(), ctx, variableFactory);
@@ -648,6 +616,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
       //非静态成员
       else {
         o = ctx != null ? f.get(ctx) : null;
+        //字段的访问也根据是否存在空处理来进行区分
         if (hasNullPropertyHandler()) {
           addAccessorNode(new FieldAccessorNH((Field) member, getNullMethodHandler()));
           if (o == null) o = getNullMethodHandler().getProperty(member.getName(), ctx, variableFactory);
@@ -659,7 +628,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
       currType = toNonPrimitiveType(f.getType());
       return o;
     }
-    //map属性获取的方式(前提是有此key或者是允许null安全)
+    //map属性获取的方式(前提是有此key或者是允许null安全),即如果map没有此属性，也仍然不能访问此值
     else if (ctx instanceof Map && (((Map) ctx).containsKey(property) || nullSafe)) {
       addAccessorNode(new MapAccessor(property));
       return ((Map) ctx).get(property);
@@ -680,14 +649,17 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
       Object tryStaticMethodRef = tryStaticAccess();
       staticAccess = true;
       if (tryStaticMethodRef != null) {
+        //静态类
         if (tryStaticMethodRef instanceof Class) {
           addAccessorNode(new StaticReferenceAccessor(tryStaticMethodRef));
           return tryStaticMethodRef;
         }
+        //直接访问类的字段
         else if (tryStaticMethodRef instanceof Field) {
           addAccessorNode(new StaticVarAccessor((Field) tryStaticMethodRef));
           return ((Field) tryStaticMethodRef).get(null);
         }
+        //直接访问类的方法信息
         else {
           addAccessorNode(new StaticReferenceAccessor(tryStaticMethodRef));
           return tryStaticMethodRef;
@@ -729,6 +701,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
           // fall through.
         }
       }
+      //这里如果支持伪方法调用，则跳转至方法调用处
       else if (pCtx != null && pCtx.getParserConfiguration() != null ? pCtx.getParserConfiguration().isAllowNakedMethCall() : MVEL.COMPILER_OPT_ALLOW_NAKED_METH_CALL) {
         //最后尝试直接执行此方法,虽然这里并不能走到这里,就像普通的方法一样执行(要求参数长度为0)
         //实际上并不能走到这里，因为上面在获取getter时已经获取了此方法(getter会根据名字拿到此方法)
@@ -780,12 +753,13 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
 
     String item;
 
+    //跳到相应的]结束符位置
     if (scanTo(']'))
       throw new CompileException("unterminated '['", this.expr, this.start);
 
     item = new String(expr, start, cursor - start);
 
-    //下标是否是表达式
+    //下标是否是表达式(即不能直接解析为一个数字，这里 字符串常量也认为是表达式)
     boolean itemSubExpr = true;
 
     Object idx = null;
@@ -801,6 +775,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
 
     //单元解析表达式
     ExecutableStatement itemStmt = null;
+    //这里表示下标并不是一下有效的数字常量，因此要单独进行解析
     if (itemSubExpr) {
       try {
         idx = (itemStmt = (ExecutableStatement) subCompileExpression(item.toCharArray(), pCtx))
@@ -817,6 +792,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
 
     //处理map访问的形式,如a[b]
     if (ctx instanceof Map) {
+      //根据下标是否是表达式分别进行区分构建
       if (itemSubExpr) {
         addAccessorNode(new MapAccessorNest(itemStmt, null));
       }
@@ -828,6 +804,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
     }
     //处理list访问
     else if (ctx instanceof List) {
+      //这里根据下标是否是数字分别构建
       if (itemSubExpr) {
         addAccessorNode(new ListAccessorNest(itemStmt, null));
       }
@@ -839,6 +816,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
     }
     //处理数组访问的形式
     else if (ctx.getClass().isArray()) {
+      //这里根据下标是否是数字分别构建
       if (itemSubExpr) {
         addAccessorNode(new ArrayAccessorNest(itemStmt));
       }
@@ -850,6 +828,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
     }
     //处理字符串访问的形式
     else if (ctx instanceof CharSequence) {
+      //这里根据下标是否是数字分别构建
       if (itemSubExpr) {
         addAccessorNode(new IndexedCharSeqAccessorNest(itemStmt));
       }
@@ -874,7 +853,9 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
   }
 
 
+  /** 使用支持扩展的方式来读取相应的集合属性 */
   private Object getCollectionPropertyAO(Object ctx, String prop) throws Exception {
+    //先读取集合本身的值，如a['abc']，先读取a的值
     if (prop.length() > 0) {
       ctx = getBeanPropertyAO(ctx, prop);
     }
@@ -896,6 +877,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
 
     item = new String(expr, _start, cursor - _start);
 
+    //下标是否是表达式(如果为false则表示下标是数字常量)
     boolean itemSubExpr = true;
 
     Object idx = null;
@@ -908,6 +890,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
       // not a number;
     }
 
+    //这里提前解析出相应的下标信息
     ExecutableStatement itemStmt = null;
     if (itemSubExpr) {
       idx = (itemStmt = (ExecutableStatement) subCompileExpression(item.toCharArray(), pCtx))
@@ -916,7 +899,9 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
 
     ++cursor;
 
+    //支持map访问
     if (ctx instanceof Map) {
+      //支持对内置map逻辑进行调整处理
       if (hasPropertyHandler(Map.class)) {
         return propHandler(item, ctx, Map.class);
       }
@@ -931,7 +916,9 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
         return ((Map) ctx).get(idx);
       }
     }
+    //支持list访问
     else if (ctx instanceof List) {
+      //支持对内置的list的处理逻辑进行调整,即ao访问
       if (hasPropertyHandler(List.class)) {
         return propHandler(item, ctx, List.class);
       }
@@ -946,7 +933,9 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
         return ((List) ctx).get((Integer) idx);
       }
     }
+    //支持数组访问
     else if (ctx.getClass().isArray()) {
+      //支持对内置数组的处理方式进行调整
       if (hasPropertyHandler(Array.class)) {
         return propHandler(item, ctx, Array.class);
       }
@@ -961,7 +950,9 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
         return Array.get(ctx, (Integer) idx);
       }
     }
+    //支持字符串访问
     else if (ctx instanceof CharSequence) {
+      //支持对内置的字符串的处理方式进行调整
       if (hasPropertyHandler(CharSequence.class)) {
         return propHandler(item, ctx, CharSequence.class);
       }
@@ -976,6 +967,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
         return ((CharSequence) ctx).charAt((Integer) idx);
       }
     }
+    //这里认为这里是一个数组类型声明，如A[，因此尝试创建相应的类型信息
     else {
       TypeDescriptor tDescr = new TypeDescriptor(expr, this.start, end - this.start, 0);
       if (tDescr.isArray()) {
@@ -990,6 +982,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
   }
 
   /**
+   * 这里进行方法式访问和调用
    * Find an appropriate method, execute it, and return it's response.
    *
    * @param ctx  -
@@ -1038,6 +1031,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
       }
 
       //设置参数类型信息
+      //这里为严格类型调用，因此准备相应的类型信息
       if (pCtx.isStrictTypeEnforcement()) {
         for (int i = 0; i < args.length; i++) {
           argTypes[i] = es[i].getKnownEgressType();
@@ -1102,6 +1096,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
       first = false;
     }
 
+    //因为已经不是first调用，因此要求相应的ctx不能为null
     if (ctx == null && currType == null) {
       throw new PropertyAccessException("null pointer or function not found: " + name, this.expr, this.start, pCtx);
     }
@@ -1154,11 +1149,13 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
       }
 
       // if it is not already using this as context try to access the method this
+      //支持在当前对象上进行查询，如果当前对象与ctx不相同
       if (ctx != this.thisRef && this.thisRef != null) {
         addAccessorNode(new ThisValueAccessor());
         return getMethod(this.thisRef, name, args, argTypes, es);
       }
 
+      //这里还没有找到，则报相应的异常
       for (int i = 0; i < args.length; i++) {
         errorBuild.append(args[i] != null ? args[i].getClass().getName() : null);
         if (i < args.length - 1) errorBuild.append(", ");
@@ -1167,6 +1164,8 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
       throw new PropertyAccessException("unable to resolve method: " + cls.getName() + "."
           + name + "(" + errorBuild.toString() + ") [arglength=" + args.length + "]", this.expr, this.st, pCtx);
     }
+
+    //这里表示找到了相应的方法，则准备方法调用
 
     //如果有表达式，则通过表达式重新处理相应的参数信息，如类型转换等
     if (es != null) {
@@ -1212,28 +1211,35 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
     return o;
   }
 
+  @Deprecated
   public Object getValue(Object ctx, Object elCtx, VariableResolverFactory variableFactory) throws Exception {
     return rootNode.getValue(ctx, elCtx, variableFactory);
   }
 
+  /** 根据当前的值以及具体的子类型的参考类型创建起相应的值创建访问器,这里的type类型为参考类型 */
   private Accessor _getAccessor(Object o, Class type) {
+    //当前值为list，通过一个子值访问器的列表来构造一个list的创建访问器
     if (o instanceof List) {
       Accessor[] a = new Accessor[((List) o).size()];
       int i = 0;
 
+      //里面的每一项
       for (Object item : (List) o) {
         a[i++] = _getAccessor(item, type);
       }
 
       returnType = List.class;
 
+      //最终的创建构造器
       return new ListCreator(a);
     }
+    //当前值为map,则创建想相应的map创建访问器
     else if (o instanceof Map) {
       Accessor[] k = new Accessor[((Map) o).size()];
       Accessor[] v = new Accessor[k.length];
       int i = 0;
 
+      //分别对k,v进行构造
       for (Object item : ((Map) o).keySet()) {
         k[i] = _getAccessor(item, type); // key
         v[i++] = _getAccessor(((Map) o).get(item), type); // value
@@ -1243,6 +1249,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
 
       return new MapCreator(k, v);
     }
+    //如果是数组，则需要根据参考类型,进行维度处理
     else if (o instanceof Object[]) {
       Accessor[] a = new Accessor[((Object[]) o).length];
       int i = 0;
@@ -1272,8 +1279,10 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
         throw new RuntimeException("this error should never throw:" + getBaseComponentType(type).getName(), e);
       }
     }
+    //默认情况下，直接根据值创建起一个表达式值访问器
     else {
       if (returnType == null) returnType = Object.class;
+      //这里的数组指基本类型的数组
       if (type.isArray()) {
         return new ExprValueAccessor((String) o, type, ctx, variableFactory, pCtx);
       }
@@ -1284,6 +1293,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
   }
 
 
+  /** 优化直接集合变量的访问 */
   public Accessor optimizeCollection(ParserContext pCtx, Object o, Class type, char[] property, int start, int offset,
                                      Object ctx, Object thisRef, VariableResolverFactory factory) {
     this.start = this.cursor = start;
@@ -1295,6 +1305,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
 
     Accessor root = _getAccessor(o, returnType);
 
+    //这里表示如果集合变量后面还有更多的操作，如[1,2,3].length这种，则将当前的访问器和后面
     if (property != null && length > start) {
       return new Union(pCtx, root, property, cursor, offset);
     }
@@ -1304,6 +1315,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
   }
 
 
+  /** 优化对象的创建过程，提供对象创建访问器 */
   public Accessor optimizeObjectCreation(ParserContext pCtx, char[] property, int start, int offset,
                                          Object ctx, Object thisRef, VariableResolverFactory factory) {
     this.length = start + offset;
@@ -1325,6 +1337,7 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
   }
 
 
+  /** 设置首节点信息，以方便在当前编译时将后续的编译结果串联起来 */
   private void setRootNode(AccessorNode rootNode) {
     this.rootNode = this.currNode = rootNode;
   }
@@ -1337,18 +1350,24 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
     return val;
   }
 
+  /** 根据当前上下文和相应的表达式创建出对象构造访问器 */
   @SuppressWarnings({"WeakerAccess"})
   private AccessorNode compileConstructor(char[] expression, Object ctx, VariableResolverFactory vars) throws
       InstantiationException, IllegalAccessException, InvocationTargetException,
       ClassNotFoundException, NoSuchMethodException {
 
+    //将构造函数参数信息和后续调用分开
     String[] cnsRes = captureContructorAndResidual(expression, start, length);
+    //这里拿到相应的参数信息
     List<char[]> constructorParms = parseMethodOrConstructor(cnsRes[0].toCharArray());
 
+    //有相应的参数信息，因此进行有参数构造函数的处理
     if (constructorParms != null) {
+      //找到相应的类
       String s = new String(subset(expression, 0, ArrayTools.findFirst('(', start, length, expression)));
       Class cls = ParseTools.findClass(vars, s, pCtx);
 
+      //准备相应的参数信息，包括相应的参数执行表达式
       ExecutableStatement[] cStmts = new ExecutableStatement[constructorParms.size()];
 
       for (int i = 0; i < constructorParms.size(); i++) {
@@ -1360,8 +1379,10 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
         parms[i] = cStmts[i].getValue(ctx, vars);
       }
 
+      //这里根据参数信息进行构造函数匹配
       Constructor cns = getBestConstructorCandidate(parms, cls, pCtx.isStrongTyping());
 
+      //如果找不到就报相应的异常
       if (cns == null) {
         StringBuilder error = new StringBuilder();
         for (int i = 0; i < parms.length; i++) {
@@ -1372,14 +1393,18 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
         throw new CompileException("unable to find constructor: " + cls.getName()
             + "(" + error.toString() + ")", this.expr, this.start);
       }
+      //找到相应的构造函数，这里尝试进行类型转换
       for (int i = 0; i < parms.length; i++) {
         //noinspection unchecked
         parms[i] = convert(parms[i], paramTypeVarArgsSafe(cns.getParameterTypes(), i, cns.isVarArgs()));
       }
+      //转换为正常的参数(处理变长参数)
       parms = normalizeArgsForVarArgs(cns.getParameterTypes(), parms, cns.isVarArgs());
 
+      //构造出正确的访问器
       AccessorNode ca = new ConstructorAccessor(cns, cStmts);
 
+      //这里表示还有还有后续的访问，因此联接后续的调用,并且返回相应的串联信息
       if (cnsRes.length > 1) {
         ReflectiveAccessorOptimizer compiledOptimizer
             = new ReflectiveAccessorOptimizer(pCtx, cnsRes[1].toCharArray(), 0, cnsRes[1].length(),
@@ -1396,11 +1421,13 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
 
       return ca;
     }
+    //没有相应的参数信息，则准备按照无参构造函数来处理
     else {
       ClassLoader classLoader = pCtx != null ? pCtx.getClassLoader() : currentThread().getContextClassLoader();
       Constructor<?> cns = Class.forName(new String(expression), true, classLoader).getConstructor(EMPTYCLS);
       AccessorNode ca = new ConstructorAccessor(cns, null);
 
+      //串联后面的访问
       if (cnsRes.length > 1) {
         //noinspection NullArgumentToVariableArgMethod
         ReflectiveAccessorOptimizer compiledOptimizer
@@ -1424,12 +1451,14 @@ public class ReflectiveAccessorOptimizer extends AbstractOptimizer implements Ac
     return false;
   }
 
+  /** 使用相应类型的属性处理器来访问相应的属性 */
   private Object propHandler(String property, Object ctx, Class handler) {
     PropertyHandler ph = getPropertyHandler(handler);
     addAccessorNode(new PropertyHandlerAccessor(property, handler, ph));
     return ph.getProperty(property, ctx, variableFactory);
   }
 
+  /** 使用相应类型的属性设置访问器来设置相应的属性 */
   public void propHandlerSet(String property, Object ctx, Class handler, Object value) {
     PropertyHandler ph = getPropertyHandler(handler);
     addAccessorNode(new PropertyHandlerAccessor(property, handler, ph));

@@ -52,10 +52,12 @@ public class Stacklang extends BlockNode {
     //整个执行栈,即是以解释模式运行的,因此直接从之前的解释栈中返回即可
     ExecutionStack stk = new ExecutionStack();
     stk.push(getReducedValue(stk, thisValue, factory));
-    //如果栈中有多个值,则返回最之前的那个值(好奇怪...)
+    //如果栈中有多个值，就直接使用后缀表达式操作对栈进行操作
     if (stk.isReduceable()) {
       while (true) {
         stk.op();
+        //还可以进行处理，则进行交换，以将相应的操作符进行交换，以执行处理
+        //这里执行交换的意思在于需要将栈中的中缀转换为后缀
         if (stk.isReduceable()) {
           stk.xswap();
         }

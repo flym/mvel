@@ -65,7 +65,7 @@ public class ASTLinkedList implements ASTIterator {
     }
   }
 
-  /** 入栈2个节点 */
+  /** 入栈2个节点,按照先后顺序，第1个节点在前面，第2个节点在后面 */
   public void addTokenNode(ASTNode astNode, ASTNode token2) {
     //长度+2
     size += 2;

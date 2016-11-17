@@ -90,7 +90,7 @@ public class ASTNode implements Cloneable, Serializable {
 
   //---------------------------- 以下的标记仅起到静态标记的作用，没有其它逻辑作用 end ------------------------------//
 
-  /** 特定的标识 表示当前操作数需要取反，但实际上也没有意义 */
+  /** 特定的标识 表示当前操作数需要取反，但实际上也没有意义,为什么没意义，因为没地方使用到 */
   public static final int OPT_SUBTR = 1 << 19;
 
   /** 表示当前节点是一个静态全称访问，即通过全类型名来访问一个属性，通常指静态属性访问 */
@@ -155,7 +155,7 @@ public class ASTNode implements Cloneable, Serializable {
   /** 当前节点的下一步节点(顺序上的下一步),构成链式处理 */
   public ASTNode nextASTNode;
 
-  /** 当前解析上下文 */
+  /** 当前解析上下文,用于表示在定义时的解析上下文，运行时上下文可能并不一样.并且在正常的运行中，并不会采用定义时上下文来进行 */
   protected ParserContext pCtx;
 
   /**
@@ -209,8 +209,10 @@ public class ASTNode implements Cloneable, Serializable {
       optimizer = getDefaultAccessorCompiler();
     }
 
+    //重新使用解析上下文，并不采用定义时解析上下文
     ParserContext pCtx;
 
+    //如果之前在当前节点中存储了上下文，则直接使用当前节点中存储的
     if ((fields & PCTX_STORED) != 0) {
       pCtx = (ParserContext) literal;
     }
@@ -220,6 +222,8 @@ public class ASTNode implements Cloneable, Serializable {
 
     try {
       pCtx.optimizationNotify();
+      //因为是执行访问操作，因此采用优化器产生一个get类的访问器以进行相应的处理。在默认的处理中，均认为获取值都是获取类操作
+      //在针对a = b的这种处理时，会采用不同的node，而在其内部切换为相应的优化器的set版本
       setAccessor(optimizer.optimizeAccessor(pCtx, expr, start, offset, ctx, thisValue, factory, true, egressType));
     }
     catch (OptimizationNotSupported ne) {
@@ -228,14 +232,17 @@ public class ASTNode implements Cloneable, Serializable {
           .optimizeAccessor(pCtx, expr, start, offset, ctx, thisValue, factory, true, null));
     }
 
+    //如果没有访问器，则表示访问本身无法进行工作，则切换为解释模式
     if (accessor == null) {
       return get(expr, start, offset, ctx, factory, thisValue, pCtx);
     }
 
+    //相应的优化器，会在产生访问器时默认就已经计算了相应的值，因此这里直接给出相应的结果
     if (retVal == null) {
       retVal = optimizer.getResultOptPass();
     }
 
+    //如果之前没有声明的输出类型，这里根据当前的处理结果设置结果类型
     if (egressType == null) {
       egressType = optimizer.getEgressType();
     }
@@ -265,6 +272,8 @@ public class ASTNode implements Cloneable, Serializable {
     }
   }
 
+  /** 无用方法,即拿到最前面的第一个表达式头的名字 */
+  @Deprecated
   protected String getAbsoluteRootElement() {
     if ((fields & (DEEP_PROPERTY | COLLECTION)) != 0) {
       return new String(expr, start, getAbsoluteFirstPart());
@@ -280,6 +289,7 @@ public class ASTNode implements Cloneable, Serializable {
     this.egressType = egressType;
   }
 
+  /** 返回表达式名的数组形式 */
   public char[] getNameAsArray() {
     return subArray(expr, start, start + offset);
   }
@@ -308,6 +318,7 @@ public class ASTNode implements Cloneable, Serializable {
     }
   }
 
+  /** 返回当前节点的属性名 */
   public String getName() {
     if (nameCache != null) {
       return nameCache;
@@ -323,16 +334,21 @@ public class ASTNode implements Cloneable, Serializable {
     return literal;
   }
 
-  /** 临时将上下文存储在常量值当中,以提供特殊处理 */
+  /**
+   * 临时将上下文存储在常量值当中,以提供特殊处理,即当前节点无其它作用.如在解析上下文节点中，仅用于存储解析上下文
+   * 当前仅用于表示用于常量来存储特定的信息，而并不是字面常量信息
+   */
   public void storeInLiteralRegister(Object o) {
     this.literal = o;
   }
 
+  /** 设置常量，即当前节点为一个常量节点 */
   public void setLiteralValue(Object literal) {
     this.literal = literal;
     this.fields |= LITERAL;
   }
 
+  /** 重新设置相应的属性名信息,即重新进行简单的解析操作 */
   @SuppressWarnings({"SuspiciousMethodCalls"})
   protected void setName(char[] name) {
     //判断当前字符串是否是一个数字，如果是数字，则设置相应的标记
@@ -376,6 +392,7 @@ public class ASTNode implements Cloneable, Serializable {
       }
     }
 
+    //当前节点为字面量节点，因为已解析过了，因此这里直接跳过,被认为并不是属性名，也不是深度属性
     if ((fields & INLINE_COLLECTION) != 0) {
       return;
     }
@@ -422,10 +439,12 @@ public class ASTNode implements Cloneable, Serializable {
     return NOOP;
   }
 
+  /** 当前节点是否是集合访问节点 */
   protected boolean isCollection() {
     return (fields & COLLECTION) != 0;
   }
 
+  /** 当前节点是否是赋值节点 */
   public boolean isAssignment() {
     return ((fields & ASSIGN) != 0);
   }
@@ -435,6 +454,7 @@ public class ASTNode implements Cloneable, Serializable {
     return ((fields & DEEP_PROPERTY) != 0);
   }
 
+  /** 当前节点是否静态全字面量 */
   public boolean isFQCN() {
     return ((fields & FQCN) != 0);
   }
@@ -467,10 +487,12 @@ public class ASTNode implements Cloneable, Serializable {
     this.fields |= DISCARD;
   }
 
+  /** 设置当前节点处理为强类型 */
   public void strongTyping() {
     this.fields |= STRONG_TYPING;
   }
 
+  /** 表示当前节点用于存储解析上下文 */
   public void storePctx() {
     this.fields |= PCTX_STORED;
   }

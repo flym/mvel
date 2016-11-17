@@ -56,6 +56,7 @@ import static org.mvel2.util.ASTBinaryTree.buildTree;
 import static org.mvel2.util.ParseTools.__resolveType;
 import static org.mvel2.util.ParseTools.boxPrimitive;
 
+/** 各种编译工具，对节点链和各种操作符进行优化处理工作 */
 public class CompilerTools {
   /**
    * 进行节点优化,包括运算节点转换，常量节点优化替换等
@@ -63,7 +64,7 @@ public class CompilerTools {
    *
    * @param astLinkedList          - AST to be optimized.
    * @param secondPassOptimization - perform a second pass optimization to optimize boolean expressions.
-   * @param pCtx                    - The parser context
+   * @param pCtx                   - The parser context
    * @return optimized AST
    */
   public static ASTLinkedList finalizePayload(ASTLinkedList astLinkedList, boolean secondPassOptimization, ParserContext pCtx) {
@@ -112,16 +113,20 @@ public class CompilerTools {
 
             //解决减法的问题，更换为 + -x
             boolean inv = tkOp.isOperator(Operator.SUB);
-            //处理加减法优先级问题
+            //处理加减法优先级问题,即是否要先计算后面的,这里的reduc即表示要先计算后面的数据
             boolean reduc = isReductionOpportunity(tkOp, tk2);
             boolean p_inv = false;
 
+            //因为这里不涉及到 乘除法，因此不需要有过度计算的问题，这里的reduc仅表示加减法
             while (reduc) {
+              //下一个操作符
               ASTNode oper = astLinkedList.nextNode();
               ASTNode rightNode = astLinkedList.nextNode();
 
+              //已经没有后面的节点，则跳出相应的处理
               if (rightNode == null) break;
 
+              //解析出实际的右则的表达式
               Object val = new BinaryOperation(oper.getOperator(), inv ?
                   new LiteralNode(signNumber(tk2.getLiteralValue()), pCtx) : tk2, rightNode, pCtx)
                   .getReducedValueAccelerated(null, null, null);
@@ -132,6 +137,7 @@ public class CompilerTools {
                 continue;
               }
 
+              //已经继续完，继续执行
               reduc = astLinkedList.hasMoreNodes()
                   && (reducacbleOperator(astLinkedList.peekNode().getOperator()))
                   && astLinkedList.peekNext().isLiteral();
@@ -142,9 +148,11 @@ public class CompilerTools {
               //因为已经处理了减法的切换，因此转换为加法
               inv = false;
 
+              //已经不能再继续处理了，因此将相应的结果进行保存，重新定义相应 tk和tk2表示形式
               if (!reduc) {
                 bo = new BinaryOperation(tkOp.getOperator(), tk, new LiteralNode(p_inv ? signNumber(val) : val, pCtx), pCtx);
               }
+              //还可以继续重新，将临时的结果保存在tk2中然后继续，即 tk op tk2 op2 tk3，这里即将tk2 op2 tk3的结果重新认为为tk2
               else {
                 tk2 = new LiteralNode(val, pCtx);
               }
@@ -184,11 +192,12 @@ public class CompilerTools {
                 //如 a + (b*c) / d，就更换为a + ((b * c) / d)
                 tk2 = astLinkedList.nextNode();
 
-                //这句话什么意思...
+                //如果bo是一个整数优化节点，但是tk2节点不知道是什么类型，则需要进行逆化操作，即还原回来,将右侧的节点处理为普通的操作节点
                 if (isIntOptimizationviolation(bo, tk2)) {
                   bo = new BinaryOperation(bo.getOperation(), bo.getLeft(), bo.getRight(), pCtx);
                 }
 
+                //重新处理右侧节点
                 bo.setRight(new BinaryOperation(op2, bo.getRight(), tk2, pCtx));
               }
             }
@@ -200,10 +209,12 @@ public class CompilerTools {
               //bo中优先级更小，那么连接右边逻辑
               tk2 = astLinkedList.nextNode();
 
+              //如果bo是一个整数优化节点，但是tk2节点不知道是什么类型，则需要进行逆化操作，即还原回来,将右侧的节点处理为普通的操作节点
               if (isIntOptimizationviolation(bo, tk2)) {
                 bo = new BinaryOperation(bo.getOperation(), bo.getLeft(), bo.getRight(), pCtx);
               }
 
+              //重新处理右侧节点
               bo.setRight(new BinaryOperation(op2, bo.getRight(), tk2, pCtx));
             }
 
@@ -233,6 +244,7 @@ public class CompilerTools {
           tk.discard();
           optimizedAst.addTokenNode(tkOp);
         }
+        //这里先有一个class 定义，然后后面接一个赋值，即 Object obj = xx;因此，丢掉Object声明，因为在相应的解析上下文中已经有相应的数据了
         else if (astLinkedList.hasMoreNodes() && tkOp.getLiteralValue() instanceof Class
             && astLinkedList.peekNode().isAssignment()) {
           tkOp.discard();
@@ -249,6 +261,7 @@ public class CompilerTools {
       }
     }
 
+    //开始优化 boolean 操作
     if (secondPassOptimization) {
       /**
        * boolean条件优化
@@ -360,21 +373,30 @@ public class CompilerTools {
     return false;
   }
 
-  /** 处理非数学运算的情况 */
+  /**
+   * 优化操作符，处理非数学运算的情况
+   *
+   * @param astLinkedList 当前正在处理的节点链表
+   * @param optimizedAst  要放入的优化节点链表
+   */
   private static void optimizeOperator(int operator, ASTNode tk, ASTNode tkOp,
                                        ASTLinkedList astLinkedList,
                                        ASTLinkedList optimizedAst,
                                        ParserContext pCtx) {
     switch (operator) {
+      //正则式处理
       case Operator.REGEX:
         optimizedAst.addTokenNode(new RegExMatchNode(tk, astLinkedList.nextNode(), pCtx));
         break;
+      //contails优化节点
       case Operator.CONTAINS:
         optimizedAst.addTokenNode(new Contains(tk, astLinkedList.nextNode(), pCtx));
         break;
+      //支持instanceOf
       case Operator.INSTANCEOF:
         optimizedAst.addTokenNode(new Instance(tk, astLinkedList.nextNode(), pCtx));
         break;
+      //转换操作
       case Operator.CONVERTABLE_TO:
         optimizedAst.addTokenNode((new Convertable(tk, astLinkedList.nextNode(), pCtx)));
         break;
@@ -385,11 +407,13 @@ public class CompilerTools {
         optimizedAst.addTokenNode(new Soundslike(tk, astLinkedList.nextNode(), pCtx));
         break;
 
+      //默认情况，不知道如何优化，先直接添加到链表中
       default:
         optimizedAst.addTokenNode(tk, tkOp);
     }
   }
 
+  /** 两个节点之间是否不支持进一步优化级联，即左侧一个优化 的 a + b ? c这种操作，这里的?优先级更高， 因此需要把a 和b拆开，形成 a + (b ? c)的这种形式 */
   private static boolean isIntOptimizationviolation(BooleanNode bn, ASTNode bn2) {
     return (bn instanceof IntOptimized && bn2.getEgressType() != Integer.class);
   }
@@ -403,6 +427,7 @@ public class CompilerTools {
   }
 
   /**
+   * 从一个表达式执行单元中提取所有的函数信息，按照 函数名和函数定义放入map中并返回
    * Returns an ordered Map of all functions declared within an compiled script.
    *
    * @param compile
@@ -506,6 +531,8 @@ public class CompilerTools {
     return null;
   }
 
+  /** 将相应的节点转换为访问器 */
+  @Deprecated
   public static Accessor extractAccessor(ASTNode n) {
     if (n instanceof LiteralNode) return new ExecutableLiteral(n.getLiteralValue());
     else return new ExecutableAccessor(n, n.getEgressType());
@@ -525,6 +552,7 @@ public class CompilerTools {
     return null;
   }
 
+  /** 将相应的数字进行转负处理,即返回相应的负数形式 */
   public static Number signNumber(Object number) {
     if (number instanceof Integer) {
       return -((Integer) number);

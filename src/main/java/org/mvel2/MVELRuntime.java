@@ -31,14 +31,17 @@ import static org.mvel2.Operator.*;
 import static org.mvel2.util.PropertyTools.isEmpty;
 
 /**
+ * 用于主要运行已经编译过的表达式的处理，完成主要的运算逻辑处理
  * This class contains the runtime for running compiled MVEL expressions.
  */
 @SuppressWarnings({"CaughtExceptionImmediatelyRethrown"})
 public class MVELRuntime {
   // public static final ImmutableDefaultFactory IMMUTABLE_DEFAULT_FACTORY = new ImmutableDefaultFactory();
+  /** 描述相应的调试断点上下文，以支持在处理过程中设置相应的调试断点，并进行相应的断点处理 */
   private static ThreadLocal<DebuggerContext> debuggerContext;
 
   /**
+   * 执行相应的编译运行表达式
    * Main interpreter.
    *
    * @param debugger        Run in debug mode
@@ -58,9 +61,12 @@ public class MVELRuntime {
     ASTNode tk = expression.getFirstNode();
     Integer operator;
 
+    //本身就没有可执行节点，则直接返回null
     if (tk == null) return null;
+
     try {
       do {
+        //这里表示当前节点为调试节点，因此尝试设置相应的调试上下文，fields 为 1 为调试节点
         if (tk.fields == -1) {
           /**
            * This may seem silly and redundant, however, when an MVEL script recurses into a block
@@ -129,6 +135,8 @@ public class MVELRuntime {
             continue;
         }
 
+        //这里继续圧入下一个节点值
+        //到这里这里的tk.nextASTNode肯定不为null，因为如果为null,则在上一个switch中已经处理掉，这里只要是支持一些当前还未支持到的处理
         stk.push(tk.nextASTNode.getReducedValueAccelerated(ctx, ctx, variableFactory), operator);
 
         try {
@@ -180,6 +188,7 @@ public class MVELRuntime {
   }
 
   /**
+   * 注册相应的调试代码行,以支持在特定的运行时增加相应的调试信息
    * Register a debugger breakpoint.
    *
    * @param source - the source file the breakpoint is registered in
@@ -191,6 +200,7 @@ public class MVELRuntime {
   }
 
   /**
+   * 移除相应的调试代码行
    * Remove a specific breakpoint.
    *
    * @param source - the source file the breakpoint is registered in
@@ -203,6 +213,7 @@ public class MVELRuntime {
   }
 
   /**
+   * 读取当前是否存在调试信息
    * Tests whether or not a debugger context exist.
    *
    * @return boolean
@@ -212,6 +223,7 @@ public class MVELRuntime {
   }
 
   /**
+   * 保证建立起相应的调试上下文
    * Ensures that debugger context exists.
    */
   private static void ensureDebuggerContext() {
@@ -220,6 +232,7 @@ public class MVELRuntime {
   }
 
   /**
+   * 清除所有的调试信息
    * Reset all the currently registered breakpoints.
    */
   public static void clearAllBreakpoints() {
@@ -229,6 +242,7 @@ public class MVELRuntime {
   }
 
   /**
+   * 读取当前是否存在调试信息
    * Tests whether or not breakpoints have been declared.
    *
    * @return boolean
@@ -238,6 +252,7 @@ public class MVELRuntime {
   }
 
   /**
+   * 设置具体的调试器
    * Sets the Debugger instance to handle breakpoints.   A debugger may only be registered once per thread.
    * Calling this method more than once will result in the second and subsequent calls to simply fail silently.
    * To re-register the Debugger, you must call {@link #resetDebugger}
@@ -250,6 +265,7 @@ public class MVELRuntime {
   }
 
   /**
+   * 清除相应的调试上下文信息
    * Reset all information registered in the debugger, including the actual attached Debugger and registered
    * breakpoints.
    */

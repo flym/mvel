@@ -45,23 +45,28 @@ public class FunctionParser {
     this.splitAccumulator = splitAccumulator;
   }
 
+  /** 进行函数的解析，并最终返回一个函数对象 */
   public Function parse() {
     int start = cursor;
 
+    //括号内的数据分割
     int startCond = 0;
     int endCond = 0;
 
+    //语句部分分割
     int blockStart;
     int blockEnd;
 
     int end = cursor + length;
 
+    //定位到相应的函数名后面的位置,因为函数名已经提前被解析了，因此这里只是位置往后进行定位
     cursor = ParseTools.captureToNextTokenJunction(expr, cursor, end, pCtx);
 
     //该函数有相应的参数定义信息
     if (expr[cursor = ParseTools.nextNonBlank(expr, cursor)] == '(') {
       /**
        * 这里因为是(，表示有参数定义了，这里找到()之内的定义信息
+       * 同时认为是相应的参数信息定义的结束位置
        * If we discover an opening bracket after the function name, we check to see
        * if this function accepts parameters.
        */
@@ -127,6 +132,7 @@ public class FunctionParser {
     }
 
     /**
+     * 根据最终解析到的各种数据构建出相应的函数对象
      * Produce the funciton node.
      */
     return new Function(name, expr, startCond, endCond - startCond, blockStart, blockEnd - blockStart, fields, pCtx);
